@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'theme_selection_screen.dart';
 import 'streak_screen.dart';
 import 'subject_switcher.dart';
+import 'services/auth_service.dart';
+import 'level_detail_screen.dart';
 
 class LevelSelectionScreen extends StatefulWidget {
   final AppTheme theme;
@@ -20,6 +22,13 @@ class LevelSelectionScreen extends StatefulWidget {
 
 class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   String currentTopic = 'DSA';
+  Future<void> _logout() async {
+    await AuthService.logout();
+
+    if (!mounted) return;
+
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+  }
 
   @override
   void initState() {
@@ -275,6 +284,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
               ),
             );
           }),
+          const SizedBox(width: 8),
+
+          _roundButton(Icons.logout_rounded, _logout),
         ],
       ),
     );
@@ -521,10 +533,11 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ChallengePlaceholder(
+        builder: (_) => LevelDetailScreen(
           level: level.number,
           title: level.title,
-          theme: widget.theme,
+          subtitle: level.subtitle,
+          accentColor: _accentColor(),
         ),
       ),
     );

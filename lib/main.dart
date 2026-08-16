@@ -1,8 +1,59 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'survey_screen.dart';
+import 'services/api_service.dart';
+import 'package:confetti/confetti.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 void main() {
   runApp(const PocketPlacementApp());
+}
+
+class StartupScreen extends StatefulWidget {
+  const StartupScreen({super.key});
+
+  @override
+  State<StartupScreen> createState() => _StartupScreenState();
+}
+
+class _StartupScreenState extends State<StartupScreen> {
+  @override
+  void initState() {
+    super.initState();
+    checkLogin();
+  }
+
+  Future<void> checkLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    if (!mounted) return;
+
+    if (token != null && token.isNotEmpty) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const SurveyScreen(),
+        ),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const AuthScreen(),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
 }
 
 class PocketPlacementApp extends StatelessWidget {
@@ -13,11 +64,8 @@ class PocketPlacementApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Pocket Placement',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        useMaterial3: true,
-      ),
-      home: const AuthScreen(),
+      theme: ThemeData(brightness: Brightness.dark, useMaterial3: true),
+      home: const StartupScreen(),
     );
   }
 }
@@ -44,6 +92,10 @@ class _AuthScreenState extends State<AuthScreen> {
   final loginEmailController = TextEditingController();
   final loginPasswordController = TextEditingController();
 
+  final ConfettiController confettiController = ConfettiController(
+    duration: const Duration(seconds: 2),
+  );
+
   bool showLogin = false;
 
   bool hideSignupPassword = true;
@@ -58,54 +110,110 @@ class _AuthScreenState extends State<AuthScreen> {
     confirmPasswordController.dispose();
     loginEmailController.dispose();
     loginPasswordController.dispose();
+    confettiController.dispose();
     super.dispose();
   }
 
   void showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
-  void createAccount() {
-  if (usernameController.text.trim().isEmpty ||
-      signupEmailController.text.trim().isEmpty ||
-      signupPasswordController.text.isEmpty ||
-      confirmPasswordController.text.isEmpty) {
-    showMessage('Please complete all fields.');
-    return;
+  Future<void> createAccount() async {
+    if (usernameController.text.trim().isEmpty ||
+        signupEmailController.text.trim().isEmpty ||
+        signupPasswordController.text.isEmpty ||
+        confirmPasswordController.text.isEmpty) {
+      showMessage('Please complete all fields.');
+      return;
+    }
+
+    if (signupPasswordController.text != confirmPasswordController.text) {
+      showMessage('Passwords do not match.');
+      return;
+    }
+
+    try {
+      final response = await ApiService.signup(
+        name: usernameController.text.trim(),
+        email: signupEmailController.text.trim(),
+        password: signupPasswordController.text,
+      );
+
+      if (!mounted) return;
+
+      if (response['success'] == true) {
+        confettiController.play();
+
+        showMessage('🎉 Account created successfully!');
+
+        await Future.delayed(const Duration(seconds: 2));
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const SurveyScreen()),
+        );
+      } else {
+        showMessage(response['message'] ?? 'Signup failed.');
+      }
+    } catch (error) {
+      if (!mounted) return;
+
+      showMessage('Unable to connect to the server. Please try again.');
+
+      debugPrint('Signup error: $error');
+    }
   }
 
-  if (signupPasswordController.text !=
-      confirmPasswordController.text) {
-    showMessage('Passwords do not match.');
-    return;
-  }
+  Future<void> login() async {
+    if (loginEmailController.text.trim().isEmpty ||
+        loginPasswordController.text.isEmpty) {
+      showMessage('Please enter your email and password.');
+      return;
+    }
 
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const SurveyScreen(),
-    ),
-  );
-}
-void login() {
-  if (loginEmailController.text.trim().isEmpty ||
-      loginPasswordController.text.isEmpty) {
-    showMessage('Please enter your email and password.');
-    return;
-  }
+    try {
+      final response = await ApiService.login(
+        email: loginEmailController.text.trim(),
+        password: loginPasswordController.text,
+      );
 
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const SurveyScreen(),
-    ),
-  );
-}
+      if (!mounted) return;
+
+      if (response['success'] == true) {
+        final token = response['token'];
+
+        if (token != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', token);
+        }
+
+        confettiController.play();
+
+        showMessage('🎉 Login successful!');
+
+        await Future.delayed(const Duration(seconds: 2));
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const SurveyScreen()),
+        );
+      } else {
+        showMessage(response['message'] ?? 'Login failed.');
+      }
+    } catch (error) {
+      if (!mounted) return;
+
+      showMessage('Unable to connect to the server. Please try again.');
+
+      debugPrint('Login error: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,21 +221,25 @@ void login() {
       backgroundColor: const Color(0xFF06130F),
       body: Stack(
         children: [
-          const Positioned.fill(
-            child: FantasyBackground(),
+          const Positioned.fill(child: FantasyBackground()),
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+              emissionFrequency: 0.05,
+              numberOfParticles: 30,
+              gravity: 0.25,
+            ),
           ),
 
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 18,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: 650,
-                  ),
+                  constraints: const BoxConstraints(maxWidth: 650),
                   child: Column(
                     children: [
                       // Back button
@@ -164,16 +276,12 @@ void login() {
                         child: showLogin
                             ? LoginPage(
                                 key: const ValueKey('login'),
-                                emailController:
-                                    loginEmailController,
-                                passwordController:
-                                    loginPasswordController,
-                                hidePassword:
-                                    hideLoginPassword,
+                                emailController: loginEmailController,
+                                passwordController: loginPasswordController,
+                                hidePassword: hideLoginPassword,
                                 onPasswordVisibility: () {
                                   setState(() {
-                                    hideLoginPassword =
-                                        !hideLoginPassword;
+                                    hideLoginPassword = !hideLoginPassword;
                                   });
                                 },
                                 onLogin: login,
@@ -200,28 +308,21 @@ void login() {
                               )
                             : SignupPage(
                                 key: const ValueKey('signup'),
-                                usernameController:
-                                    usernameController,
-                                emailController:
-                                    signupEmailController,
-                                passwordController:
-                                    signupPasswordController,
+                                usernameController: usernameController,
+                                emailController: signupEmailController,
+                                passwordController: signupPasswordController,
                                 confirmPasswordController:
                                     confirmPasswordController,
-                                hidePassword:
-                                    hideSignupPassword,
-                                hideConfirmPassword:
-                                    hideConfirmPassword,
+                                hidePassword: hideSignupPassword,
+                                hideConfirmPassword: hideConfirmPassword,
                                 onPasswordVisibility: () {
                                   setState(() {
-                                    hideSignupPassword =
-                                        !hideSignupPassword;
+                                    hideSignupPassword = !hideSignupPassword;
                                   });
                                 },
                                 onConfirmVisibility: () {
                                   setState(() {
-                                    hideConfirmPassword =
-                                        !hideConfirmPassword;
+                                    hideConfirmPassword = !hideConfirmPassword;
                                   });
                                 },
                                 onSignup: createAccount,
@@ -378,10 +479,7 @@ class SignupPage extends StatelessWidget {
               Expanded(
                 child: RichText(
                   text: const TextSpan(
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
                     children: [
                       TextSpan(text: 'I agree to the '),
                       TextSpan(
@@ -422,10 +520,7 @@ class SignupPage extends StatelessWidget {
             children: [
               const Text(
                 'Already have an account? ',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 14),
               ),
               GestureDetector(
                 onTap: onLogin,
@@ -541,9 +636,7 @@ class LoginPage extends StatelessWidget {
               onPressed: onForgotPassword,
               child: const Text(
                 'Forgot your password?',
-                style: TextStyle(
-                  color: Color(0xFF4DE4FF),
-                ),
+                style: TextStyle(color: Color(0xFF4DE4FF)),
               ),
             ),
           ),
@@ -563,10 +656,7 @@ class LoginPage extends StatelessWidget {
             children: [
               const Text(
                 'New here? ',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 14),
               ),
               GestureDetector(
                 onTap: onSignup,
@@ -614,26 +704,17 @@ class LoginPage extends StatelessWidget {
 class FantasyPanel extends StatelessWidget {
   final Widget child;
 
-  const FantasyPanel({
-    super.key,
-    required this.child,
-  });
+  const FantasyPanel({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 42,
-        vertical: 38,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 42, vertical: 38),
       decoration: BoxDecoration(
-        color: const Color(0xFF071711).withValues(alpha :.88),
+        color: const Color(0xFF071711).withValues(alpha: .88),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: const Color(0xFF6CA184),
-          width: 2,
-        ),
+        border: Border.all(color: const Color(0xFF6CA184), width: 2),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),
@@ -641,7 +722,7 @@ class FantasyPanel extends StatelessWidget {
             spreadRadius: 3,
           ),
           BoxShadow(
-            color: const Color(0xFF00D9FF).withValues(alpha:.08),
+            color: const Color(0xFF00D9FF).withValues(alpha: .08),
             blurRadius: 35,
             spreadRadius: 4,
           ),
@@ -650,9 +731,7 @@ class FantasyPanel extends StatelessWidget {
       child: CustomPaint(
         painter: VinePainter(),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: child,
         ),
       ),
@@ -686,14 +765,7 @@ class VinePainter extends CustomPainter {
       9,
     );
 
-    top.cubicTo(
-      size.width * .68,
-      -4,
-      size.width * .82,
-      25,
-      size.width,
-      8,
-    );
+    top.cubicTo(size.width * .68, -4, size.width * .82, 25, size.width, 8);
 
     canvas.drawPath(top, paint);
 
@@ -756,40 +828,26 @@ class FantasyTextField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 15,
-      ),
+      style: const TextStyle(color: Colors.white, fontSize: 15),
       cursorColor: const Color(0xFF4DE4FF),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(
-          color: Colors.white.withValues(alpha : .52),
-        ),
-        prefixIcon: Icon(
-          icon,
-          color: const Color(0xFFBCEAD8),
-        ),
+        hintStyle: TextStyle(color: Colors.white.withValues(alpha: .52)),
+        prefixIcon: Icon(icon, color: const Color(0xFFBCEAD8)),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: const Color(0xFF04110C).withValues(alpha : .80),
+        fillColor: const Color(0xFF04110C).withValues(alpha: .80),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 15,
           vertical: 17,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(13),
-          borderSide: const BorderSide(
-            color: Color(0xFF508B70),
-            width: 1.2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFF508B70), width: 1.2),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(13),
-          borderSide: const BorderSide(
-            color: Color(0xFF4DE4FF),
-            width: 1.8,
-          ),
+          borderSide: const BorderSide(color: Color(0xFF4DE4FF), width: 1.8),
         ),
       ),
     );
@@ -826,10 +884,7 @@ class FantasyButton extends StatelessWidget {
           shadowColor: const Color(0xFF00D9FF),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
-            side: const BorderSide(
-              color: Color(0xFF62EFFF),
-              width: 1.5,
-            ),
+            side: const BorderSide(color: Color(0xFF62EFFF), width: 1.5),
           ),
         ),
         child: Row(
@@ -876,10 +931,8 @@ class SocialButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.black..withValues(alpha :.15),
-          side: BorderSide(
-            color: Colors.white..withValues(alpha :.20),
-          ),
+          backgroundColor: Colors.black..withValues(alpha: .15),
+          side: BorderSide(color: Colors.white..withValues(alpha: .20)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -892,16 +945,12 @@ class SocialButton extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: icon == 'G'
-                    ? Colors.white
-                    : const Color(0xFF1877F2),
+                color: icon == 'G' ? Colors.white : const Color(0xFF1877F2),
               ),
               child: Text(
                 icon,
                 style: TextStyle(
-                  color: icon == 'G'
-                      ? Colors.black
-                      : Colors.white,
+                  color: icon == 'G' ? Colors.black : Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
                 ),
@@ -911,10 +960,7 @@ class SocialButton extends StatelessWidget {
               child: Text(
                 text,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                ),
+                style: const TextStyle(color: Colors.white, fontSize: 13),
               ),
             ),
             const SizedBox(width: 28),
@@ -933,11 +979,7 @@ class AuthHeading extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const AuthHeading({
-    super.key,
-    required this.title,
-    required this.subtitle,
-  });
+  const AuthHeading({super.key, required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -946,15 +988,10 @@ class AuthHeading extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Container(
-                height: 1,
-                color: const Color(0xFF47765F),
-              ),
+              child: Container(height: 1, color: const Color(0xFF47765F)),
             ),
             const Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: 12,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: 12),
               child: Icon(
                 Icons.auto_awesome,
                 size: 16,
@@ -962,10 +999,7 @@ class AuthHeading extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Container(
-                height: 1,
-                color: const Color(0xFF47765F),
-              ),
+              child: Container(height: 1, color: const Color(0xFF47765F)),
             ),
           ],
         ),
@@ -987,7 +1021,7 @@ class AuthHeading extends StatelessWidget {
         Text(
           subtitle,
           style: TextStyle(
-            color: Colors.white..withValues(alpha :.55),
+            color: Colors.white..withValues(alpha: .55),
             fontSize: 12,
           ),
         ),
@@ -1007,28 +1041,15 @@ class OrDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: Container(
-            height: 1,
-            color: const Color(0xFF3D6855),
-          ),
-        ),
+        Expanded(child: Container(height: 1, color: const Color(0xFF3D6855))),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 13),
           child: Text(
             'OR',
-            style: TextStyle(
-              color: Colors.white54,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: Colors.white54, fontSize: 12),
           ),
         ),
-        Expanded(
-          child: Container(
-            height: 1,
-            color: Color(0xFF3D6855),
-          ),
-        ),
+        Expanded(child: Container(height: 1, color: Color(0xFF3D6855))),
       ],
     );
   }
@@ -1059,11 +1080,7 @@ class PocketPlacementLogo extends StatelessWidget {
         ShaderMask(
           shaderCallback: (bounds) {
             return const LinearGradient(
-              colors: [
-                Color(0xFFFFE9C8),
-                Color(0xFFD5F8FF),
-                Color(0xFFFFE9C8),
-              ],
+              colors: [Color(0xFFFFE9C8), Color(0xFFD5F8FF), Color(0xFFFFE9C8)],
             ).createShader(bounds);
           },
           child: const Text(
@@ -1077,11 +1094,7 @@ class PocketPlacementLogo extends StatelessWidget {
           ),
         ),
 
-        Container(
-          width: 215,
-          height: 1,
-          color: const Color(0xFFE5D0A7),
-        ),
+        Container(width: 215, height: 1, color: const Color(0xFFE5D0A7)),
 
         const Text(
           'PLACEMENT',
@@ -1113,7 +1126,7 @@ class CircleIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black..withValues(alpha :.35),
+      color: Colors.black..withValues(alpha: .35),
       shape: const CircleBorder(),
       child: InkWell(
         onTap: onPressed,
@@ -1121,11 +1134,7 @@ class CircleIconButton extends StatelessWidget {
         child: const SizedBox(
           width: 52,
           height: 52,
-          child: Icon(
-            Icons.arrow_back_rounded,
-            color: Colors.white,
-            size: 28,
-          ),
+          child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 28),
         ),
       ),
     );
@@ -1154,12 +1163,7 @@ class FantasyBackground extends StatelessWidget {
               Color(0xFF173331),
               Color(0xFF061610),
             ],
-            stops: [
-              0.0,
-              0.30,
-              0.62,
-              1.0,
-            ],
+            stops: [0.0, 0.30, 0.62, 1.0],
           ),
         ),
       ),
@@ -1174,33 +1178,27 @@ class ForestPainter extends CustomPainter {
 
     // Moon glow
     final moonPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFFFFC88E)..withValues(alpha :.20),
-          Colors.transparent,
-        ],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(
-            size.width * .76,
-            size.height * .13,
-          ),
-          radius: size.width * .32,
-        ),
-      );
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(0xFFFFC88E)..withValues(alpha: .20),
+              Colors.transparent,
+            ],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(size.width * .76, size.height * .13),
+              radius: size.width * .32,
+            ),
+          );
 
     canvas.drawCircle(
-      Offset(
-        size.width * .76,
-        size.height * .13,
-      ),
+      Offset(size.width * .76, size.height * .13),
       size.width * .32,
       moonPaint,
     );
 
     // Mountains
-    final mountainPaint = Paint()
-      ..color = const Color(0xFF171B2B);
+    final mountainPaint = Paint()..color = const Color(0xFF171B2B);
 
     final mountains = Path()
       ..moveTo(0, size.height * .32)
@@ -1215,13 +1213,11 @@ class ForestPainter extends CustomPainter {
     canvas.drawPath(mountains, mountainPaint);
 
     // Forest trees
-    final treePaint = Paint()
-      ..color = const Color(0xFF0B2721);
+    final treePaint = Paint()..color = const Color(0xFF0B2721);
 
     for (int i = 0; i < 18; i++) {
       final x = random.nextDouble() * size.width;
-      final treeHeight =
-          80 + random.nextDouble() * 150;
+      final treeHeight = 80 + random.nextDouble() * 150;
 
       final tree = Path()
         ..moveTo(x, size.height * .72)
@@ -1236,25 +1232,17 @@ class ForestPainter extends CustomPainter {
     // Fireflies
     final glowPaint = Paint()
       ..color = const Color(0xFFE7FF73)
-      ..maskFilter = const MaskFilter.blur(
-        BlurStyle.normal,
-        4,
-      );
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
 
     for (int i = 0; i < 45; i++) {
       final x = random.nextDouble() * size.width;
       final y = random.nextDouble() * size.height;
 
-      canvas.drawCircle(
-        Offset(x, y),
-        2,
-        glowPaint,
-      );
+      canvas.drawCircle(Offset(x, y), 2, glowPaint);
     }
 
     // Bottom foliage
-    final foliagePaint = Paint()
-      ..color = const Color(0xFF061711);
+    final foliagePaint = Paint()..color = const Color(0xFF061711);
 
     final foliage = Path()
       ..moveTo(0, size.height * .82)
