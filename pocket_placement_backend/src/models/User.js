@@ -26,6 +26,11 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
+    skillTestCompleted: {
+      type: Boolean,
+      default: false,
+    },
+
     currentLevel: {
       type: Number,
       default: 1,
@@ -41,6 +46,7 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
   },
+
   {
     timestamps: true,
   }

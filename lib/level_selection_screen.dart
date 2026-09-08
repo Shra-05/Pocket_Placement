@@ -5,6 +5,7 @@ import 'streak_screen.dart';
 import 'subject_switcher.dart';
 import 'services/auth_service.dart';
 import 'level_detail_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LevelSelectionScreen extends StatefulWidget {
   final AppTheme theme;
@@ -12,8 +13,8 @@ class LevelSelectionScreen extends StatefulWidget {
 
   const LevelSelectionScreen({
     super.key,
+    required this.topic,
     required this.theme,
-    this.topic = 'DSA',
   });
 
   @override
@@ -22,6 +23,7 @@ class LevelSelectionScreen extends StatefulWidget {
 
 class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   String currentTopic = 'DSA';
+  Set<int> completedLevels = {};
   Future<void> _logout() async {
     await AuthService.logout();
 
@@ -30,10 +32,31 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
 
+  Future<void> _loadProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final savedLevels = prefs.getStringList('completed_levels') ?? [];
+
+    if (!mounted) return;
+
+    setState(() {
+      completedLevels = savedLevels.map(int.parse).toSet();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadProgress();
     currentTopic = widget.topic;
+  }
+
+  bool _isLevelUnlocked(int level) {
+    if (level == 1) {
+      return true;
+    }
+
+    return completedLevels.contains(level - 1);
   }
 
   List<LevelData> _buildLevels() {
@@ -133,17 +156,52 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             1,
             'PROGRAMMING BASICS',
             'Variables • Loops • Functions',
-            true,
+            _isLevelUnlocked(1),
           ),
-          LevelData(2, 'ARRAYS', 'Traversal • Searching', true),
-          LevelData(3, 'STRINGS', 'Manipulation • Patterns', false),
-          LevelData(4, 'SEARCHING', 'Linear • Binary Search', false),
-          LevelData(5, 'SORTING', 'Bubble • Merge • Quick Sort', false),
-          LevelData(6, 'LINKED LIST', 'Nodes • Operations', false),
-          LevelData(7, 'STACK & QUEUE', 'LIFO • FIFO', false),
-          LevelData(8, 'RECURSION', 'Base Cases • Backtracking', false),
-          LevelData(9, 'TREES', 'BST • Traversals • Heaps', false),
-          LevelData(10, 'GRAPHS', 'BFS • DFS • Shortest Path', false),
+          LevelData(2, 'ARRAYS', 'Traversal • Searching', _isLevelUnlocked(2)),
+          LevelData(
+            3,
+            'STRINGS',
+            'Manipulation • Patterns',
+            _isLevelUnlocked(3),
+          ),
+          LevelData(
+            4,
+            'SEARCHING',
+            'Linear • Binary Search',
+            _isLevelUnlocked(4),
+          ),
+          LevelData(
+            5,
+            'SORTING',
+            'Bubble • Merge • Quick Sort',
+            _isLevelUnlocked(5),
+          ),
+          LevelData(
+            6,
+            'LINKED LIST',
+            'Nodes • Operations',
+            _isLevelUnlocked(6),
+          ),
+          LevelData(7, 'STACK & QUEUE', 'LIFO • FIFO', _isLevelUnlocked(7)),
+          LevelData(
+            8,
+            'RECURSION',
+            'Base Cases • Backtracking',
+            _isLevelUnlocked(8),
+          ),
+          LevelData(
+            9,
+            'TREES',
+            'BST • Traversals • Heaps',
+            _isLevelUnlocked(9),
+          ),
+          LevelData(
+            10,
+            'GRAPHS',
+            'BFS • DFS • Shortest Path',
+            _isLevelUnlocked(10),
+          ),
         ];
     }
   }
@@ -161,7 +219,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
               children: [
                 _buildTopBar(),
 
-                // SUBJECT SWITCHER
+                // SUBJECT SWITCHER*
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
                   child: Align(
@@ -191,9 +249,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     );
   }
 
-  // ============================================================
-  // THEME BACKGROUND
-  // ============================================================
+  // ============================================================*
+  // THEME BACKGROUND*
+  // ============================================================*
 
   Widget _buildThemeBackground() {
     switch (widget.theme) {
@@ -221,9 +279,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     }
   }
 
-  // ============================================================
-  // TOP BAR
-  // ============================================================
+  // ============================================================*
+  // TOP BAR*
+  // ============================================================*
 
   Widget _buildTopBar() {
     return Container(
@@ -333,9 +391,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     );
   }
 
-  // ============================================================
-  // MAP
-  // ============================================================
+  // ============================================================*
+  // MAP*
+  // ============================================================*
 
   Widget _buildMap() {
     return LayoutBuilder(
@@ -348,7 +406,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
             height: 1850,
             child: Stack(
               children: [
-                // TITLE
+                // TITLE*
                 Positioned(
                   top: 25,
                   left: 20,
@@ -378,7 +436,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                   ),
                 ),
 
-                // PATH
+                // PATH*
                 Positioned.fill(
                   top: 125,
                   child: CustomPaint(
@@ -386,17 +444,17 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                   ),
                 ),
 
-                // LEVELS
+                // LEVELS*
                 ..._buildLevelNodes(width),
 
-                // BOSS
+                // BOSS*
                 Positioned(
                   top: 1680,
                   left: width * 0.5 - 70,
                   child: BossNode(theme: widget.theme),
                 ),
 
-                // THEME DECORATIONS
+                // THEME DECORATIONS*
                 if (widget.theme == AppTheme.forest)
                   ..._forestDecorations(width),
 
@@ -444,9 +502,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     });
   }
 
-  // ============================================================
-  // FOREST DECORATIONS
-  // ============================================================
+  // ============================================================*
+  // FOREST DECORATIONS*
+  // ============================================================*
 
   List<Widget> _forestDecorations(double width) {
     return [
@@ -461,9 +519,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     ];
   }
 
-  // ============================================================
-  // CYBER DECORATIONS
-  // ============================================================
+  // ============================================================*
+  // CYBER DECORATIONS*
+  // ============================================================*
 
   List<Widget> _cyberDecorations(double width) {
     return [
@@ -500,9 +558,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     ];
   }
 
-  // ============================================================
-  // KINGDOM DECORATIONS
-  // ============================================================
+  // ============================================================*
+  // KINGDOM DECORATIONS*
+  // ============================================================*
 
   List<Widget> _kingdomDecorations(double width) {
     return [
@@ -515,11 +573,11 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     ];
   }
 
-  // ============================================================
-  // LEVEL TAP
-  // ============================================================
+  // ============================================================*
+  // LEVEL TAP*
+  // ============================================================*
 
-  void _handleLevelTap(LevelData level) {
+  Future<void> _handleLevelTap(LevelData level) async {
     if (!level.unlocked) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -530,22 +588,29 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => LevelDetailScreen(
-          level: level.number,
-          title: level.title,
-          subtitle: level.subtitle,
-          accentColor: _accentColor(),
-        ),
-      ),
-    );
+    await Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (_) => LevelDetailScreen(
+      level: level.number,
+      title: level.title,
+      subtitle: level.subtitle,
+      accentColor: _accentColor(),
+      theme: widget.theme,
+    ),
+  ),
+);
+
+    await _loadProgress();
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
-  // ============================================================
-  // THEME HELPERS
-  // ============================================================
+  // ============================================================*
+  // THEME HELPERS*
+  // ============================================================*
 
   Color _accentColor() {
     switch (widget.theme) {
@@ -600,9 +665,9 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 }
 
-// ============================================================
-// LEVEL DATA
-// ============================================================
+// ============================================================*
+// LEVEL DATA*
+// ============================================================*
 
 class LevelData {
   final int number;
@@ -613,9 +678,9 @@ class LevelData {
   LevelData(this.number, this.title, this.subtitle, this.unlocked);
 }
 
-// ============================================================
-// LEVEL NODE
-// ============================================================
+// ============================================================*
+// LEVEL NODE*
+// ============================================================*
 
 class LevelNode extends StatelessWidget {
   final LevelData level;
@@ -778,9 +843,9 @@ class LevelNode extends StatelessWidget {
   }
 }
 
-// ============================================================
-// PATH
-// ============================================================
+// ============================================================*
+// PATH*
+// ============================================================*
 
 class MapPathPainter extends CustomPainter {
   final AppTheme theme;
@@ -927,9 +992,9 @@ class MapPathPainter extends CustomPainter {
   }
 }
 
-// ============================================================
-// FOREST BACKGROUND
-// ============================================================
+// ============================================================*
+// FOREST BACKGROUND*
+// ============================================================*
 
 class ForestBackground extends StatelessWidget {
   const ForestBackground({super.key});
@@ -989,9 +1054,9 @@ class ForestPainter extends CustomPainter {
   }
 }
 
-// ============================================================
-// FOREST TREE
-// ============================================================
+// ============================================================*
+// FOREST TREE*
+// ============================================================*
 
 class ForestTree extends StatelessWidget {
   final double size;
@@ -1049,9 +1114,9 @@ class TreePainter extends CustomPainter {
   }
 }
 
-// ============================================================
-// MUSHROOM
-// ============================================================
+// ============================================================*
+// MUSHROOM*
+// ============================================================*
 
 class Mushroom extends StatelessWidget {
   const Mushroom({super.key});
@@ -1099,9 +1164,9 @@ class MushroomPainter extends CustomPainter {
   }
 }
 
-// ============================================================
-// CYBERPUNK BACKGROUND
-// ============================================================
+// ============================================================*
+// CYBERPUNK BACKGROUND*
+// ============================================================*
 
 class CyberpunkBackground extends StatelessWidget {
   const CyberpunkBackground({super.key});
@@ -1156,9 +1221,9 @@ class CyberBackgroundPainter extends CustomPainter {
   }
 }
 
-// ============================================================
-// NEON BUILDING
-// ============================================================
+// ============================================================*
+// NEON BUILDING*
+// ============================================================*
 
 class NeonBuilding extends StatelessWidget {
   final double height;
@@ -1213,9 +1278,9 @@ class NeonBuilding extends StatelessWidget {
   }
 }
 
-// ============================================================
-// KINGDOM BACKGROUND
-// ============================================================
+// ============================================================*
+// KINGDOM BACKGROUND*
+// ============================================================*
 
 class KingdomBackground extends StatelessWidget {
   const KingdomBackground({super.key});
@@ -1281,9 +1346,9 @@ class KingdomPainter extends CustomPainter {
   }
 }
 
-// ============================================================
-// CASTLE TOWER
-// ============================================================
+// ============================================================*
+// CASTLE TOWER*
+// ============================================================*
 
 class CastleTower extends StatelessWidget {
   final double height;
@@ -1316,9 +1381,9 @@ class CastleTower extends StatelessWidget {
   }
 }
 
-// ============================================================
-// BOSS
-// ============================================================
+// ============================================================*
+// BOSS*
+// ============================================================*
 
 class BossNode extends StatelessWidget {
   final AppTheme theme;
@@ -1424,9 +1489,9 @@ class BossNode extends StatelessWidget {
   }
 }
 
-// ============================================================
-// TEMPORARY CHALLENGE SCREEN
-// ============================================================
+// ============================================================*
+// TEMPORARY CHALLENGE SCREEN*
+// ============================================================*
 
 class ChallengePlaceholder extends StatelessWidget {
   final int level;

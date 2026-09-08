@@ -3,7 +3,9 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'analytics_screen.dart';
+
+import '../services/auth_service.dart';
+import 'theme_selection_screen.dart';
 
 class AssessmentScreen extends StatefulWidget {
   final String goal;
@@ -16,12 +18,10 @@ class AssessmentScreen extends StatefulWidget {
   });
 
   @override
-  State<AssessmentScreen> createState() =>
-      _AssessmentScreenState();
+  State<AssessmentScreen> createState() => _AssessmentScreenState();
 }
 
-class _AssessmentScreenState
-    extends State<AssessmentScreen>
+class _AssessmentScreenState extends State<AssessmentScreen>
     with TickerProviderStateMixin {
   int currentQuestion = 0;
   int score = 0;
@@ -46,8 +46,7 @@ class _AssessmentScreenState
       'answer': 1,
     },
     {
-      'question':
-          'Which data structure follows the LIFO principle?',
+      'question': 'Which data structure follows the LIFO principle?',
       'options': [
         'Queue',
         'Stack',
@@ -57,8 +56,7 @@ class _AssessmentScreenState
       'answer': 1,
     },
     {
-      'question':
-          'What is the time complexity of Binary Search?',
+      'question': 'What is the time complexity of Binary Search?',
       'options': [
         'O(n)',
         'O(log n)',
@@ -68,8 +66,7 @@ class _AssessmentScreenState
       'answer': 1,
     },
     {
-      'question':
-          'Which SQL command is used to retrieve data?',
+      'question': 'Which SQL command is used to retrieve data?',
       'options': [
         'INSERT',
         'UPDATE',
@@ -79,8 +76,7 @@ class _AssessmentScreenState
       'answer': 2,
     },
     {
-      'question':
-          'Which protocol is connection-oriented?',
+      'question': 'Which protocol is connection-oriented?',
       'options': [
         'UDP',
         'TCP',
@@ -113,11 +109,14 @@ class _AssessmentScreenState
     super.dispose();
   }
 
-  void selectAnswer(int index) {
+  // ======================================================
+  // SELECT ANSWER
+  // ======================================================
+
+  Future<void> selectAnswer(int index) async {
     if (showFeedback) return;
 
-    final correct =
-        index == questions[currentQuestion]['answer'];
+    final correct = index == questions[currentQuestion]['answer'];
 
     setState(() {
       selectedAnswer = index;
@@ -129,30 +128,77 @@ class _AssessmentScreenState
       }
     });
 
-    Timer(const Duration(milliseconds: 1100), () {
-      if (!mounted) return;
+    // Keep the existing feedback delay
+    await Future.delayed(
+      const Duration(milliseconds: 1100),
+    );
 
-      if (currentQuestion < questions.length - 1) {
-        setState(() {
-          currentQuestion++;
-          selectedAnswer = null;
-          answerCorrect = null;
-          showFeedback = false;
-        });
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AnalyticsScreen(
-              score: score,
-              totalQuestions: questions.length,
-              topic: _topicName,
-            ),
+    if (!mounted) return;
+
+    // ======================================================
+    // MOVE TO NEXT QUESTION
+    // ======================================================
+
+    if (currentQuestion < questions.length - 1) {
+      setState(() {
+        currentQuestion++;
+        selectedAnswer = null;
+        answerCorrect = null;
+        showFeedback = false;
+      });
+
+      return;
+    }
+
+    // ======================================================
+    // QUESTION 5 COMPLETED
+    // SAVE COMPLETION TO DATABASE
+    // ======================================================
+
+    final completed = await AuthService.completeSkillTest();
+
+    if (!mounted) return;
+
+    // ======================================================
+    // IF SAVE FAILED
+    // ======================================================
+
+    if (!completed) {
+      setState(() {
+        selectedAnswer = null;
+        answerCorrect = null;
+        showFeedback = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not save your skill test. Please try again.',
           ),
-        );
-      }
-    });
+        ),
+      );
+
+      return;
+    }
+
+    // ======================================================
+    // SKILL TEST COMPLETED
+    // GO TO THEME SELECTION
+    // ======================================================
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ThemeSelectionScreen(
+          topic: _topicName,
+        ),
+      ),
+    );
   }
+
+  // ======================================================
+  // TOPIC NAME
+  // ======================================================
 
   String get _topicName {
     if (widget.subjects.isNotEmpty) {
@@ -230,9 +276,7 @@ class _AssessmentScreenState
 
                     const SizedBox(height: 10),
 
-                    _buildAnswers(
-                      question['options'],
-                    ),
+                    _buildAnswers(question['options']),
 
                     const SizedBox(height: 15),
 
@@ -257,17 +301,16 @@ class _AssessmentScreenState
               ),
             ),
 
-            if (showFeedback)
-              _buildFeedback(),
+            if (showFeedback) _buildFeedback(),
           ],
         ),
       ),
     );
   }
 
-  // ------------------------------------------------------------
+  // ======================================================
   // BACKGROUND
-  // ------------------------------------------------------------
+  // ======================================================
 
   Widget _buildBackground() {
     return Positioned.fill(
@@ -338,9 +381,9 @@ class _AssessmentScreenState
     );
   }
 
-  // ------------------------------------------------------------
+  // ======================================================
   // HEADER
-  // ------------------------------------------------------------
+  // ======================================================
 
   Widget _buildHeader() {
     return Row(
@@ -371,8 +414,7 @@ class _AssessmentScreenState
 
         const Expanded(
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 '⚔️  SKILL QUEST',
@@ -428,9 +470,9 @@ class _AssessmentScreenState
     );
   }
 
-  // ------------------------------------------------------------
+  // ======================================================
   // QUESTION COUNTER
-  // ------------------------------------------------------------
+  // ======================================================
 
   Widget _buildQuestionCounter() {
     return Container(
@@ -465,9 +507,9 @@ class _AssessmentScreenState
     );
   }
 
-  // ------------------------------------------------------------
+  // ======================================================
   // QUESTION
-  // ------------------------------------------------------------
+  // ======================================================
 
   Widget _buildQuestionCard(String question) {
     return ClipRRect(
@@ -533,9 +575,9 @@ class _AssessmentScreenState
     );
   }
 
-  // ------------------------------------------------------------
+  // ======================================================
   // ANSWERS
-  // ------------------------------------------------------------
+  // ======================================================
 
   Widget _buildAnswers(List options) {
     return LayoutBuilder(
@@ -555,6 +597,7 @@ class _AssessmentScreenState
                     options[0],
                   ),
                 ),
+
                 Positioned(
                   left: constraints.maxWidth * .25,
                   top: 5,
@@ -563,6 +606,7 @@ class _AssessmentScreenState
                     options[1],
                   ),
                 ),
+
                 Positioned(
                   right: constraints.maxWidth * .25,
                   top: 85,
@@ -571,6 +615,7 @@ class _AssessmentScreenState
                     options[2],
                   ),
                 ),
+
                 Positioned(
                   right: 35,
                   top: 35,
@@ -606,7 +651,9 @@ class _AssessmentScreenState
                 ),
               ],
             ),
+
             const SizedBox(height: 15),
+
             Row(
               children: [
                 Expanded(
@@ -633,15 +680,15 @@ class _AssessmentScreenState
     );
   }
 
-  Widget _bubble(
-    int index,
-    String text,
-  ) {
+  // ======================================================
+  // ANSWER BUBBLE
+  // ======================================================
+
+  Widget _bubble(int index, String text) {
     final correctIndex =
         questions[currentQuestion]['answer'];
 
-    final isSelected =
-        selectedAnswer == index;
+    final isSelected = selectedAnswer == index;
 
     final isCorrect =
         showFeedback && index == correctIndex;
@@ -664,13 +711,14 @@ class _AssessmentScreenState
     return AnimatedBuilder(
       animation: floatingController,
       builder: (context, child) {
-        final offset = math.sin(
-              floatingController.value *
+        final offset =
+            math.sin(
+                  floatingController.value *
                       math.pi *
                       2 +
                   index,
-            ) *
-            7;
+                ) *
+                7;
 
         return Transform.translate(
           offset: Offset(0, offset),
@@ -699,19 +747,13 @@ class _AssessmentScreenState
                         alpha: .82,
                       ),
                       const Color(0xFFFFE9C8)
-                          .withValues(
-                        alpha: .55,
-                      ),
+                          .withValues(alpha: .55),
                       const Color(0xFFFFB74D)
-                          .withValues(
-                        alpha: .22,
-                      ),
+                          .withValues(alpha: .22),
                     ],
                   ),
                   border: Border.all(
-                    color: accent.withValues(
-                      alpha: .8,
-                    ),
+                    color: accent.withValues(alpha: .8),
                     width: isSelected ? 3 : 1.7,
                   ),
                   boxShadow: [
@@ -756,8 +798,7 @@ class _AssessmentScreenState
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white
-                                .withValues(
+                            color: Colors.white.withValues(
                               alpha: .55,
                             ),
                           ),
@@ -767,8 +808,7 @@ class _AssessmentScreenState
 
                     Center(
                       child: Padding(
-                        padding:
-                            const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(20),
                         child: Column(
                           mainAxisAlignment:
                               MainAxisAlignment.center,
@@ -779,9 +819,7 @@ class _AssessmentScreenState
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: Colors.white
-                                    .withValues(
-                                  alpha: .55,
-                                ),
+                                    .withValues(alpha: .55),
                                 border: Border.all(
                                   color: accent,
                                   width: 1.4,
@@ -792,17 +830,13 @@ class _AssessmentScreenState
                                     ? const Icon(
                                         Icons.check,
                                         color:
-                                            Color(
-                                          0xFF4E8B3C,
-                                        ),
+                                            Color(0xFF4E8B3C),
                                       )
                                     : isWrong
                                         ? const Icon(
                                             Icons.close,
                                             color:
-                                                Color(
-                                              0xFFC84F46,
-                                            ),
+                                                Color(0xFFC84F46),
                                           )
                                         : Text(
                                             String.fromCharCode(
@@ -810,13 +844,10 @@ class _AssessmentScreenState
                                             ),
                                             style:
                                                 TextStyle(
-                                              color:
-                                                  accent,
+                                              color: accent,
                                               fontWeight:
-                                                  FontWeight
-                                                      .w900,
-                                              fontSize:
-                                                  17,
+                                                  FontWeight.w900,
+                                              fontSize: 17,
                                             ),
                                           ),
                               ),
@@ -826,17 +857,14 @@ class _AssessmentScreenState
 
                             Text(
                               text,
-                              textAlign:
-                                  TextAlign.center,
+                              textAlign: TextAlign.center,
                               maxLines: 3,
                               overflow:
                                   TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color:
-                                    Color(0xFF653B1D),
+                                color: Color(0xFF653B1D),
                                 fontSize: 13,
-                                fontWeight:
-                                    FontWeight.w800,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ],
@@ -853,14 +881,13 @@ class _AssessmentScreenState
     );
   }
 
-  // ------------------------------------------------------------
+  // ======================================================
   // PROGRESS
-  // ------------------------------------------------------------
+  // ======================================================
 
   Widget _buildProgress() {
     final progress =
-        (currentQuestion + 1) /
-            questions.length;
+        (currentQuestion + 1) / questions.length;
 
     return Container(
       width: double.infinity,
@@ -886,6 +913,7 @@ class _AssessmentScreenState
                   fontWeight: FontWeight.w900,
                 ),
               ),
+
               Text(
                 '${currentQuestion + 1} / ${questions.length}',
                 style: const TextStyle(
@@ -917,9 +945,9 @@ class _AssessmentScreenState
     );
   }
 
-  // ------------------------------------------------------------
+  // ======================================================
   // CAT
-  // ------------------------------------------------------------
+  // ======================================================
 
   Widget _buildCat() {
     return SizedBox(
@@ -931,9 +959,9 @@ class _AssessmentScreenState
     );
   }
 
-  // ------------------------------------------------------------
+  // ======================================================
   // FEEDBACK
-  // ------------------------------------------------------------
+  // ======================================================
 
   Widget _buildFeedback() {
     final correct = answerCorrect == true;
@@ -970,8 +998,9 @@ class _AssessmentScreenState
                   children: [
                     Text(
                       correct ? '🎉' : '🐾',
-                      style:
-                          const TextStyle(fontSize: 42),
+                      style: const TextStyle(
+                        fontSize: 42,
+                      ),
                     ),
 
                     const SizedBox(height: 7),
@@ -1038,8 +1067,7 @@ class _ParticlePainter extends CustomPainter {
     final random = math.Random(22);
 
     for (int i = 0; i < 55; i++) {
-      final x =
-          random.nextDouble() * size.width;
+      final x = random.nextDouble() * size.width;
 
       final baseY =
           random.nextDouble() * size.height;
@@ -1055,10 +1083,10 @@ class _ParticlePainter extends CustomPainter {
           random.nextDouble() * 1.4 + .4;
 
       final paint = Paint()
-        ..color = const Color(0xFFD8891A)
-            .withValues(
-          alpha:
-              random.nextDouble() * .18 + .04,
+        ..color = const Color(
+          0xFFD8891A,
+        ).withValues(
+          alpha: random.nextDouble() * .18 + .04,
         );
 
       canvas.drawCircle(
