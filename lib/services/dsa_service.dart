@@ -2,45 +2,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ApiService {
-  static const String baseUrl = 'http://localhost:5000/api';
+class DSAService {
+  static const String baseUrl = 'http://localhost:5000/api/dsa';
 
-  // ============ EXISTING AUTH METHODS ============
-
-  static Future<Map<String, dynamic>> signup({
-    required String name,
-    required String email,
-    required String password,
-  }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/auth/signup'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'name': name, 'email': email, 'password': password}),
-    );
-
-    return jsonDecode(response.body) as Map<String, dynamic>;
-  }
-
-  static Future<Map<String, dynamic>> login({
-    required String email,
-    required String password,
-  }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/auth/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
-    );
-
-    return jsonDecode(response.body) as Map<String, dynamic>;
-  }
-
-  // ============ HELPER METHODS ============
-
+  // Helper: Get auth token from SharedPreferences
   static Future<String?> _getAuthToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token');
   }
 
+  // Helper: Build headers with auth token
   static Future<Map<String, String>> _getHeaders() async {
     final token = await _getAuthToken();
     return {
@@ -49,14 +20,13 @@ class ApiService {
     };
   }
 
-  // ============ DSA METHODS ============
-
-  // Get problem details + user's progress
-  static Future<Map<String, dynamic>> getDSAProblem(String problemId) async {
+  // ============ FETCH PROBLEM ============
+  // Get problem details + user's progress on it
+  static Future<Map<String, dynamic>> getProblem(String problemId) async {
     try {
       final headers = await _getHeaders();
       final response = await http.get(
-        Uri.parse('$baseUrl/dsa/problems/$problemId'),
+        Uri.parse('$baseUrl/problems/$problemId'),
         headers: headers,
       );
 
@@ -74,12 +44,13 @@ class ApiService {
     }
   }
 
-  // Start a new attempt
-  static Future<Map<String, dynamic>> startDSAAttempt(String problemId) async {
+  // ============ START ATTEMPT ============
+  // Begin a new attempt on a problem
+  static Future<Map<String, dynamic>> startAttempt(String problemId) async {
     try {
       final headers = await _getHeaders();
       final response = await http.post(
-        Uri.parse('$baseUrl/dsa/problems/$problemId/start-attempt'),
+        Uri.parse('$baseUrl/problems/$problemId/start-attempt'),
         headers: headers,
         body: jsonEncode({}),
       );
@@ -96,8 +67,9 @@ class ApiService {
     }
   }
 
-  // Submit checkpoint answer
-  static Future<Map<String, dynamic>> submitDSACheckpoint({
+  // ============ SUBMIT CHECKPOINT ============
+  // Submit answer to a reasoning checkpoint
+  static Future<Map<String, dynamic>> submitCheckpoint({
     required String problemId,
     required int checkpointNumber,
     required String checkpointType,
@@ -106,7 +78,7 @@ class ApiService {
     try {
       final headers = await _getHeaders();
       final response = await http.post(
-        Uri.parse('$baseUrl/dsa/problems/$problemId/checkpoint'),
+        Uri.parse('$baseUrl/problems/$problemId/checkpoint'),
         headers: headers,
         body: jsonEncode({
           'checkpointNumber': checkpointNumber,
@@ -129,15 +101,16 @@ class ApiService {
     }
   }
 
-  // Get hint
-  static Future<Map<String, dynamic>> getDSAHint({
+  // ============ GET HINT ============
+  // Request a hint at a specific level
+  static Future<Map<String, dynamic>> getHint({
     required String problemId,
     required int hintLevel,
   }) async {
     try {
       final headers = await _getHeaders();
       final response = await http.post(
-        Uri.parse('$baseUrl/dsa/problems/$problemId/hint'),
+        Uri.parse('$baseUrl/problems/$problemId/hint'),
         headers: headers,
         body: jsonEncode({'hintLevel': hintLevel}),
       );
@@ -158,8 +131,9 @@ class ApiService {
     }
   }
 
-  // Submit solution
-  static Future<Map<String, dynamic>> submitDSASolution({
+  // ============ SUBMIT SOLUTION ============
+  // Submit final approach + explanation after working through checkpoints
+  static Future<Map<String, dynamic>> submitSolution({
     required String problemId,
     required String selectedApproach,
     required String selectedApproachExplanation,
@@ -168,7 +142,7 @@ class ApiService {
     try {
       final headers = await _getHeaders();
       final response = await http.post(
-        Uri.parse('$baseUrl/dsa/problems/$problemId/submit-solution'),
+        Uri.parse('$baseUrl/problems/$problemId/submit-solution'),
         headers: headers,
         body: jsonEncode({
           'selectedApproach': selectedApproach,
@@ -191,14 +165,15 @@ class ApiService {
     }
   }
 
-  // Get optimal solution
-  static Future<Map<String, dynamic>> getDSAOptimalSolution(
+  // ============ GET OPTIMAL SOLUTION ============
+  // View the optimal solution explanation (only after submission)
+  static Future<Map<String, dynamic>> getOptimalSolution(
     String problemId,
   ) async {
     try {
       final headers = await _getHeaders();
       final response = await http.get(
-        Uri.parse('$baseUrl/dsa/problems/$problemId/solution'),
+        Uri.parse('$baseUrl/problems/$problemId/solution'),
         headers: headers,
       );
 

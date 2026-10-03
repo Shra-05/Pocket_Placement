@@ -45,6 +45,28 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+
+    // ============= NEW DSA FIELDS =============
+    dsaProblemsAttempted: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "DSAProblem",
+      default: [],
+      // Track which DSA problems user has tried
+    },
+
+    dsaCurrentProblem: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DSAProblem",
+      default: null,
+      // The problem user is currently working on
+    },
+
+    dsaTotalXP: {
+      type: Number,
+      default: 0,
+      // XP earned from DSA problems specifically
+    },
+    // ==========================================
   },
 
   {

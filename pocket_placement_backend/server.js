@@ -7,12 +7,17 @@ require("dotenv").config();
 
 const connectDB = require("./src/config/db");
 const authRoutes = require("./src/routes/authRoutes");
+const dsaRoutes = require("./src/routes/dsaRoutes");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Mount routes
 app.use("/api/auth", authRoutes);
+app.use("/api/dsa", dsaRoutes);
+
 app.get("/", (req, res) => {
   res.json({
     message: "Pocket Placement Backend is running 🚀",
