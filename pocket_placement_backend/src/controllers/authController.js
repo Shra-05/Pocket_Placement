@@ -61,6 +61,10 @@ const signup = async (req, res) => {
         name: user.name,
         email: user.email,
         skillTestCompleted: user.skillTestCompleted,
+
+        // Streak information
+        streak: user.streak,
+        longestStreak: user.longestStreak,
       },
     });
   } catch (error) {
@@ -128,6 +132,10 @@ const login = async (req, res) => {
         name: user.name,
         email: user.email,
         skillTestCompleted: user.skillTestCompleted,
+
+        // Streak information
+        streak: user.streak,
+        longestStreak: user.longestStreak,
       },
     });
   } catch (error) {
@@ -186,6 +194,156 @@ const completeSkillTest = async (req, res) => {
 };
 
 // ======================================================
+// GET USER STREAK
+// ======================================================
+
+const getStreak = async (req, res) => {
+  try {
+    // Get logged-in user's ID from JWT
+    const userId = req.user.userId;
+
+    const user = await User.findById(userId).select(
+      "streak longestStreak lastActivityDate"
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      streak: user.streak,
+      longestStreak: user.longestStreak,
+      lastActivityDate: user.lastActivityDate,
+    });
+  } catch (error) {
+    console.error("Get streak error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error while getting streak",
+    });
+  }
+};
+
+// ======================================================
+// UPDATE USER STREAK
+// ======================================================
+
+const updateStreak = async (req, res) => {
+  try {
+    // Get logged-in user's ID from JWT
+    const userId = req.user.userId;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Get today's date
+    const today = new Date();
+
+    // Create date values containing only the date
+    // so time does not affect streak calculation.
+    const todayDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+
+    let currentStreak = user.streak || 0;
+
+    // --------------------------------------------------
+    // FIRST ACTIVITY
+    // --------------------------------------------------
+
+    if (!user.lastActivityDate) {
+      currentStreak = 1;
+    } else {
+      const lastDate = new Date(user.lastActivityDate);
+
+      const lastActivityOnlyDate = new Date(
+        lastDate.getFullYear(),
+        lastDate.getMonth(),
+        lastDate.getDate()
+      );
+
+      // Calculate difference in days
+      const differenceInTime =
+        todayDate.getTime() -
+        lastActivityOnlyDate.getTime();
+
+      const differenceInDays =
+        Math.floor(
+          differenceInTime / (1000 * 60 * 60 * 24)
+        );
+
+      // ------------------------------------------------
+      // SAME DAY
+      // ------------------------------------------------
+
+      if (differenceInDays === 0) {
+        // User has already completed today's activity.
+        // Do NOT increase the streak.
+        currentStreak = user.streak || 1;
+      }
+
+      // ------------------------------------------------
+      // NEXT CONSECUTIVE DAY
+      // ------------------------------------------------
+
+      else if (differenceInDays === 1) {
+        currentStreak = (user.streak || 0) + 1;
+      }
+
+      // ------------------------------------------------
+      // STREAK BROKEN
+      // ------------------------------------------------
+
+      else {
+        currentStreak = 1;
+      }
+    }
+
+    // Update longest streak
+    const longestStreak = Math.max(
+      user.longestStreak || 0,
+      currentStreak
+    );
+
+    // Save streak information
+    user.streak = currentStreak;
+    user.longestStreak = longestStreak;
+    user.lastActivityDate = today;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Streak updated successfully",
+
+      streak: user.streak,
+      longestStreak: user.longestStreak,
+      lastActivityDate: user.lastActivityDate,
+    });
+  } catch (error) {
+    console.error("Update streak error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating streak",
+    });
+  }
+};
+
+// ======================================================
 // EXPORTS
 // ======================================================
 
@@ -193,4 +351,6 @@ module.exports = {
   signup,
   login,
   completeSkillTest,
+  getStreak,
+  updateStreak,
 };

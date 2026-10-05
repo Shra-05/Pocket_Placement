@@ -41,9 +41,22 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
 
+    // Current daily streak
     streak: {
       type: Number,
       default: 0,
+    },
+
+    // Highest streak achieved by the user
+    longestStreak: {
+      type: Number,
+      default: 0,
+    },
+
+    // Date on which the user last completed a qualifying activity
+    lastActivityDate: {
+      type: Date,
+      default: null,
     },
   },
 
