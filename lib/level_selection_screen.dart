@@ -235,6 +235,31 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                   ),
                 ),
 
+                if (currentTopic.toUpperCase() == 'DSA')
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pushNamed('/dsa-world-home');
+                        },
+                        child: const Text(
+                          '🌍 ENTER DSA WORLD',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -589,17 +614,17 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     }
 
     await Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (_) => LevelDetailScreen(
-      level: level.number,
-      title: level.title,
-      subtitle: level.subtitle,
-      accentColor: _accentColor(),
-      theme: widget.theme,
-    ),
-  ),
-);
+      context,
+      MaterialPageRoute(
+        builder: (_) => LevelDetailScreen(
+          level: level.number,
+          title: level.title,
+          subtitle: level.subtitle,
+          accentColor: _accentColor(),
+          theme: widget.theme,
+        ),
+      ),
+    );
 
     await _loadProgress();
 

@@ -45,6 +45,23 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+
+    dsaProblemsAttempted: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "DSAProblem",
+      default: [],
+    },
+
+    dsaCurrentProblem: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DSAProblem",
+      default: null,
+    },
+
+    dsaTotalXP: {
+      type: Number,
+      default: 0,
+    },
   },
 
   {
