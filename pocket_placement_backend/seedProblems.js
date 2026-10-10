@@ -1,4 +1,4 @@
-// Seeds DSA World problems. This batch: Sorting (8) + 3Sum + Find All Numbers Disappeared (2).
+// Seeds DSA World problems. This batch: Trees (12).
 // Run from the pocket_placement_backend folder:  node seedProblems.js
 // Safe to re-run: problems are matched by title and updated, never duplicated.
 // To add the next batch, paste the new batch's file over this one and run it again.
@@ -51,215 +51,196 @@ const ap = (description, timeComplexity, spaceComplexity) => ({
 
 const problems = [
   // ====================================================
-  // ARRAYS (leftovers)
+  // TREES
   // ====================================================
 
   p({
-    slug: "3sum",
-    title: "3Sum",
-    difficulty: "Medium",
-    topics: ["Arrays", "Two Pointers", "Sorting"],
-    patterns: ["Sort + Two Pointers"],
-    problem:
-      "Given an integer array nums, return all unique triplets [nums[i], nums[j], nums[k]] with i, j and k all different, such that the three numbers add up to 0. The answer must not contain duplicate triplets.",
-    examples: [
-      {
-        input: "nums = [-1,0,1,2,-1,-4]",
-        output: "[[-1,-1,2],[-1,0,1]]",
-        explanation: "Both triplets sum to 0, and no triplet is repeated.",
-      },
-    ],
-    intuitionChallenges: [
-      ch(
-        "If you fix one number, the rest becomes finding two numbers with a given sum. What helps when the array is sorted?",
-        [
-          "Two pointers moving in from both ends",
-          "A third nested loop",
-          "Binary search on the total of all numbers",
-          "Reversing the array",
-        ],
-        0,
-        "Exactly! A sorted array lets two pointers home in on the target sum.",
-        "Think about how sortedness tells you which pointer to move."
-      ),
-      ch(
-        "How do you avoid reporting duplicate triplets?",
-        [
-          "Skip repeated values after sorting",
-          "Ignore the problem",
-          "Use only positive numbers",
-          "Shuffle the array",
-        ],
-        0,
-        "Right! After sorting, equal values sit next to each other and can be skipped.",
-        "Where do equal values end up after sorting?"
-      ),
-    ],
-    hints: [
-      "Sorting makes duplicates easy to spot and enables pointer tricks.",
-      "Fix the first number, then look for two numbers that add up to its negative.",
-      "For the rest of the array, use one pointer at each end and move them based on the sum.",
-      "After finding a triplet or moving a pointer, skip equal neighbours to avoid duplicates.",
-    ],
-    keyInsight:
-      "Sort, fix one number, then use two pointers to find the other two, skipping repeated values.",
-    bruteForceApproach: ap("Check every group of three numbers", "O(n³)", "O(1) extra"),
-    optimalApproach: ap(
-      "Sort, fix one number, then sweep two pointers over the rest",
-      "O(n²)",
-      "O(1) extra"
-    ),
-    patternName: "Sort + Two Pointers",
-    transferQuestions: [
-      tq(
-        "Sorted nums = [-4,-1,-1,0,1,2]. The fixed number is -1 (index 1), left is at index 2 (value -1) and right is at index 5 (value 2).",
-        "The sum is -1 + -1 + 2 = 0. What do you do next?",
-        [
-          "Record the triplet and move both pointers inward, skipping duplicates",
-          "Stop, the answer is complete",
-          "Move only the right pointer outward",
-          "Discard the triplet as a duplicate",
-        ],
-        0
-      ),
-    ],
-  }),
-
-  p({
-    slug: "find-all-numbers-disappeared-in-an-array",
-    title: "Find All Numbers Disappeared in an Array",
+    slug: "maximum-depth-of-binary-tree",
+    title: "Maximum Depth of Binary Tree",
     difficulty: "Easy",
-    topics: ["Arrays", "Hashing"],
-    patterns: ["In-Place Index Marking"],
+    topics: ["Trees", "Binary Tree", "DFS"],
+    patterns: ["Recursive DFS"],
     problem:
-      "Given an array nums of n integers where every nums[i] is in the range [1, n], return all the integers in [1, n] that do not appear in nums.",
+      "Given the root of a binary tree, return its maximum depth: the number of nodes along the longest path from the root down to the farthest leaf.",
     examples: [
       {
-        input: "nums = [4,3,2,7,8,2,3,1]",
-        output: "[5,6]",
-        explanation: "The numbers 5 and 6 are missing from the array.",
+        input: "root = [3,9,20,null,null,15,7]",
+        output: "3",
+        explanation: "The longest path is 3 -> 20 -> 15 (or 7), which has 3 nodes.",
       },
     ],
     intuitionChallenges: [
       ch(
-        "Every value is between 1 and n. What does that let you do?",
+        "The depth of a tree depends on the depths of its subtrees. How?",
         [
-          "Use the array's own indexes to mark which values were seen",
-          "Sort using only comparisons",
-          "Binary search for each missing number",
-          "Ignore the range",
+          "1 plus the larger of the left and right depths",
+          "The sum of both depths",
+          "The smaller of the two depths",
+          "The number of leaves",
         ],
         0,
-        "Exactly! The values 1..n line up with the indexes 0..n-1.",
-        "What do the allowed values have in common with the array's indexes?"
+        "Exactly! The deeper subtree decides the depth, plus one for the root.",
+        "The longest path goes through whichever side is deeper."
       ),
       ch(
-        "How can you mark that value v was seen without any extra space?",
-        [
-          "Make the number at index v - 1 negative",
-          "Delete the number v",
-          "Add v to a second array",
-          "Swap v with the first element every time",
-        ],
+        "What is the depth of an empty tree (null)?",
+        ["0", "1", "-1", "Undefined"],
         0,
-        "Right! A negative sign records a visit while keeping the original value readable.",
-        "You need a flag stored in the array itself."
+        "Right! An empty tree has no nodes, so its depth is 0.",
+        "How many nodes does an empty tree have?"
       ),
     ],
     hints: [
-      "The values 1..n line up perfectly with the indexes 0..n-1.",
-      "A value v can point to index v - 1.",
-      "Mark the pointed-to position, for example by making it negative.",
-      "After marking, any index that is still positive means the number index + 1 is missing.",
+      "A tree is a root plus a left subtree and a right subtree.",
+      "The depth of the whole tree comes from its deeper subtree.",
+      "An empty tree has depth 0.",
+      "Return 1 + max(depth(left), depth(right)).",
     ],
     keyInsight:
-      "Treat each value as a pointer to an index and mark it; unmarked positions reveal the missing numbers.",
+      "A tree's depth is one more than the depth of its deeper subtree, with an empty tree having depth 0.",
     bruteForceApproach: ap(
-      "For each number from 1 to n, search the array for it",
-      "O(n²)",
-      "O(1)"
+      "List every root-to-leaf path and take the longest",
+      "O(n · h)",
+      "O(n)"
     ),
-    optimalApproach: ap(
-      "Mark seen values by negating positions, then collect the positive ones",
-      "O(n)",
-      "O(1) extra"
-    ),
-    patternName: "In-Place Index Marking",
+    optimalApproach: ap("Recursive depth-first search", "O(n)", "O(h)"),
+    patternName: "Recursive DFS",
     transferQuestions: [
       tq(
-        "nums = [2,2,3]. After marking, index 0 is still positive while indexes 1 and 2 are negative.",
-        "Which number is missing?",
-        ["0", "1", "2", "3"],
+        "Node 1 has a left child 2 and a right child 3. Node 2 has a left child 4.",
+        "What is the maximum depth?",
+        ["2", "3", "4", "1"],
         1
       ),
     ],
   }),
 
-  // ====================================================
-  // SORTING
-  // ====================================================
-
   p({
-    slug: "sort-colors",
-    title: "Sort Colors",
-    difficulty: "Medium",
-    topics: ["Sorting", "Arrays", "Two Pointers"],
-    patterns: ["Dutch National Flag"],
+    slug: "invert-binary-tree",
+    title: "Invert Binary Tree",
+    difficulty: "Easy",
+    topics: ["Trees", "Binary Tree", "DFS"],
+    patterns: ["Recursive Swap"],
     problem:
-      "Given an array nums containing only 0, 1 and 2 (red, white and blue), sort it in place so that equal values are next to each other in the order 0, 1, 2. Do not use the library sort function.",
+      "Given the root of a binary tree, invert the tree (swap the left and right children at every node) and return its root.",
     examples: [
       {
-        input: "nums = [2,0,2,1,1,0]",
-        output: "[0,0,1,1,2,2]",
-        explanation: "All 0s come first, then the 1s, then the 2s.",
+        input: "root = [4,2,7,1,3,6,9]",
+        output: "[4,7,2,9,6,3,1]",
+        explanation: "The tree becomes a mirror image of itself.",
       },
     ],
     intuitionChallenges: [
       ch(
-        "There are only three distinct values. What does that allow?",
+        "To mirror a tree, what do you do at every node?",
         [
-          "A single pass that keeps three regions",
-          "Needing a full comparison sort",
-          "Binary search",
-          "Hashing every element",
+          "Swap its left and right children",
+          "Delete its children",
+          "Swap its value with the root",
+          "Sort its children",
         ],
         0,
-        "Exactly! With only three values you can sort by sending each element to its region.",
-        "Fewer distinct values means you can do better than a general sort."
+        "Exactly! A mirror image swaps left and right everywhere.",
+        "What changes between a tree and its mirror image?"
       ),
       ch(
-        "You see a 2 at the current position. What do you do?",
+        "After swapping at a node, what about the subtrees below it?",
         [
-          "Swap it into the end region and do not advance, because the swapped-in value is unchecked",
-          "Swap it to the front",
-          "Skip it",
-          "Remove it",
+          "They must be inverted too",
+          "They stay as they are",
+          "They are removed",
+          "Only the left one is inverted",
         ],
         0,
-        "Right! The value you swap in from the end has not been examined yet.",
-        "The element you bring in from the back is still unknown."
+        "Right! Every subtree needs the same treatment.",
+        "A mirror image must be mirrored all the way down."
       ),
     ],
     hints: [
-      "Only 0, 1 and 2 exist, so you do not need a general sort.",
-      "Think of three zones: zeros at the front, twos at the back, ones in the middle.",
-      "Use three pointers: low (next slot for 0), mid (current) and high (next slot for 2).",
-      "Swap 0s to low, 2s to high, and move mid past 1s.",
+      "A mirror image swaps left and right everywhere.",
+      "Swap the two children of the current node.",
+      "Every subtree must be mirrored as well.",
+      "Recursively invert the left and right subtrees, and swap them.",
     ],
-    keyInsight:
-      "Maintain three zones with pointers and swap each element into its zone in a single pass.",
-    bruteForceApproach: ap("Use a general comparison sort", "O(n log n)", "O(1)"),
-    optimalApproach: ap("Dutch national flag: one pass with three pointers", "O(n)", "O(1)"),
-    patternName: "Dutch National Flag",
+    keyInsight: "Swap the children of every node, recursively, to mirror the whole tree.",
+    bruteForceApproach: ap("Build a brand-new mirrored tree by copying every node", "O(n)", "O(n)"),
+    optimalApproach: ap("Swap the children in place, recursively", "O(n)", "O(h)"),
+    patternName: "Recursive Swap",
     transferQuestions: [
       tq(
-        "nums = [2,0,1] with low = 0, mid = 0, high = 2, and nums[mid] is 2.",
-        "After swapping nums[mid] with nums[high], what is the array and what happens to mid?",
+        "Node 2 has a left child 1 and a right child 3.",
+        "After inverting this subtree, what are node 2's children?",
+        ["Left 3, right 1", "Left 1, right 3", "Both 2", "No children"],
+        0
+      ),
+    ],
+  }),
+
+  p({
+    slug: "same-tree",
+    title: "Same Tree",
+    difficulty: "Easy",
+    topics: ["Trees", "Binary Tree", "DFS"],
+    patterns: ["Parallel DFS"],
+    problem:
+      "Given the roots of two binary trees p and q, check whether they are the same. Two trees are the same if they have identical structure and the nodes have the same values.",
+    examples: [
+      {
+        input: "p = [1,2,3], q = [1,2,3]",
+        output: "true",
+        explanation: "Both trees have the same shape and the same values.",
+      },
+    ],
+    intuitionChallenges: [
+      ch(
+        "Two trees are the same when their roots match and...",
         [
-          "[1,0,2], and mid stays at 0",
-          "[1,0,2], and mid moves to 1",
-          "[2,0,1], and mid moves to 1",
-          "[0,2,1], and mid stays at 0",
+          "their left subtrees match and their right subtrees match",
+          "only their left subtrees match",
+          "they have the same height",
+          "they have the same number of leaves",
+        ],
+        0,
+        "Exactly! Same roots plus the same left and right subtrees.",
+        "Every part of the structure must match, not just a summary of it."
+      ),
+      ch(
+        "One node is null and the other is not. What does that mean?",
+        [
+          "The trees are different",
+          "The trees are the same",
+          "Keep comparing",
+          "Swap them",
+        ],
+        0,
+        "Right! A missing node in one tree means the structures differ.",
+        "Structure must match exactly, including missing children."
+      ),
+    ],
+    hints: [
+      "Compare the trees node by node, in the same positions.",
+      "If both nodes are null, they match.",
+      "If only one is null, or the values differ, the trees differ.",
+      "Recurse on the left pair and the right pair; both must match.",
+    ],
+    keyInsight:
+      "Compare the two trees in lockstep: equal values at the roots and both pairs of subtrees equal.",
+    bruteForceApproach: ap(
+      "Convert both trees to lists with null markers and compare the lists",
+      "O(n)",
+      "O(n)"
+    ),
+    optimalApproach: ap("Recursive parallel DFS", "O(n)", "O(h)"),
+    patternName: "Parallel DFS",
+    transferQuestions: [
+      tq(
+        "Tree p: node 1 with a left child 2. Tree q: node 1 with a right child 2.",
+        "Are they the same tree?",
+        [
+          "No, the child is on a different side",
+          "Yes, the values are the same",
+          "Yes, the size is the same",
+          "Cannot tell",
         ],
         0
       ),
@@ -267,467 +248,609 @@ const problems = [
   }),
 
   p({
-    slug: "merge-intervals",
-    title: "Merge Intervals",
-    difficulty: "Medium",
-    topics: ["Sorting", "Arrays"],
-    patterns: ["Sort by Start"],
+    slug: "symmetric-tree",
+    title: "Symmetric Tree",
+    difficulty: "Easy",
+    topics: ["Trees", "Binary Tree", "DFS"],
+    patterns: ["Mirror Comparison"],
     problem:
-      "Given an array of intervals where intervals[i] = [start, end], merge all overlapping intervals and return an array of non-overlapping intervals that cover all the input intervals.",
+      "Given the root of a binary tree, check whether it is a mirror of itself (symmetric around its center).",
     examples: [
       {
-        input: "intervals = [[1,3],[2,6],[8,10],[15,18]]",
-        output: "[[1,6],[8,10],[15,18]]",
-        explanation: "[1,3] and [2,6] overlap, so they merge into [1,6].",
+        input: "root = [1,2,2,3,4,4,3]",
+        output: "true",
+        explanation: "The left and right halves are mirror images.",
       },
     ],
     intuitionChallenges: [
       ch(
-        "Before merging, what should you do with the intervals?",
+        "In a symmetric tree, which two subtrees must mirror each other?",
         [
-          "Sort them by start time",
-          "Sort them by length",
-          "Reverse them",
-          "Remove the shortest ones",
+          "The left and right subtrees of the root",
+          "The left subtree and itself",
+          "Two leaves",
+          "The root and its left child",
         ],
         0,
-        "Exactly! Sorted by start, overlapping intervals end up next to each other.",
-        "Overlaps are easiest to spot when intervals appear in order."
+        "Exactly! Symmetry means the root's two sides are mirror images.",
+        "A mirror splits the tree down the middle."
       ),
       ch(
-        "When do two intervals, in sorted order, overlap?",
+        "To compare two mirrored nodes, whose children do you pair up?",
         [
-          "The next start is at most the current end",
-          "The next end is larger than the current end",
-          "They have the same length",
-          "The next start is greater than the current end",
+          "The left child of one with the right child of the other",
+          "Left with left",
+          "Right with right",
+          "Parents with children",
         ],
         0,
-        "Right! If the next one starts before the current one ends, they touch or overlap.",
-        "Compare where one interval begins with where the previous one finishes."
+        "Right! In a mirror, left and right are reversed.",
+        "Mirroring reverses left and right."
       ),
     ],
     hints: [
-      "Overlaps are easier to see when intervals appear in order.",
-      "Sort the intervals by their start value.",
-      "Compare each interval with the last merged one.",
-      "If it starts before the last merged interval ends, extend that end; otherwise start a new merged interval.",
+      "Mirror means left-right reversal.",
+      "Compare the left subtree with the right subtree.",
+      "Their root values must match, and the outside children must match each other, as must the inside children.",
+      "Check (left.left, right.right) and (left.right, right.left) recursively.",
     ],
     keyInsight:
-      "After sorting by start, you only need to compare each interval with the last merged one.",
+      "Two subtrees are mirrors if their roots match and each one's left child mirrors the other's right child.",
     bruteForceApproach: ap(
-      "Compare every pair and keep merging until nothing overlaps",
-      "O(n²)",
+      "Copy and invert one side, then compare it to the other",
+      "O(n)",
       "O(n)"
     ),
-    optimalApproach: ap("Sort by start, then merge in one pass", "O(n log n)", "O(n)"),
-    patternName: "Sort by Start",
+    optimalApproach: ap("Recursive mirror comparison", "O(n)", "O(h)"),
+    patternName: "Mirror Comparison",
     transferQuestions: [
       tq(
-        "Sorted intervals: [1,3] and [2,6]",
-        "What does the merged interval look like?",
-        ["[1,3]", "[2,6]", "[1,6]", "[1,2]"],
-        2
+        "The root has two children, both 2. The left 2 has a left child 3, and the right 2 has a right child 3.",
+        "Is this tree symmetric?",
+        [
+          "Yes, the 3s are in mirror positions",
+          "No, the 3s are on different sides",
+          "No, the 2s differ",
+          "Cannot tell",
+        ],
+        0
       ),
     ],
   }),
 
   p({
-    slug: "kth-largest-element-in-an-array",
-    title: "Kth Largest Element in an Array",
+    slug: "binary-tree-level-order-traversal",
+    title: "Binary Tree Level Order Traversal",
     difficulty: "Medium",
-    topics: ["Sorting", "Arrays", "Heap"],
-    patterns: ["Min-Heap of Size k"],
+    topics: ["Trees", "Binary Tree", "BFS"],
+    patterns: ["BFS with a Queue"],
     problem:
-      "Given an integer array nums and an integer k, return the kth largest element in the array. It is the kth largest in sorted order, not the kth distinct value.",
+      "Given the root of a binary tree, return the level order traversal of its nodes' values: level by level, from left to right.",
     examples: [
       {
-        input: "nums = [3,2,1,5,6,4], k = 2",
-        output: "5",
-        explanation: "Sorted in descending order the array is 6, 5, 4, 3, 2, 1, so the 2nd largest is 5.",
+        input: "root = [3,9,20,null,null,15,7]",
+        output: "[[3],[9,20],[15,7]]",
+        explanation: "The nodes are grouped by their depth in the tree.",
       },
     ],
     intuitionChallenges: [
       ch(
-        "Which element are you looking for when k = 1?",
-        ["The largest", "The smallest", "The median", "The first element"],
+        "Which structure processes nodes in the order they were discovered?",
+        ["A queue", "A stack", "A hash map", "A heap"],
         0,
-        "Exactly! The 1st largest is simply the maximum.",
-        "k = 1 means the very top of the ranking."
+        "Exactly! A queue is first in, first out, which gives level-by-level order.",
+        "Which structure serves the earliest item first?"
       ),
       ch(
-        "A min-heap of size k holds the k largest values seen so far. Which value sits on top?",
+        "How do you know where one level ends and the next begins?",
         [
-          "The kth largest",
-          "The largest",
-          "The smallest of the whole array",
-          "The median",
+          "Process exactly as many nodes as the queue held at the start of the level",
+          "Count the leaves",
+          "Look for null values",
+          "Sort the queue",
         ],
         0,
-        "Right! The smallest of the k largest is exactly the kth largest.",
-        "The top of a min-heap is the smallest value it holds."
+        "Right! Freezing the queue size marks the level boundary.",
+        "The queue mixes levels as you add children. How can you separate them?"
       ),
     ],
     hints: [
-      "You do not need the whole array sorted, only the kth position.",
-      "Sorting works, but it does more work than necessary.",
-      "Keep track of only the k largest values seen so far.",
-      "Use a min-heap of size k: push each number, pop when the size exceeds k, and the top is the answer.",
+      "Level order means visiting all nodes at depth d before depth d + 1.",
+      "A queue gives first-in, first-out order.",
+      "Start with the root in the queue.",
+      "For each level, take the current queue size, process that many nodes, and add their children.",
     ],
     keyInsight:
-      "Keep a min-heap of the k largest values; its smallest element is the kth largest overall.",
+      "Use a queue and process it one level at a time by freezing the queue's size at the start of each level.",
     bruteForceApproach: ap(
-      "Sort the whole array and take the kth from the end",
-      "O(n log n)",
-      "O(1)"
+      "Compute every node's depth with DFS, then group the nodes by depth",
+      "O(n)",
+      "O(n)"
     ),
-    optimalApproach: ap("Min-heap of size k", "O(n log k)", "O(k)"),
+    optimalApproach: ap("Breadth-first search with a queue", "O(n)", "O(n)"),
+    patternName: "BFS with a Queue",
+    transferQuestions: [
+      tq(
+        "Node 3 is the root and has children 9 and 20. The queue starts as [3].",
+        "After processing the root level, which nodes are in the queue?",
+        ["9 and 20", "3", "9 only", "20 and 3"],
+        0
+      ),
+    ],
+  }),
+
+  p({
+    slug: "validate-binary-search-tree",
+    title: "Validate Binary Search Tree",
+    difficulty: "Medium",
+    topics: ["Trees", "Binary Search Tree", "DFS"],
+    patterns: ["DFS with Bounds"],
+    problem:
+      "Given the root of a binary tree, determine whether it is a valid binary search tree: every node's left subtree contains only smaller keys, its right subtree contains only larger keys, and both subtrees are also valid.",
+    examples: [
+      {
+        input: "root = [5,1,4,null,null,3,6]",
+        output: "false",
+        explanation: "The node 3 sits in the right subtree of 5 but is smaller than 5.",
+      },
+    ],
+    intuitionChallenges: [
+      ch(
+        "Checking only that each node is bigger than its left child and smaller than its right child is not enough. Why?",
+        [
+          "A deeper node can still violate an ancestor's bound",
+          "It is too slow",
+          "Children can be equal",
+          "Trees have no ancestors",
+        ],
+        0,
+        "Exactly! The whole left subtree must be smaller, not just the direct child.",
+        "Think about a node several levels down in the right subtree."
+      ),
+      ch(
+        "As you go to the left child, what new bound do you pass down?",
+        [
+          "An upper bound equal to the current node's value",
+          "A lower bound only",
+          "Nothing",
+          "The root's value always",
+        ],
+        0,
+        "Right! Everything in the left subtree must be smaller than this node.",
+        "Values on the left must stay below the current node."
+      ),
+    ],
+    hints: [
+      "Every node must fit within a range of allowed values.",
+      "The root can be any value.",
+      "Going left, nodes must be smaller than the parent; going right, larger.",
+      "Pass (min, max) bounds down: the left child gets max = node.val, the right child gets min = node.val.",
+    ],
+    keyInsight:
+      "Every node must lie strictly between the bounds inherited from all of its ancestors.",
+    bruteForceApproach: ap(
+      "For every node, check that all values in its left subtree are smaller and all in its right are larger",
+      "O(n²)",
+      "O(h)"
+    ),
+    optimalApproach: ap("DFS passing down min and max bounds", "O(n)", "O(h)"),
+    patternName: "DFS with Bounds",
+    transferQuestions: [
+      tq(
+        "Tree [5,1,4,null,null,3,6]. The node 3 is the left child of 4, and 4 is the right child of 5.",
+        "Which rule makes the node 3 invalid?",
+        [
+          "It must be greater than 5, because it is in the right subtree of 5",
+          "It must be less than 4",
+          "It must be less than 1",
+          "It must equal 4",
+        ],
+        0
+      ),
+    ],
+  }),
+
+  p({
+    slug: "lowest-common-ancestor-of-a-binary-search-tree",
+    title: "Lowest Common Ancestor of a BST",
+    difficulty: "Medium",
+    topics: ["Trees", "Binary Search Tree"],
+    patterns: ["BST Property"],
+    problem:
+      "Given a binary search tree and two of its nodes p and q, find their lowest common ancestor: the lowest node that has both p and q as descendants (a node can be a descendant of itself).",
+    examples: [
+      {
+        input: "root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 8",
+        output: "6",
+        explanation: "The nodes 2 and 8 are on different sides of 6, so 6 is their lowest common ancestor.",
+      },
+    ],
+    intuitionChallenges: [
+      ch(
+        "At a node, both p and q are smaller than its value. Where is their lowest common ancestor?",
+        [
+          "In the left subtree",
+          "In the right subtree",
+          "At this node",
+          "At the root, always",
+        ],
+        0,
+        "Exactly! Smaller values live in the left subtree, so move left.",
+        "A BST keeps smaller values on the left."
+      ),
+      ch(
+        "When is the current node the lowest common ancestor?",
+        [
+          "When p and q are on different sides (or one of them equals the node)",
+          "When both are smaller",
+          "When both are larger",
+          "Never",
+        ],
+        0,
+        "Right! That is the point where the two paths split.",
+        "What happens to the paths to p and q at their lowest common ancestor?"
+      ),
+    ],
+    hints: [
+      "A BST keeps smaller values on the left and larger values on the right.",
+      "Compare p and q with the current node's value.",
+      "If both are smaller, go left; if both are larger, go right.",
+      "The first node where p and q split, or where one equals the node, is the answer.",
+    ],
+    keyInsight:
+      "Walk down from the root; the first node where p and q fall on different sides is the lowest common ancestor.",
+    bruteForceApproach: ap(
+      "Ignore the BST ordering and search every node like a general tree",
+      "O(n)",
+      "O(h)"
+    ),
+    optimalApproach: ap("Walk down using the BST ordering", "O(h)", "O(1)"),
+    patternName: "BST Property",
+    transferQuestions: [
+      tq(
+        "The BST root is 6, with p = 2 and q = 8.",
+        "Where do p and q lie compared with 6, and what is the answer?",
+        [
+          "On different sides, so 6 is the answer",
+          "Both on the left, so go left",
+          "Both on the right, so go right",
+          "Both equal to 6",
+        ],
+        0
+      ),
+    ],
+  }),
+
+  p({
+    slug: "diameter-of-binary-tree",
+    title: "Diameter of Binary Tree",
+    difficulty: "Easy",
+    topics: ["Trees", "Binary Tree", "DFS"],
+    patterns: ["DFS with a Global Maximum"],
+    problem:
+      "Given the root of a binary tree, return the length of its diameter: the longest path between any two nodes, which may or may not pass through the root. The length is measured in edges.",
+    examples: [
+      {
+        input: "root = [1,2,3,4,5]",
+        output: "3",
+        explanation: "The path 4 -> 2 -> 1 -> 3 (or 5 -> 2 -> 1 -> 3) has 3 edges.",
+      },
+    ],
+    intuitionChallenges: [
+      ch(
+        "The longest path that bends at a node uses...",
+        [
+          "The deepest path on its left plus the deepest path on its right",
+          "Only its left depth",
+          "The height of the whole tree",
+          "The number of leaves",
+        ],
+        0,
+        "Exactly! The path goes down on both sides of the node.",
+        "A path that turns at a node goes down on both sides."
+      ),
+      ch(
+        "Why track a global maximum while computing depths?",
+        [
+          "The best path might not pass through the root",
+          "To count nodes",
+          "To sort the tree",
+          "To find leaves",
+        ],
+        0,
+        "Right! Every node is a candidate for the path's turning point.",
+        "The longest path could bend at any node, not just the root."
+      ),
+    ],
+    hints: [
+      "A path bends at some node, going down on both sides.",
+      "At each node, the path length through it is left depth + right depth.",
+      "Compute depths bottom-up, and update the best answer at every node.",
+      "Return 1 + max(left, right) as the depth, and track the maximum of left + right.",
+    ],
+    keyInsight:
+      "At every node, the longest path through it is its left depth plus its right depth; track the best over all nodes.",
+    bruteForceApproach: ap(
+      "For every node, compute the depths of both subtrees separately",
+      "O(n²)",
+      "O(h)"
+    ),
+    optimalApproach: ap(
+      "A single DFS that returns depths and updates a global best",
+      "O(n)",
+      "O(h)"
+    ),
+    patternName: "DFS with a Global Maximum",
+    transferQuestions: [
+      tq(
+        "The root 1 has a left subtree of depth 2 (node 2 with children 4 and 5) and a right subtree of depth 1 (node 3).",
+        "What is the length, in edges, of the longest path through the root?",
+        ["2", "3", "4", "5"],
+        1
+      ),
+    ],
+  }),
+
+  p({
+    slug: "binary-tree-inorder-traversal",
+    title: "Binary Tree Inorder Traversal",
+    difficulty: "Easy",
+    topics: ["Trees", "Binary Tree", "DFS"],
+    patterns: ["Inorder Traversal"],
+    problem:
+      "Given the root of a binary tree, return the inorder traversal of its nodes' values: left subtree first, then the node itself, then the right subtree.",
+    examples: [
+      {
+        input: "root = [1,null,2,3]",
+        output: "[1,3,2]",
+        explanation: "Node 1 has no left child, then comes 1, then the right subtree gives 3, 2.",
+      },
+    ],
+    intuitionChallenges: [
+      ch(
+        "In an inorder traversal, when is a node's value visited?",
+        [
+          "After its left subtree and before its right subtree",
+          "Before both subtrees",
+          "After both subtrees",
+          "Only for leaves",
+        ],
+        0,
+        "Exactly! Inorder means left, node, right.",
+        "The name tells you where the node sits relative to its subtrees."
+      ),
+      ch(
+        "What does an inorder traversal of a binary search tree produce?",
+        [
+          "Values in sorted order",
+          "Values in reverse order",
+          "Values level by level",
+          "Values in random order",
+        ],
+        0,
+        "Right! A BST's ordering makes inorder traversal come out sorted.",
+        "Smaller values are on the left and larger on the right."
+      ),
+    ],
+    hints: [
+      "Inorder means left, then node, then right.",
+      "Recursion handles it naturally: traverse left, record the value, traverse right.",
+      "An iterative version uses a stack.",
+      "Push nodes while going left, pop and record, then move to the right child.",
+    ],
+    keyInsight:
+      "Visit the left subtree, then the node, then the right subtree; a stack can replace the recursion.",
+    bruteForceApproach: ap("Recursive traversal using the call stack", "O(n)", "O(h)"),
+    optimalApproach: ap(
+      "Iterative traversal with an explicit stack (or Morris traversal for O(1) space)",
+      "O(n)",
+      "O(h)"
+    ),
+    patternName: "Inorder Traversal",
+    transferQuestions: [
+      tq(
+        "The root 2 has a left child 1 and a right child 3.",
+        "What is the inorder traversal?",
+        ["[1,2,3]", "[2,1,3]", "[1,3,2]", "[3,2,1]"],
+        0
+      ),
+    ],
+  }),
+
+  p({
+    slug: "kth-smallest-element-in-a-bst",
+    title: "Kth Smallest Element in a BST",
+    difficulty: "Medium",
+    topics: ["Trees", "Binary Search Tree", "DFS"],
+    patterns: ["Inorder Traversal on a BST"],
+    problem:
+      "Given the root of a binary search tree and an integer k, return the kth smallest value (counting from 1) among all the nodes' values.",
+    examples: [
+      {
+        input: "root = [3,1,4,null,2], k = 1",
+        output: "1",
+        explanation: "The smallest value in the tree is 1.",
+      },
+    ],
+    intuitionChallenges: [
+      ch(
+        "Which traversal visits the values of a BST in increasing order?",
+        ["Inorder", "Preorder", "Postorder", "Level order"],
+        0,
+        "Exactly! Inorder gives sorted order for a BST.",
+        "Which traversal visits left, then node, then right?"
+      ),
+      ch(
+        "When can you stop the traversal?",
+        [
+          "As soon as you have visited k nodes",
+          "After visiting all nodes",
+          "At the first leaf",
+          "Never",
+        ],
+        0,
+        "Right! The kth visited node is the answer, so there is no need to go further.",
+        "You only need the kth value in order."
+      ),
+    ],
+    hints: [
+      "A BST has a built-in ordering.",
+      "Inorder traversal produces the values in sorted order.",
+      "You only need the kth value visited.",
+      "Do an inorder traversal, count nodes as you visit them, and return when the count reaches k.",
+    ],
+    keyInsight:
+      "Inorder traversal of a BST gives sorted order, so the kth visited node is the kth smallest.",
+    bruteForceApproach: ap(
+      "Collect all values, sort them, and take the kth",
+      "O(n log n)",
+      "O(n)"
+    ),
+    optimalApproach: ap("Inorder traversal that stops at the kth node", "O(h + k)", "O(h)"),
+    patternName: "Inorder Traversal on a BST",
+    transferQuestions: [
+      tq(
+        "The BST has root 3, left child 1 (with a right child 2) and right child 4. Its inorder order is 1, 2, 3, 4.",
+        "For k = 3, which value is returned?",
+        ["2", "3", "4", "1"],
+        1
+      ),
+    ],
+  }),
+
+  p({
+    slug: "path-sum",
+    title: "Path Sum",
+    difficulty: "Easy",
+    topics: ["Trees", "Binary Tree", "DFS"],
+    patterns: ["DFS with a Remaining Sum"],
+    problem:
+      "Given the root of a binary tree and an integer targetSum, return true if the tree has a root-to-leaf path whose node values add up to targetSum. Otherwise return false.",
+    examples: [
+      {
+        input: "root = [5,4,8,11,null,13,4,7,2,null,null,null,1], targetSum = 22",
+        output: "true",
+        explanation: "The path 5 -> 4 -> 11 -> 2 sums to 22.",
+      },
+    ],
+    intuitionChallenges: [
+      ch(
+        "At each node, how do you update the target as you walk down?",
+        [
+          "Subtract the node's value from the remaining target",
+          "Add the node's value",
+          "Multiply it",
+          "Keep it unchanged",
+        ],
+        0,
+        "Exactly! The remaining target shrinks by each value you use.",
+        "How much sum is still needed after using this node?"
+      ),
+      ch(
+        "When is a path successful?",
+        [
+          "At a leaf, when the remaining target equals that leaf's value",
+          "At any node with value 0",
+          "At the root",
+          "When the tree is empty",
+        ],
+        0,
+        "Right! A valid path must end at a leaf and use up the target exactly.",
+        "The path must go from the root all the way to a leaf."
+      ),
+    ],
+    hints: [
+      "A path must go from the root to a leaf.",
+      "Track how much sum is still needed as you walk down.",
+      "At a leaf, check whether the remaining amount equals the leaf's value.",
+      "Recurse on both children and return true if either side succeeds.",
+    ],
+    keyInsight:
+      "Subtract each node from the target as you descend; a leaf that uses up exactly the remaining amount completes a valid path.",
+    bruteForceApproach: ap(
+      "List every root-to-leaf path and add up each one",
+      "O(n · h)",
+      "O(n)"
+    ),
+    optimalApproach: ap("DFS carrying the remaining sum", "O(n)", "O(h)"),
+    patternName: "DFS with a Remaining Sum",
+    transferQuestions: [
+      tq(
+        "targetSum = 7. The path starts at the root 5 and its next node is the leaf 2.",
+        "After visiting 5, what remaining target do you carry to the child 2?",
+        ["2", "7", "12", "5"],
+        0
+      ),
+    ],
+  }),
+
+  p({
+    slug: "kth-largest-element-in-a-stream",
+    title: "Kth Largest Element in a Stream",
+    difficulty: "Easy",
+    topics: ["Trees", "Heap", "Design"],
+    patterns: ["Min-Heap of Size k"],
+    problem:
+      "Design a class KthLargest that is created with an integer k and an initial array nums. Its method add(val) adds val to the stream and returns the kth largest element among all numbers added so far.",
+    examples: [
+      {
+        input: "k = 3, nums = [4,5,8,2], then add(3), add(5), add(10), add(9), add(4)",
+        output: "4, 5, 5, 8, 8",
+        explanation: "After each add, the third largest value of the stream is returned.",
+      },
+    ],
+    intuitionChallenges: [
+      ch(
+        "You only care about the k largest values seen. What can you discard?",
+        [
+          "Everything smaller than the kth largest",
+          "Everything larger",
+          "Every other value",
+          "Nothing",
+        ],
+        0,
+        "Exactly! Smaller values can never become the kth largest again.",
+        "Which values can never matter for the top k?"
+      ),
+      ch(
+        "In a min-heap that holds the k largest values, which value is the kth largest?",
+        [
+          "The smallest one, at the top",
+          "The largest",
+          "The median",
+          "The newest",
+        ],
+        0,
+        "Right! The smallest of the k largest is the kth largest.",
+        "The top of a min-heap is its smallest value."
+      ),
+    ],
+    hints: [
+      "The kth largest only depends on the k biggest values.",
+      "Keep just those k values.",
+      "A min-heap keeps its smallest value at the top.",
+      "Add each new value; if the heap grows beyond k, remove the smallest; the top is the answer.",
+    ],
+    keyInsight:
+      "Keep a min-heap of the k largest values; its top is always the kth largest.",
+    bruteForceApproach: ap(
+      "Store all values and sort them on every add",
+      "O(n log n) per add",
+      "O(n)"
+    ),
+    optimalApproach: ap("Min-heap of size k", "O(log k) per add", "O(k)"),
     patternName: "Min-Heap of Size k",
     transferQuestions: [
       tq(
-        "nums = [3,2,1,5,6,4], k = 2. After processing every number, the heap holds 5 and 6.",
-        "Which value is on top of the min-heap?",
-        ["5", "6", "4", "2"],
-        0
-      ),
-    ],
-  }),
-
-  p({
-    slug: "top-k-frequent-elements",
-    title: "Top K Frequent Elements",
-    difficulty: "Medium",
-    topics: ["Sorting", "Arrays", "Hashing"],
-    patterns: ["Frequency Map", "Bucket Sort"],
-    problem:
-      "Given an integer array nums and an integer k, return the k most frequent elements. You may return the answer in any order.",
-    examples: [
-      {
-        input: "nums = [1,1,1,2,2,3], k = 2",
-        output: "[1,2]",
-        explanation: "1 appears three times and 2 appears twice, the two highest counts.",
-      },
-    ],
-    intuitionChallenges: [
-      ch(
-        "What must you know about each value before you can rank them?",
+        "k = 3 and the heap holds [4,5,8] (top is 4). The value 3 is added.",
+        "What happens?",
         [
-          "How many times it appears",
-          "Its position",
-          "Whether it is even",
-          "Its square",
-        ],
-        0,
-        "Exactly! Ranking by frequency needs a count for every value.",
-        "The word 'frequent' tells you what to measure."
-      ),
-      ch(
-        "A count can never be larger than n. What does that suggest?",
-        [
-          "Group values into buckets indexed by frequency",
-          "Use recursion",
-          "Use binary search",
-          "Sort the values alphabetically",
-        ],
-        0,
-        "Right! Frequencies live in the range 1 to n, so bucket indexes work.",
-        "Small, bounded numbers can act as array indexes."
-      ),
-    ],
-    hints: [
-      "'Most frequent' needs counts first.",
-      "Count every value with a hash map.",
-      "Now you need the k values with the highest counts.",
-      "Sort by count, use a heap of size k, or place values into buckets indexed by frequency and read from the top.",
-    ],
-    keyInsight:
-      "Count frequencies first, then pick the k largest counts using a heap or frequency buckets.",
-    bruteForceApproach: ap(
-      "Count, then sort every distinct value by frequency",
-      "O(n log n)",
-      "O(n)"
-    ),
-    optimalApproach: ap("Count, then bucket values by frequency", "O(n)", "O(n)"),
-    patternName: "Frequency Map + Buckets",
-    transferQuestions: [
-      tq(
-        "nums = [4,4,4,5,5,6]",
-        "After counting, which value goes into the bucket for frequency 2?",
-        ["4", "5", "6", "None"],
-        1
-      ),
-    ],
-  }),
-
-  p({
-    slug: "meeting-rooms",
-    title: "Meeting Rooms",
-    difficulty: "Easy",
-    topics: ["Sorting", "Arrays"],
-    patterns: ["Sort by Start"],
-    problem:
-      "Given an array of meeting time intervals where intervals[i] = [start, end], determine whether a person could attend all the meetings, meaning no two meetings overlap.",
-    examples: [
-      {
-        input: "intervals = [[0,30],[5,10],[15,20]]",
-        output: "false",
-        explanation: "The meeting [0,30] overlaps with both of the others.",
-      },
-    ],
-    intuitionChallenges: [
-      ch(
-        "You sort the meetings by start time. What do you compare next?",
-        [
-          "Each meeting's start with the previous meeting's end",
-          "Each meeting's length",
-          "Only the first and last meetings",
-          "The meeting names",
-        ],
-        0,
-        "Exactly! Only neighbours in the sorted order can conflict.",
-        "After sorting, which pairs could possibly overlap?"
-      ),
-      ch(
-        "When does a person fail to attend all meetings?",
-        [
-          "A meeting starts before the previous one ends",
-          "Two meetings have the same length",
-          "The first meeting is long",
-          "There are more than three meetings",
-        ],
-        0,
-        "Right! An early start means they would need to be in two places at once.",
-        "A conflict means two meetings share some time."
-      ),
-    ],
-    hints: [
-      "Overlaps only happen between meetings that are close together in time.",
-      "Sort by start time so that neighbours are the only ones that can conflict.",
-      "Compare each meeting with the one before it.",
-      "If a start time is earlier than the previous end time, return false.",
-    ],
-    keyInsight: "After sorting by start time, only adjacent meetings can overlap.",
-    bruteForceApproach: ap("Compare every pair of meetings", "O(n²)", "O(1)"),
-    optimalApproach: ap("Sort by start, then check neighbours", "O(n log n)", "O(1) extra"),
-    patternName: "Sort by Start",
-    transferQuestions: [
-      tq(
-        "Sorted meetings: [1,4] and [3,6]",
-        "Can the person attend both?",
-        [
-          "Yes, because 4 is greater than 3",
-          "No, the second starts (3) before the first ends (4)",
-          "Yes, because they are the same length",
-          "No, the day is too long",
-        ],
-        1
-      ),
-    ],
-  }),
-
-  p({
-    slug: "sort-an-array",
-    title: "Sort an Array",
-    difficulty: "Medium",
-    topics: ["Sorting", "Arrays", "Divide and Conquer"],
-    patterns: ["Merge Sort"],
-    problem:
-      "Given an array of integers nums, sort it in ascending order and return it. Do not use built-in sorting functions, and solve it in O(n log n) time.",
-    examples: [
-      {
-        input: "nums = [5,2,3,1]",
-        output: "[1,2,3,5]",
-        explanation: "The array in ascending order.",
-      },
-    ],
-    intuitionChallenges: [
-      ch(
-        "Merge sort splits the array in half, sorts each half, and then...",
-        [
-          "Merges the two sorted halves",
-          "Reverses them",
-          "Deletes duplicates",
-          "Picks the median",
-        ],
-        0,
-        "Exactly! Combining two sorted halves is the key step.",
-        "What do you do once both halves are already sorted?"
-      ),
-      ch(
-        "Why is merge sort O(n log n)?",
-        [
-          "It halves the array log n times, and each level does O(n) merging work",
-          "It compares every pair of elements",
-          "It sorts in a single pass",
-          "It uses a hash map",
-        ],
-        0,
-        "Right! log n levels, each costing about n work.",
-        "Count the number of levels and the work done on each level."
-      ),
-    ],
-    hints: [
-      "An array of 0 or 1 elements is already sorted.",
-      "Split the array into two halves and sort each half recursively.",
-      "Two sorted halves can be combined in a single pass.",
-      "Merge by repeatedly taking the smaller front element from either half.",
-    ],
-    keyInsight:
-      "Divide the array in half, sort each half, then merge the two sorted halves in linear time.",
-    bruteForceApproach: ap(
-      "Bubble sort: repeatedly swap adjacent out-of-order pairs",
-      "O(n²)",
-      "O(1)"
-    ),
-    optimalApproach: ap("Merge sort", "O(n log n)", "O(n)"),
-    patternName: "Merge Sort",
-    transferQuestions: [
-      tq(
-        "The sorted halves are [1,4] and [2,3].",
-        "What is the merged result?",
-        ["[1,2,3,4]", "[1,4,2,3]", "[4,3,2,1]", "[1,2,4,3]"],
-        0
-      ),
-    ],
-  }),
-
-  p({
-    slug: "largest-number",
-    title: "Largest Number",
-    difficulty: "Medium",
-    topics: ["Sorting", "Strings", "Arrays"],
-    patterns: ["Custom Comparator"],
-    problem:
-      "Given a list of non-negative integers nums, arrange them so that they form the largest possible number, and return it as a string.",
-    examples: [
-      {
-        input: "nums = [3,30,34,5,9]",
-        output: '"9534330"',
-        explanation: "Ordering the numbers as 9, 5, 34, 3, 30 gives the biggest result.",
-      },
-    ],
-    intuitionChallenges: [
-      ch(
-        "Which of 3 and 30 should come first to build the biggest number?",
-        [
-          "3, because 330 is bigger than 303",
-          "30, because it is the bigger number",
-          "They are equal",
-          "30, because it has more digits",
-        ],
-        0,
-        "Exactly! Try both orders and keep the one that gives the larger result.",
-        "Write out both combinations: 3 then 30, and 30 then 3."
-      ),
-      ch(
-        "How should you compare two numbers a and b while sorting?",
-        [
-          "By comparing the strings a+b and b+a",
-          "By their numeric values",
-          "By their lengths",
-          "By their last digits",
-        ],
-        0,
-        "Right! Concatenate both ways and see which is larger.",
-        "Plain numeric order fails, so compare the combined results instead."
-      ),
-    ],
-    hints: [
-      "Sorting by plain numeric value does not work: 3 should come before 30.",
-      "Compare two numbers by trying both orders.",
-      "Join them as strings: is a followed by b bigger than b followed by a?",
-      "Sort with that rule and join the result; handle the all-zeros case by returning 0.",
-    ],
-    keyInsight:
-      "Order two numbers a and b by whichever of a+b or b+a (as strings) is larger.",
-    bruteForceApproach: ap(
-      "Try every permutation of the numbers",
-      "O(n! · n)",
-      "O(n)"
-    ),
-    optimalApproach: ap("Sort with a custom string comparator", "O(n log n · k)", "O(n · k)"),
-    patternName: "Custom Comparator",
-    transferQuestions: [
-      tq(
-        "a = 9 and b = 34",
-        "Which concatenation is bigger?",
-        [
-          "934 (9 before 34)",
-          "349 (34 before 9)",
-          "They are equal",
-          "Cannot be compared",
+          "3 is discarded and the answer stays 4",
+          "The answer becomes 3",
+          "The heap grows to size 4",
+          "The answer is 8",
         ],
         0
-      ),
-    ],
-  }),
-
-  p({
-    slug: "insertion-sort-list",
-    title: "Insertion Sort List",
-    difficulty: "Medium",
-    topics: ["Sorting", "Linked List"],
-    patterns: ["Insertion Sort", "Dummy Node"],
-    problem:
-      "Given the head of a singly linked list, sort the list using insertion sort and return the head of the sorted list.",
-    examples: [
-      {
-        input: "head = 4 -> 2 -> 1 -> 3",
-        output: "1 -> 2 -> 3 -> 4",
-        explanation: "Each node is inserted into its correct place in the sorted part.",
-      },
-    ],
-    intuitionChallenges: [
-      ch(
-        "Insertion sort keeps part of the list sorted. What does each new node do?",
-        [
-          "It is inserted into the correct place in the sorted part",
-          "It replaces the head",
-          "It is deleted",
-          "It swaps with the tail",
-        ],
-        0,
-        "Exactly! Each node finds its spot in the already sorted section.",
-        "The sorted part grows by one node each step. How does it grow?"
-      ),
-      ch(
-        "Why is a dummy node useful here?",
-        [
-          "It lets you insert before the first real node without special cases",
-          "It stores the answer",
-          "It makes the algorithm O(n)",
-          "It sorts the list for you",
-        ],
-        0,
-        "Right! The dummy head removes the special case of inserting at the front.",
-        "What is awkward about inserting a node before the current head?"
-      ),
-    ],
-    hints: [
-      "Build a new sorted list one node at a time.",
-      "Take the next node from the original list.",
-      "Find where it belongs in the sorted list by scanning from the front.",
-      "Use a dummy head and relink pointers instead of moving values.",
-    ],
-    keyInsight:
-      "Take nodes one at a time and relink each one into its correct position in a growing sorted list.",
-    bruteForceApproach: ap(
-      "Copy values into an array, sort it, and rebuild the list",
-      "O(n log n)",
-      "O(n)"
-    ),
-    optimalApproach: ap(
-      "Insertion sort that relinks the nodes in place",
-      "O(n²)",
-      "O(1)"
-    ),
-    patternName: "Insertion Sort with a Dummy Node",
-    transferQuestions: [
-      tq(
-        "The sorted part is 1 -> 3, and the next node to insert has value 2.",
-        "Where does 2 go?",
-        ["Before 1", "Between 1 and 3", "After 3", "It replaces 3"],
-        1
       ),
     ],
   }),

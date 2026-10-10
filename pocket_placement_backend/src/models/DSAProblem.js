@@ -10,6 +10,7 @@ const intuitionChallengeSchema = new mongoose.Schema(
       correct: String,
       incorrect: String,
     },
+    visual: mongoose.Schema.Types.Mixed,
   },
   { _id: false }
 );

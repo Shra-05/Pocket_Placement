@@ -230,13 +230,12 @@ class _ProblemDisplayScreenState extends State<ProblemDisplayScreen> {
                                   color: Colors.grey.shade800.withValues(
                                     alpha: 0.5,
                                   ),
-                                  border: Border(
-                                    left: BorderSide(
-                                      color: Colors.blue.shade400,
-                                      width: 4,
+                                  border: Border.all(
+                                    color: Colors.blue.shade400.withValues(
+                                      alpha: 0.5,
                                     ),
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
