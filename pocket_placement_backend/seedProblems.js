@@ -1,4 +1,4 @@
-// Seeds DSA World problems. This batch: Trees (12).
+// Seeds DSA World problems. This batch: Recursion & Backtracking (10).
 // Run from the pocket_placement_backend folder:  node seedProblems.js
 // Safe to re-run: problems are matched by title and updated, never duplicated.
 // To add the next batch, paste the new batch's file over this one and run it again.
@@ -51,267 +51,263 @@ const ap = (description, timeComplexity, spaceComplexity) => ({
 
 const problems = [
   // ====================================================
-  // TREES
+  // RECURSION & BACKTRACKING
   // ====================================================
 
   p({
-    slug: "maximum-depth-of-binary-tree",
-    title: "Maximum Depth of Binary Tree",
+    slug: "fibonacci-number",
+    title: "Fibonacci Number",
     difficulty: "Easy",
-    topics: ["Trees", "Binary Tree", "DFS"],
-    patterns: ["Recursive DFS"],
+    topics: ["Recursion & Backtracking", "Recursion", "Dynamic Programming"],
+    patterns: ["Recursion with Memoization"],
     problem:
-      "Given the root of a binary tree, return its maximum depth: the number of nodes along the longest path from the root down to the farthest leaf.",
+      "The Fibonacci numbers are defined by F(0) = 0, F(1) = 1 and F(n) = F(n - 1) + F(n - 2) for n greater than 1. Given n, return F(n).",
     examples: [
       {
-        input: "root = [3,9,20,null,null,15,7]",
+        input: "n = 4",
         output: "3",
-        explanation: "The longest path is 3 -> 20 -> 15 (or 7), which has 3 nodes.",
+        explanation: "F(4) = F(3) + F(2) = 2 + 1 = 3.",
       },
     ],
     intuitionChallenges: [
       ch(
-        "The depth of a tree depends on the depths of its subtrees. How?",
+        "To compute F(n), which smaller problems do you need?",
         [
-          "1 plus the larger of the left and right depths",
-          "The sum of both depths",
-          "The smaller of the two depths",
-          "The number of leaves",
+          "F(n - 1) and F(n - 2)",
+          "Only F(n - 1)",
+          "F(n / 2)",
+          "F(n + 1)",
         ],
         0,
-        "Exactly! The deeper subtree decides the depth, plus one for the root.",
-        "The longest path goes through whichever side is deeper."
+        "Exactly! Each Fibonacci number is the sum of the previous two.",
+        "Look at the definition: which two earlier values does F(n) use?"
       ),
       ch(
-        "What is the depth of an empty tree (null)?",
-        ["0", "1", "-1", "Undefined"],
+        "Plain recursion recomputes the same values many times. How can you avoid that?",
+        [
+          "Remember results you have already computed (memoization)",
+          "Use a bigger stack",
+          "Sort the values",
+          "Start from n + 1",
+        ],
         0,
-        "Right! An empty tree has no nodes, so its depth is 0.",
-        "How many nodes does an empty tree have?"
+        "Right! Storing each result means every F(k) is computed only once.",
+        "What could you save so the same work is never repeated?"
       ),
     ],
     hints: [
-      "A tree is a root plus a left subtree and a right subtree.",
-      "The depth of the whole tree comes from its deeper subtree.",
-      "An empty tree has depth 0.",
-      "Return 1 + max(depth(left), depth(right)).",
+      "The definition of F(n) refers to two smaller values.",
+      "The base cases are F(0) = 0 and F(1) = 1.",
+      "Plain recursion calls the same F(k) many times.",
+      "Store computed results (memoize) or build upward from the bottom using two variables.",
     ],
     keyInsight:
-      "A tree's depth is one more than the depth of its deeper subtree, with an empty tree having depth 0.",
-    bruteForceApproach: ap(
-      "List every root-to-leaf path and take the longest",
-      "O(n · h)",
-      "O(n)"
-    ),
-    optimalApproach: ap("Recursive depth-first search", "O(n)", "O(h)"),
-    patternName: "Recursive DFS",
+      "Each Fibonacci number depends only on the two before it, so store results to avoid recomputing them.",
+    bruteForceApproach: ap("Plain recursion without remembering results", "O(2^n)", "O(n)"),
+    optimalApproach: ap("Iterate upward, keeping only the last two values", "O(n)", "O(1)"),
+    patternName: "Recursion with Memoization",
     transferQuestions: [
       tq(
-        "Node 1 has a left child 2 and a right child 3. Node 2 has a left child 4.",
-        "What is the maximum depth?",
-        ["2", "3", "4", "1"],
+        "F(0) = 0, F(1) = 1 and F(2) = 1.",
+        "What is F(5)?",
+        ["3", "5", "8", "13"],
         1
       ),
     ],
   }),
 
   p({
-    slug: "invert-binary-tree",
-    title: "Invert Binary Tree",
+    slug: "climbing-stairs",
+    title: "Climbing Stairs",
     difficulty: "Easy",
-    topics: ["Trees", "Binary Tree", "DFS"],
-    patterns: ["Recursive Swap"],
+    topics: ["Recursion & Backtracking", "Recursion", "Dynamic Programming"],
+    patterns: ["Recursion with Memoization", "Fibonacci Pattern"],
     problem:
-      "Given the root of a binary tree, invert the tree (swap the left and right children at every node) and return its root.",
+      "You are climbing a staircase with n steps. Each time you can climb either 1 or 2 steps. In how many distinct ways can you climb to the top?",
     examples: [
       {
-        input: "root = [4,2,7,1,3,6,9]",
-        output: "[4,7,2,9,6,3,1]",
-        explanation: "The tree becomes a mirror image of itself.",
+        input: "n = 3",
+        output: "3",
+        explanation: "The ways are 1+1+1, 1+2 and 2+1.",
       },
     ],
     intuitionChallenges: [
       ch(
-        "To mirror a tree, what do you do at every node?",
+        "To reach step n, what was your last move?",
         [
-          "Swap its left and right children",
-          "Delete its children",
-          "Swap its value with the root",
-          "Sort its children",
+          "A 1-step from n - 1, or a 2-step from n - 2",
+          "Always a 2-step",
+          "Always a 1-step",
+          "A jump from the top",
         ],
         0,
-        "Exactly! A mirror image swaps left and right everywhere.",
-        "What changes between a tree and its mirror image?"
+        "Exactly! Only those two steps can lead to step n.",
+        "Which steps can you stand on right before reaching step n?"
       ),
       ch(
-        "After swapping at a node, what about the subtrees below it?",
+        "So the number of ways to reach step n equals...",
         [
-          "They must be inverted too",
-          "They stay as they are",
-          "They are removed",
-          "Only the left one is inverted",
+          "ways(n - 1) + ways(n - 2)",
+          "ways(n - 1) × 2",
+          "n × 2",
+          "ways(n) - 1",
         ],
         0,
-        "Right! Every subtree needs the same treatment.",
-        "A mirror image must be mirrored all the way down."
+        "Right! Add the ways to reach each of the two possible previous steps.",
+        "Each last move gives a separate set of ways. Add them."
       ),
     ],
     hints: [
-      "A mirror image swaps left and right everywhere.",
-      "Swap the two children of the current node.",
-      "Every subtree must be mirrored as well.",
-      "Recursively invert the left and right subtrees, and swap them.",
-    ],
-    keyInsight: "Swap the children of every node, recursively, to mirror the whole tree.",
-    bruteForceApproach: ap("Build a brand-new mirrored tree by copying every node", "O(n)", "O(n)"),
-    optimalApproach: ap("Swap the children in place, recursively", "O(n)", "O(h)"),
-    patternName: "Recursive Swap",
-    transferQuestions: [
-      tq(
-        "Node 2 has a left child 1 and a right child 3.",
-        "After inverting this subtree, what are node 2's children?",
-        ["Left 3, right 1", "Left 1, right 3", "Both 2", "No children"],
-        0
-      ),
-    ],
-  }),
-
-  p({
-    slug: "same-tree",
-    title: "Same Tree",
-    difficulty: "Easy",
-    topics: ["Trees", "Binary Tree", "DFS"],
-    patterns: ["Parallel DFS"],
-    problem:
-      "Given the roots of two binary trees p and q, check whether they are the same. Two trees are the same if they have identical structure and the nodes have the same values.",
-    examples: [
-      {
-        input: "p = [1,2,3], q = [1,2,3]",
-        output: "true",
-        explanation: "Both trees have the same shape and the same values.",
-      },
-    ],
-    intuitionChallenges: [
-      ch(
-        "Two trees are the same when their roots match and...",
-        [
-          "their left subtrees match and their right subtrees match",
-          "only their left subtrees match",
-          "they have the same height",
-          "they have the same number of leaves",
-        ],
-        0,
-        "Exactly! Same roots plus the same left and right subtrees.",
-        "Every part of the structure must match, not just a summary of it."
-      ),
-      ch(
-        "One node is null and the other is not. What does that mean?",
-        [
-          "The trees are different",
-          "The trees are the same",
-          "Keep comparing",
-          "Swap them",
-        ],
-        0,
-        "Right! A missing node in one tree means the structures differ.",
-        "Structure must match exactly, including missing children."
-      ),
-    ],
-    hints: [
-      "Compare the trees node by node, in the same positions.",
-      "If both nodes are null, they match.",
-      "If only one is null, or the values differ, the trees differ.",
-      "Recurse on the left pair and the right pair; both must match.",
+      "Think about the very last move before reaching step n.",
+      "It came from step n - 1 or step n - 2.",
+      "Add the number of ways to reach each of those steps.",
+      "This is the Fibonacci pattern; compute it iteratively using the previous two values.",
     ],
     keyInsight:
-      "Compare the two trees in lockstep: equal values at the roots and both pairs of subtrees equal.",
+      "The ways to reach step n are the ways to reach n - 1 plus the ways to reach n - 2.",
     bruteForceApproach: ap(
-      "Convert both trees to lists with null markers and compare the lists",
-      "O(n)",
+      "Recursively try every sequence of 1-steps and 2-steps",
+      "O(2^n)",
       "O(n)"
     ),
-    optimalApproach: ap("Recursive parallel DFS", "O(n)", "O(h)"),
-    patternName: "Parallel DFS",
+    optimalApproach: ap("Iterate with two variables", "O(n)", "O(1)"),
+    patternName: "Fibonacci Pattern",
     transferQuestions: [
       tq(
-        "Tree p: node 1 with a left child 2. Tree q: node 1 with a right child 2.",
-        "Are they the same tree?",
+        "ways(1) = 1, ways(2) = 2 and ways(3) = 3.",
+        "What is ways(4)?",
+        ["4", "5", "6", "8"],
+        1
+      ),
+    ],
+  }),
+
+  p({
+    slug: "powx-n",
+    title: "Pow(x, n)",
+    difficulty: "Medium",
+    topics: ["Recursion & Backtracking", "Recursion", "Math"],
+    patterns: ["Fast Exponentiation"],
+    problem:
+      "Implement pow(x, n), which raises the number x to the integer power n. The exponent n may be negative.",
+    examples: [
+      {
+        input: "x = 2.0, n = 10",
+        output: "1024.0",
+        explanation: "2 multiplied by itself 10 times equals 1024.",
+      },
+    ],
+    intuitionChallenges: [
+      ch(
+        "How can x^10 be computed using x^5?",
         [
-          "No, the child is on a different side",
-          "Yes, the values are the same",
-          "Yes, the size is the same",
-          "Cannot tell",
+          "x^10 = x^5 × x^5",
+          "x^10 = x^5 + x^5",
+          "x^10 = x^5 × 2",
+          "x^10 = (x^5)^10",
         ],
+        0,
+        "Exactly! Squaring a half-power doubles the exponent.",
+        "Exponents add when you multiply powers of the same base."
+      ),
+      ch(
+        "How do you handle a negative exponent n?",
+        [
+          "Compute x^|n| and take its reciprocal",
+          "Return 0",
+          "Ignore the sign",
+          "Multiply by -1",
+        ],
+        0,
+        "Right! x^(-n) is 1 divided by x^n.",
+        "What does a negative exponent mean mathematically?"
+      ),
+    ],
+    hints: [
+      "Multiplying x by itself n times is slow for large n.",
+      "x^n can be built from half of the exponent.",
+      "If n is even, x^n = (x^(n/2))². If n is odd, multiply by one extra x.",
+      "For negative n, compute with |n| and return 1 divided by the result.",
+    ],
+    keyInsight:
+      "Halve the exponent each time: x^n = (x^(n/2))², with one extra factor of x when n is odd.",
+    bruteForceApproach: ap("Multiply x by itself n times", "O(n)", "O(1)"),
+    optimalApproach: ap("Fast exponentiation by squaring", "O(log n)", "O(log n) recursion"),
+    patternName: "Fast Exponentiation",
+    transferQuestions: [
+      tq(
+        "x = 3 and n = 5, using 3² = 9.",
+        "How is 3^5 built from 3²?",
+        ["3² × 3² × 3", "3² × 3² × 3²", "3² + 3² + 3", "3² × 3"],
         0
       ),
     ],
   }),
 
   p({
-    slug: "symmetric-tree",
-    title: "Symmetric Tree",
-    difficulty: "Easy",
-    topics: ["Trees", "Binary Tree", "DFS"],
-    patterns: ["Mirror Comparison"],
+    slug: "subsets",
+    title: "Subsets",
+    difficulty: "Medium",
+    topics: ["Recursion & Backtracking", "Backtracking", "Arrays"],
+    patterns: ["Include / Exclude Backtracking"],
     problem:
-      "Given the root of a binary tree, check whether it is a mirror of itself (symmetric around its center).",
+      "Given an integer array nums of unique elements, return all possible subsets (the power set). The solution must not contain duplicate subsets, and you may return them in any order.",
     examples: [
       {
-        input: "root = [1,2,2,3,4,4,3]",
-        output: "true",
-        explanation: "The left and right halves are mirror images.",
+        input: "nums = [1,2,3]",
+        output: "[[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]",
+        explanation: "Every combination of elements, including the empty one, appears once.",
       },
     ],
     intuitionChallenges: [
       ch(
-        "In a symmetric tree, which two subtrees must mirror each other?",
+        "For each element, how many choices do you have?",
         [
-          "The left and right subtrees of the root",
-          "The left subtree and itself",
-          "Two leaves",
-          "The root and its left child",
+          "Two: include it or leave it out",
+          "One: include it",
+          "Three",
+          "It depends on the value",
         ],
         0,
-        "Exactly! Symmetry means the root's two sides are mirror images.",
-        "A mirror splits the tree down the middle."
+        "Exactly! Each element is either in the subset or not.",
+        "Think about what you can do with a single element."
       ),
       ch(
-        "To compare two mirrored nodes, whose children do you pair up?",
-        [
-          "The left child of one with the right child of the other",
-          "Left with left",
-          "Right with right",
-          "Parents with children",
-        ],
+        "How many subsets does an array of n unique numbers have?",
+        ["2^n", "n²", "n!", "2n"],
         0,
-        "Right! In a mirror, left and right are reversed.",
-        "Mirroring reverses left and right."
+        "Right! Two choices for each of n elements gives 2^n.",
+        "Multiply the number of choices for each element."
       ),
     ],
     hints: [
-      "Mirror means left-right reversal.",
-      "Compare the left subtree with the right subtree.",
-      "Their root values must match, and the outside children must match each other, as must the inside children.",
-      "Check (left.left, right.right) and (left.right, right.left) recursively.",
+      "Every element is either in a subset or not.",
+      "Make that choice for the first element, then solve the rest.",
+      "Each choice splits the problem into two smaller ones.",
+      "Recurse over indexes: add the current element, recurse, remove it (backtrack), and recurse again without it.",
     ],
     keyInsight:
-      "Two subtrees are mirrors if their roots match and each one's left child mirrors the other's right child.",
+      "At each element make two choices, include or exclude, and recurse on the rest of the array.",
     bruteForceApproach: ap(
-      "Copy and invert one side, then compare it to the other",
-      "O(n)",
+      "Generate every bitmask from 0 to 2^n - 1 and build a subset from each",
+      "O(n · 2^n)",
       "O(n)"
     ),
-    optimalApproach: ap("Recursive mirror comparison", "O(n)", "O(h)"),
-    patternName: "Mirror Comparison",
+    optimalApproach: ap(
+      "Backtracking with include / exclude choices",
+      "O(n · 2^n)",
+      "O(n) recursion depth"
+    ),
+    patternName: "Include / Exclude Backtracking",
     transferQuestions: [
       tq(
-        "The root has two children, both 2. The left 2 has a left child 3, and the right 2 has a right child 3.",
-        "Is this tree symmetric?",
+        "nums = [1,2]",
+        "Which subsets does the recursion produce?",
         [
-          "Yes, the 3s are in mirror positions",
-          "No, the 3s are on different sides",
-          "No, the 2s differ",
-          "Cannot tell",
+          "[], [1], [2], [1,2]",
+          "[1], [2]",
+          "[], [1,2]",
+          "[1], [2], [1,2]",
         ],
         0
       ),
@@ -319,131 +315,65 @@ const problems = [
   }),
 
   p({
-    slug: "binary-tree-level-order-traversal",
-    title: "Binary Tree Level Order Traversal",
+    slug: "permutations",
+    title: "Permutations",
     difficulty: "Medium",
-    topics: ["Trees", "Binary Tree", "BFS"],
-    patterns: ["BFS with a Queue"],
+    topics: ["Recursion & Backtracking", "Backtracking", "Arrays"],
+    patterns: ["Backtracking with a Used Marker"],
     problem:
-      "Given the root of a binary tree, return the level order traversal of its nodes' values: level by level, from left to right.",
+      "Given an array nums of distinct integers, return all the possible permutations. You may return the answer in any order.",
     examples: [
       {
-        input: "root = [3,9,20,null,null,15,7]",
-        output: "[[3],[9,20],[15,7]]",
-        explanation: "The nodes are grouped by their depth in the tree.",
+        input: "nums = [1,2,3]",
+        output: "[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]",
+        explanation: "Every ordering of the three numbers appears exactly once.",
       },
     ],
     intuitionChallenges: [
       ch(
-        "Which structure processes nodes in the order they were discovered?",
-        ["A queue", "A stack", "A hash map", "A heap"],
-        0,
-        "Exactly! A queue is first in, first out, which gives level-by-level order.",
-        "Which structure serves the earliest item first?"
-      ),
-      ch(
-        "How do you know where one level ends and the next begins?",
+        "To build a permutation position by position, which numbers can fill the next position?",
         [
-          "Process exactly as many nodes as the queue held at the start of the level",
-          "Count the leaves",
-          "Look for null values",
-          "Sort the queue",
+          "Any number that has not been used yet",
+          "Any number",
+          "Only the largest",
+          "Only the smallest",
         ],
         0,
-        "Right! Freezing the queue size marks the level boundary.",
-        "The queue mixes levels as you add children. How can you separate them?"
+        "Exactly! Each number must appear exactly once.",
+        "A permutation cannot repeat a number."
+      ),
+      ch(
+        "How many permutations does an array of 3 distinct numbers have?",
+        ["6", "3", "9", "8"],
+        0,
+        "Right! 3 × 2 × 1 = 6.",
+        "Count the choices for each position: 3, then 2, then 1."
       ),
     ],
     hints: [
-      "Level order means visiting all nodes at depth d before depth d + 1.",
-      "A queue gives first-in, first-out order.",
-      "Start with the root in the queue.",
-      "For each level, take the current queue size, process that many nodes, and add their children.",
+      "A permutation uses every number exactly once.",
+      "Fill the positions one at a time.",
+      "At each position, try every number that has not been used.",
+      "Mark a number as used, recurse, then unmark it (backtrack) and try the next one.",
     ],
     keyInsight:
-      "Use a queue and process it one level at a time by freezing the queue's size at the start of each level.",
+      "Build the permutation one position at a time, trying every unused number and undoing the choice after each attempt.",
     bruteForceApproach: ap(
-      "Compute every node's depth with DFS, then group the nodes by depth",
-      "O(n)",
+      "Generate all sequences of length n and filter out those with repeats",
+      "O(n^n · n)",
       "O(n)"
     ),
-    optimalApproach: ap("Breadth-first search with a queue", "O(n)", "O(n)"),
-    patternName: "BFS with a Queue",
+    optimalApproach: ap("Backtracking with a used marker", "O(n · n!)", "O(n)"),
+    patternName: "Backtracking with a Used Marker",
     transferQuestions: [
       tq(
-        "Node 3 is the root and has children 9 and 20. The queue starts as [3].",
-        "After processing the root level, which nodes are in the queue?",
-        ["9 and 20", "3", "9 only", "20 and 3"],
-        0
-      ),
-    ],
-  }),
-
-  p({
-    slug: "validate-binary-search-tree",
-    title: "Validate Binary Search Tree",
-    difficulty: "Medium",
-    topics: ["Trees", "Binary Search Tree", "DFS"],
-    patterns: ["DFS with Bounds"],
-    problem:
-      "Given the root of a binary tree, determine whether it is a valid binary search tree: every node's left subtree contains only smaller keys, its right subtree contains only larger keys, and both subtrees are also valid.",
-    examples: [
-      {
-        input: "root = [5,1,4,null,null,3,6]",
-        output: "false",
-        explanation: "The node 3 sits in the right subtree of 5 but is smaller than 5.",
-      },
-    ],
-    intuitionChallenges: [
-      ch(
-        "Checking only that each node is bigger than its left child and smaller than its right child is not enough. Why?",
+        "nums = [1,2,3], and the first position is fixed to 1.",
+        "Which permutations start with 1?",
         [
-          "A deeper node can still violate an ancestor's bound",
-          "It is too slow",
-          "Children can be equal",
-          "Trees have no ancestors",
-        ],
-        0,
-        "Exactly! The whole left subtree must be smaller, not just the direct child.",
-        "Think about a node several levels down in the right subtree."
-      ),
-      ch(
-        "As you go to the left child, what new bound do you pass down?",
-        [
-          "An upper bound equal to the current node's value",
-          "A lower bound only",
-          "Nothing",
-          "The root's value always",
-        ],
-        0,
-        "Right! Everything in the left subtree must be smaller than this node.",
-        "Values on the left must stay below the current node."
-      ),
-    ],
-    hints: [
-      "Every node must fit within a range of allowed values.",
-      "The root can be any value.",
-      "Going left, nodes must be smaller than the parent; going right, larger.",
-      "Pass (min, max) bounds down: the left child gets max = node.val, the right child gets min = node.val.",
-    ],
-    keyInsight:
-      "Every node must lie strictly between the bounds inherited from all of its ancestors.",
-    bruteForceApproach: ap(
-      "For every node, check that all values in its left subtree are smaller and all in its right are larger",
-      "O(n²)",
-      "O(h)"
-    ),
-    optimalApproach: ap("DFS passing down min and max bounds", "O(n)", "O(h)"),
-    patternName: "DFS with Bounds",
-    transferQuestions: [
-      tq(
-        "Tree [5,1,4,null,null,3,6]. The node 3 is the left child of 4, and 4 is the right child of 5.",
-        "Which rule makes the node 3 invalid?",
-        [
-          "It must be greater than 5, because it is in the right subtree of 5",
-          "It must be less than 4",
-          "It must be less than 1",
-          "It must equal 4",
+          "[1,2,3] and [1,3,2]",
+          "[1,2,3] only",
+          "[2,1,3] and [3,1,2]",
+          "[1,1,2] and [1,1,3]",
         ],
         0
       ),
@@ -451,404 +381,350 @@ const problems = [
   }),
 
   p({
-    slug: "lowest-common-ancestor-of-a-binary-search-tree",
-    title: "Lowest Common Ancestor of a BST",
+    slug: "combination-sum",
+    title: "Combination Sum",
     difficulty: "Medium",
-    topics: ["Trees", "Binary Search Tree"],
-    patterns: ["BST Property"],
+    topics: ["Recursion & Backtracking", "Backtracking", "Arrays"],
+    patterns: ["Backtracking with Reuse"],
     problem:
-      "Given a binary search tree and two of its nodes p and q, find their lowest common ancestor: the lowest node that has both p and q as descendants (a node can be a descendant of itself).",
+      "Given an array of distinct integers candidates and a target integer, return all unique combinations of candidates whose chosen numbers sum to the target. The same number may be chosen an unlimited number of times.",
     examples: [
       {
-        input: "root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 8",
-        output: "6",
-        explanation: "The nodes 2 and 8 are on different sides of 6, so 6 is their lowest common ancestor.",
+        input: "candidates = [2,3,6,7], target = 7",
+        output: "[[2,2,3],[7]]",
+        explanation: "2 + 2 + 3 = 7 and 7 = 7.",
       },
     ],
     intuitionChallenges: [
       ch(
-        "At a node, both p and q are smaller than its value. Where is their lowest common ancestor?",
+        "A number can be reused. What do you do right after choosing a number?",
         [
-          "In the left subtree",
-          "In the right subtree",
-          "At this node",
-          "At the root, always",
+          "Recurse again starting from the same index",
+          "Move on to the next index only",
+          "Remove it from the array",
+          "Restart from the beginning",
         ],
         0,
-        "Exactly! Smaller values live in the left subtree, so move left.",
-        "A BST keeps smaller values on the left."
+        "Exactly! Staying on the same index allows the number to be chosen again.",
+        "Reuse means the same candidate stays available."
       ),
       ch(
-        "When is the current node the lowest common ancestor?",
+        "When should a branch of the search stop?",
         [
-          "When p and q are on different sides (or one of them equals the node)",
-          "When both are smaller",
-          "When both are larger",
+          "When the remaining target is 0 (success) or negative (failure)",
+          "Only when the array ends",
+          "After exactly 3 numbers",
           "Never",
         ],
         0,
-        "Right! That is the point where the two paths split.",
-        "What happens to the paths to p and q at their lowest common ancestor?"
+        "Right! A zero remainder is a solution and a negative one can never recover.",
+        "What does it mean when the remaining target reaches 0, or goes below 0?"
       ),
     ],
     hints: [
-      "A BST keeps smaller values on the left and larger values on the right.",
-      "Compare p and q with the current node's value.",
-      "If both are smaller, go left; if both are larger, go right.",
-      "The first node where p and q split, or where one equals the node, is the answer.",
+      "Each number can be used more than once.",
+      "Pick a number, subtract it from the target, and solve the smaller problem.",
+      "To avoid repeated combinations, only consider candidates from the current index onward.",
+      "Stop when the remaining target is 0 (record the combination) or below 0 (abandon); backtrack after each choice.",
     ],
     keyInsight:
-      "Walk down from the root; the first node where p and q fall on different sides is the lowest common ancestor.",
+      "Choose a candidate, subtract it from the target, and recurse from the same index; stop when the target reaches 0 or goes below it.",
     bruteForceApproach: ap(
-      "Ignore the BST ordering and search every node like a general tree",
-      "O(n)",
-      "O(h)"
+      "Generate every possible multiset of candidates and test its sum",
+      "Exponential",
+      "O(target)"
     ),
-    optimalApproach: ap("Walk down using the BST ordering", "O(h)", "O(1)"),
-    patternName: "BST Property",
+    optimalApproach: ap(
+      "Backtracking that prunes when the remaining target goes negative",
+      "Exponential (pruned)",
+      "O(target / smallest candidate)"
+    ),
+    patternName: "Backtracking with Reuse",
     transferQuestions: [
       tq(
-        "The BST root is 6, with p = 2 and q = 8.",
-        "Where do p and q lie compared with 6, and what is the answer?",
-        [
-          "On different sides, so 6 is the answer",
-          "Both on the left, so go left",
-          "Both on the right, so go right",
-          "Both equal to 6",
-        ],
+        "candidates = [2,3] and target = 5. The first choice is 2.",
+        "After choosing 2, what is the remaining target?",
+        ["3", "7", "2", "5"],
         0
       ),
     ],
   }),
 
   p({
-    slug: "diameter-of-binary-tree",
-    title: "Diameter of Binary Tree",
-    difficulty: "Easy",
-    topics: ["Trees", "Binary Tree", "DFS"],
-    patterns: ["DFS with a Global Maximum"],
-    problem:
-      "Given the root of a binary tree, return the length of its diameter: the longest path between any two nodes, which may or may not pass through the root. The length is measured in edges.",
-    examples: [
-      {
-        input: "root = [1,2,3,4,5]",
-        output: "3",
-        explanation: "The path 4 -> 2 -> 1 -> 3 (or 5 -> 2 -> 1 -> 3) has 3 edges.",
-      },
-    ],
-    intuitionChallenges: [
-      ch(
-        "The longest path that bends at a node uses...",
-        [
-          "The deepest path on its left plus the deepest path on its right",
-          "Only its left depth",
-          "The height of the whole tree",
-          "The number of leaves",
-        ],
-        0,
-        "Exactly! The path goes down on both sides of the node.",
-        "A path that turns at a node goes down on both sides."
-      ),
-      ch(
-        "Why track a global maximum while computing depths?",
-        [
-          "The best path might not pass through the root",
-          "To count nodes",
-          "To sort the tree",
-          "To find leaves",
-        ],
-        0,
-        "Right! Every node is a candidate for the path's turning point.",
-        "The longest path could bend at any node, not just the root."
-      ),
-    ],
-    hints: [
-      "A path bends at some node, going down on both sides.",
-      "At each node, the path length through it is left depth + right depth.",
-      "Compute depths bottom-up, and update the best answer at every node.",
-      "Return 1 + max(left, right) as the depth, and track the maximum of left + right.",
-    ],
-    keyInsight:
-      "At every node, the longest path through it is its left depth plus its right depth; track the best over all nodes.",
-    bruteForceApproach: ap(
-      "For every node, compute the depths of both subtrees separately",
-      "O(n²)",
-      "O(h)"
-    ),
-    optimalApproach: ap(
-      "A single DFS that returns depths and updates a global best",
-      "O(n)",
-      "O(h)"
-    ),
-    patternName: "DFS with a Global Maximum",
-    transferQuestions: [
-      tq(
-        "The root 1 has a left subtree of depth 2 (node 2 with children 4 and 5) and a right subtree of depth 1 (node 3).",
-        "What is the length, in edges, of the longest path through the root?",
-        ["2", "3", "4", "5"],
-        1
-      ),
-    ],
-  }),
-
-  p({
-    slug: "binary-tree-inorder-traversal",
-    title: "Binary Tree Inorder Traversal",
-    difficulty: "Easy",
-    topics: ["Trees", "Binary Tree", "DFS"],
-    patterns: ["Inorder Traversal"],
-    problem:
-      "Given the root of a binary tree, return the inorder traversal of its nodes' values: left subtree first, then the node itself, then the right subtree.",
-    examples: [
-      {
-        input: "root = [1,null,2,3]",
-        output: "[1,3,2]",
-        explanation: "Node 1 has no left child, then comes 1, then the right subtree gives 3, 2.",
-      },
-    ],
-    intuitionChallenges: [
-      ch(
-        "In an inorder traversal, when is a node's value visited?",
-        [
-          "After its left subtree and before its right subtree",
-          "Before both subtrees",
-          "After both subtrees",
-          "Only for leaves",
-        ],
-        0,
-        "Exactly! Inorder means left, node, right.",
-        "The name tells you where the node sits relative to its subtrees."
-      ),
-      ch(
-        "What does an inorder traversal of a binary search tree produce?",
-        [
-          "Values in sorted order",
-          "Values in reverse order",
-          "Values level by level",
-          "Values in random order",
-        ],
-        0,
-        "Right! A BST's ordering makes inorder traversal come out sorted.",
-        "Smaller values are on the left and larger on the right."
-      ),
-    ],
-    hints: [
-      "Inorder means left, then node, then right.",
-      "Recursion handles it naturally: traverse left, record the value, traverse right.",
-      "An iterative version uses a stack.",
-      "Push nodes while going left, pop and record, then move to the right child.",
-    ],
-    keyInsight:
-      "Visit the left subtree, then the node, then the right subtree; a stack can replace the recursion.",
-    bruteForceApproach: ap("Recursive traversal using the call stack", "O(n)", "O(h)"),
-    optimalApproach: ap(
-      "Iterative traversal with an explicit stack (or Morris traversal for O(1) space)",
-      "O(n)",
-      "O(h)"
-    ),
-    patternName: "Inorder Traversal",
-    transferQuestions: [
-      tq(
-        "The root 2 has a left child 1 and a right child 3.",
-        "What is the inorder traversal?",
-        ["[1,2,3]", "[2,1,3]", "[1,3,2]", "[3,2,1]"],
-        0
-      ),
-    ],
-  }),
-
-  p({
-    slug: "kth-smallest-element-in-a-bst",
-    title: "Kth Smallest Element in a BST",
+    slug: "generate-parentheses",
+    title: "Generate Parentheses",
     difficulty: "Medium",
-    topics: ["Trees", "Binary Search Tree", "DFS"],
-    patterns: ["Inorder Traversal on a BST"],
+    topics: ["Recursion & Backtracking", "Backtracking", "Strings"],
+    patterns: ["Backtracking with Constraints"],
     problem:
-      "Given the root of a binary search tree and an integer k, return the kth smallest value (counting from 1) among all the nodes' values.",
+      "Given n pairs of parentheses, write a function that generates all combinations of well-formed parentheses.",
     examples: [
       {
-        input: "root = [3,1,4,null,2], k = 1",
-        output: "1",
-        explanation: "The smallest value in the tree is 1.",
+        input: "n = 3",
+        output: '["((()))","(()())","(())()","()(())","()()()"]',
+        explanation: "These are all the valid strings that use 3 pairs.",
       },
     ],
     intuitionChallenges: [
       ch(
-        "Which traversal visits the values of a BST in increasing order?",
-        ["Inorder", "Preorder", "Postorder", "Level order"],
-        0,
-        "Exactly! Inorder gives sorted order for a BST.",
-        "Which traversal visits left, then node, then right?"
-      ),
-      ch(
-        "When can you stop the traversal?",
+        "When can you add an opening parenthesis?",
         [
-          "As soon as you have visited k nodes",
-          "After visiting all nodes",
-          "At the first leaf",
+          "While fewer than n opening parentheses have been used",
+          "Only at the start",
           "Never",
+          "Only after a closing one",
         ],
         0,
-        "Right! The kth visited node is the answer, so there is no need to go further.",
-        "You only need the kth value in order."
+        "Exactly! You may open as long as you have not used all n.",
+        "How many opening parentheses are allowed in total?"
+      ),
+      ch(
+        "When can you add a closing parenthesis?",
+        [
+          "Only when there are more opening than closing ones so far",
+          "Always",
+          "Only at the end",
+          "Only when n is even",
+        ],
+        0,
+        "Right! A closing parenthesis needs an open one to match.",
+        "A closing parenthesis must have something to close."
       ),
     ],
     hints: [
-      "A BST has a built-in ordering.",
-      "Inorder traversal produces the values in sorted order.",
-      "You only need the kth value visited.",
-      "Do an inorder traversal, count nodes as you visit them, and return when the count reaches k.",
+      "A string is well-formed if no prefix has more closing than opening parentheses.",
+      "Track how many opening and closing parentheses you have used so far.",
+      "Add an opening parenthesis if you have used fewer than n.",
+      "Add a closing parenthesis only if it would not exceed the number of opening ones; record the string when its length is 2n.",
     ],
     keyInsight:
-      "Inorder traversal of a BST gives sorted order, so the kth visited node is the kth smallest.",
+      "Build the string character by character, adding an opening parenthesis while under n and a closing one only when it keeps the string valid.",
     bruteForceApproach: ap(
-      "Collect all values, sort them, and take the kth",
-      "O(n log n)",
+      "Generate all strings of 2n parentheses and test each one for validity",
+      "O(2^(2n) · n)",
       "O(n)"
     ),
-    optimalApproach: ap("Inorder traversal that stops at the kth node", "O(h + k)", "O(h)"),
-    patternName: "Inorder Traversal on a BST",
-    transferQuestions: [
-      tq(
-        "The BST has root 3, left child 1 (with a right child 2) and right child 4. Its inorder order is 1, 2, 3, 4.",
-        "For k = 3, which value is returned?",
-        ["2", "3", "4", "1"],
-        1
-      ),
-    ],
-  }),
-
-  p({
-    slug: "path-sum",
-    title: "Path Sum",
-    difficulty: "Easy",
-    topics: ["Trees", "Binary Tree", "DFS"],
-    patterns: ["DFS with a Remaining Sum"],
-    problem:
-      "Given the root of a binary tree and an integer targetSum, return true if the tree has a root-to-leaf path whose node values add up to targetSum. Otherwise return false.",
-    examples: [
-      {
-        input: "root = [5,4,8,11,null,13,4,7,2,null,null,null,1], targetSum = 22",
-        output: "true",
-        explanation: "The path 5 -> 4 -> 11 -> 2 sums to 22.",
-      },
-    ],
-    intuitionChallenges: [
-      ch(
-        "At each node, how do you update the target as you walk down?",
-        [
-          "Subtract the node's value from the remaining target",
-          "Add the node's value",
-          "Multiply it",
-          "Keep it unchanged",
-        ],
-        0,
-        "Exactly! The remaining target shrinks by each value you use.",
-        "How much sum is still needed after using this node?"
-      ),
-      ch(
-        "When is a path successful?",
-        [
-          "At a leaf, when the remaining target equals that leaf's value",
-          "At any node with value 0",
-          "At the root",
-          "When the tree is empty",
-        ],
-        0,
-        "Right! A valid path must end at a leaf and use up the target exactly.",
-        "The path must go from the root all the way to a leaf."
-      ),
-    ],
-    hints: [
-      "A path must go from the root to a leaf.",
-      "Track how much sum is still needed as you walk down.",
-      "At a leaf, check whether the remaining amount equals the leaf's value.",
-      "Recurse on both children and return true if either side succeeds.",
-    ],
-    keyInsight:
-      "Subtract each node from the target as you descend; a leaf that uses up exactly the remaining amount completes a valid path.",
-    bruteForceApproach: ap(
-      "List every root-to-leaf path and add up each one",
-      "O(n · h)",
+    optimalApproach: ap(
+      "Backtracking that only builds valid prefixes",
+      "O(4^n / √n)",
       "O(n)"
     ),
-    optimalApproach: ap("DFS carrying the remaining sum", "O(n)", "O(h)"),
-    patternName: "DFS with a Remaining Sum",
+    patternName: "Backtracking with Constraints",
     transferQuestions: [
       tq(
-        "targetSum = 7. The path starts at the root 5 and its next node is the leaf 2.",
-        "After visiting 5, what remaining target do you carry to the child 2?",
-        ["2", "7", "12", "5"],
+        'n = 2, and the current string is "(".',
+        "Which characters can be added next?",
+        [
+          "Either an opening or a closing parenthesis",
+          "Only a closing parenthesis",
+          "Only an opening parenthesis",
+          "Neither",
+        ],
         0
       ),
     ],
   }),
 
   p({
-    slug: "kth-largest-element-in-a-stream",
-    title: "Kth Largest Element in a Stream",
-    difficulty: "Easy",
-    topics: ["Trees", "Heap", "Design"],
-    patterns: ["Min-Heap of Size k"],
+    slug: "letter-combinations-of-a-phone-number",
+    title: "Letter Combinations of a Phone Number",
+    difficulty: "Medium",
+    topics: ["Recursion & Backtracking", "Backtracking", "Strings"],
+    patterns: ["Backtracking over Choices"],
     problem:
-      "Design a class KthLargest that is created with an integer k and an initial array nums. Its method add(val) adds val to the stream and returns the kth largest element among all numbers added so far.",
+      "Given a string containing digits from 2 to 9, return all the letter combinations that the number could represent, using the standard telephone keypad mapping (2 = abc, 3 = def, 4 = ghi, 5 = jkl, 6 = mno, 7 = pqrs, 8 = tuv, 9 = wxyz). Digit 1 maps to no letters.",
     examples: [
       {
-        input: "k = 3, nums = [4,5,8,2], then add(3), add(5), add(10), add(9), add(4)",
-        output: "4, 5, 5, 8, 8",
-        explanation: "After each add, the third largest value of the stream is returned.",
+        input: 'digits = "23"',
+        output: '["ad","ae","af","bd","be","bf","cd","ce","cf"]',
+        explanation: "Each letter of 2 is paired with each letter of 3.",
       },
     ],
     intuitionChallenges: [
       ch(
-        "You only care about the k largest values seen. What can you discard?",
+        "For each digit, how many letters can you choose from?",
         [
-          "Everything smaller than the kth largest",
-          "Everything larger",
-          "Every other value",
-          "Nothing",
+          "The 3 or 4 letters mapped to that digit",
+          "Only one",
+          "All 26 letters",
+          "None",
         ],
         0,
-        "Exactly! Smaller values can never become the kth largest again.",
-        "Which values can never matter for the top k?"
+        "Exactly! Each digit offers its own small set of letters.",
+        "Look at the keypad: how many letters sit on each key?"
       ),
       ch(
-        "In a min-heap that holds the k largest values, which value is the kth largest?",
-        [
-          "The smallest one, at the top",
-          "The largest",
-          "The median",
-          "The newest",
-        ],
+        'How many combinations does "23" produce?',
+        ["9", "6", "5", "12"],
         0,
-        "Right! The smallest of the k largest is the kth largest.",
-        "The top of a min-heap is its smallest value."
+        "Right! 3 letters for the digit 2 times 3 letters for the digit 3.",
+        "Multiply the number of letters for each digit."
       ),
     ],
     hints: [
-      "The kth largest only depends on the k biggest values.",
-      "Keep just those k values.",
-      "A min-heap keeps its smallest value at the top.",
-      "Add each new value; if the heap grows beyond k, remove the smallest; the top is the answer.",
+      "Each digit maps to a few letters.",
+      "Choose one letter for the first digit, then solve the rest of the digits.",
+      "The number of combinations is the product of the letter counts.",
+      "Recurse by position: loop over the letters of the current digit, append one, recurse, and backtrack.",
     ],
     keyInsight:
-      "Keep a min-heap of the k largest values; its top is always the kth largest.",
+      "Treat each digit as a decision point and try every mapped letter, building the combination one digit at a time.",
     bruteForceApproach: ap(
-      "Store all values and sort them on every add",
-      "O(n log n) per add",
+      "Generate every string of the right length from all 26 letters and filter",
+      "O(26^n · n)",
       "O(n)"
     ),
-    optimalApproach: ap("Min-heap of size k", "O(log k) per add", "O(k)"),
-    patternName: "Min-Heap of Size k",
+    optimalApproach: ap("Backtracking over the digit positions", "O(4^n · n)", "O(n)"),
+    patternName: "Backtracking over Choices",
     transferQuestions: [
       tq(
-        "k = 3 and the heap holds [4,5,8] (top is 4). The value 3 is added.",
-        "What happens?",
+        'digits = "23", and the letter a has been chosen for the digit 2.',
+        "Which letters can be chosen for the digit 3?",
+        ["d, e or f", "a, b or c", "g, h or i", "Only d"],
+        0
+      ),
+    ],
+  }),
+
+  p({
+    slug: "n-queens",
+    title: "N-Queens",
+    difficulty: "Hard",
+    topics: ["Recursion & Backtracking", "Backtracking"],
+    patterns: ["Backtracking with Constraint Sets"],
+    problem:
+      "Place n queens on an n × n chessboard so that no two queens attack each other, meaning no two share a row, a column or a diagonal. Return all distinct solutions.",
+    examples: [
+      {
+        input: "n = 4",
+        output: "2 distinct solutions",
+        explanation: "There are exactly two ways to place 4 queens safely on a 4 × 4 board.",
+      },
+    ],
+    intuitionChallenges: [
+      ch(
+        "How many queens can be in each row?",
+        ["Exactly one", "Up to n", "Zero or two", "Any number"],
+        0,
+        "Exactly! n queens in n rows with no row shared means one per row.",
+        "Two queens in one row would attack each other."
+      ),
+      ch(
+        "What do you need to track to know whether a square is attacked?",
         [
-          "3 is discarded and the answer stays 4",
-          "The answer becomes 3",
-          "The heap grows to size 4",
-          "The answer is 8",
+          "The used columns and both diagonals",
+          "Only the row",
+          "Only the column",
+          "The board's colors",
+        ],
+        0,
+        "Right! Rows are handled by placing one queen per row, so columns and diagonals remain.",
+        "Which lines can a queen attack besides its row?"
+      ),
+    ],
+    hints: [
+      "Each row must have exactly one queen, so place queens row by row.",
+      "For each row, try every column.",
+      "A square is unsafe if its column or either diagonal already has a queen.",
+      "Track used columns and diagonals (row - col and row + col) in sets; place, recurse, then remove the queen.",
+    ],
+    keyInsight:
+      "Place one queen per row and track used columns and both diagonals, so conflicting squares are rejected immediately.",
+    bruteForceApproach: ap(
+      "Try every placement of n queens on the board and check all pairs",
+      "O(C(n², n))",
+      "O(n)"
+    ),
+    optimalApproach: ap(
+      "Backtracking row by row with column and diagonal sets",
+      "O(n!)",
+      "O(n)"
+    ),
+    patternName: "Backtracking with Constraint Sets",
+    transferQuestions: [
+      tq(
+        "A queen is placed at row 0, column 1 (counting from 0).",
+        "Which diagonal values are now blocked?",
+        [
+          "row - col = -1 and row + col = 1",
+          "row - col = 1 and row + col = -1",
+          "row - col = 0 and row + col = 0",
+          "row - col = 1 and row + col = 1",
+        ],
+        0
+      ),
+    ],
+  }),
+
+  p({
+    slug: "word-search",
+    title: "Word Search",
+    difficulty: "Medium",
+    topics: ["Recursion & Backtracking", "Backtracking", "Arrays"],
+    patterns: ["DFS Backtracking on a Grid"],
+    problem:
+      "Given an m × n grid of characters board and a string word, return true if word exists in the grid. The word is built from letters of sequentially adjacent cells (horizontally or vertically neighbouring), and the same cell may not be used more than once in a word.",
+    examples: [
+      {
+        input: 'board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCCED"',
+        output: "true",
+        explanation: "The path A, B, C, C, E, D uses adjacent cells without reusing any.",
+      },
+    ],
+    intuitionChallenges: [
+      ch(
+        "From a matching cell, which cells can you move to next?",
+        [
+          "Its up, down, left and right neighbours",
+          "Any cell in the grid",
+          "Only the cell to the right",
+          "Diagonal cells only",
+        ],
+        0,
+        "Exactly! Adjacent means the four side-by-side neighbours.",
+        "Re-read how the word is formed from adjacent cells."
+      ),
+      ch(
+        "Why must you mark a cell as visited while exploring a path?",
+        [
+          "So the same cell is not used twice in one word",
+          "To speed up sorting",
+          "To change the letter",
+          "To count the cells",
+        ],
+        0,
+        "Right! A cell can appear at most once in a path.",
+        "The problem forbids reusing a cell within one word."
+      ),
+    ],
+    hints: [
+      "The word must be traced through adjacent cells.",
+      "Try every cell as a starting point.",
+      "From a cell, check that its letter matches, then explore the four neighbours for the next letter.",
+      "Mark the cell visited before recursing and unmark it afterward (backtrack); return true when all letters match.",
+    ],
+    keyInsight:
+      "Run a depth-first search from each cell, marking cells used on the current path and un-marking them when backtracking.",
+    bruteForceApproach: ap(
+      "Enumerate every path through the grid and compare it with the word",
+      "Exponential",
+      "O(m · n)"
+    ),
+    optimalApproach: ap(
+      "DFS with backtracking that stops as soon as a letter mismatches",
+      "O(m · n · 3^L) for a word of length L",
+      "O(L)"
+    ),
+    patternName: "DFS Backtracking on a Grid",
+    transferQuestions: [
+      tq(
+        'word = "ABC". The search has explored a path from a matching A and returned from a dead end.',
+        "When do you un-mark a visited cell?",
+        [
+          "After exploring all neighbours from it (backtracking)",
+          "Never",
+          "Before checking its letter",
+          "Only at the very end of the program",
         ],
         0
       ),

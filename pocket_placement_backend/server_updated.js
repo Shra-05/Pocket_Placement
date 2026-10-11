@@ -1,7 +1,9 @@
-//DNS SERVER ISSUE
 
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '1.1.1.1']);
+try {
+  require("./src/dns-fix");
+} catch (e) {
+  require("dns").setServers(["8.8.8.8", "8.8.4.4"]);
+}
 
 const express = require("express");
 const cors = require("cors");

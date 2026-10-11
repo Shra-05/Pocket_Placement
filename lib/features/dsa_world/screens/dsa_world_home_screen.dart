@@ -1,5 +1,94 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../services/dsa_service.dart';
+
+const Color _green = Color(0xFF55D68A);
+
+// ============================================================
+// TOPIC DATA
+// Topic rows are built from the database (GET /api/dsa/topics).
+// A new topic appears automatically once a problem whose first
+// "topics" entry is that topic exists. The icon and blurb below
+// are optional decoration; unknown topics get a default.
+// ============================================================
+
+class _TopicInfo {
+  final String name;
+  final int total;
+  final int completed;
+
+  const _TopicInfo({
+    required this.name,
+    required this.total,
+    required this.completed,
+  });
+
+  double get progress => total == 0 ? 0 : completed / total;
+  bool get isDone => total > 0 && completed >= total;
+}
+
+class _TopicMeta {
+  final IconData icon;
+  final String blurb;
+
+  const _TopicMeta(this.icon, this.blurb);
+}
+
+const _TopicMeta _defaultTopicMeta = _TopicMeta(
+  Icons.category_rounded,
+  'Sharpen your intuition',
+);
+
+const Map<String, _TopicMeta> _topicMeta = {
+  'Arrays': _TopicMeta(Icons.grid_view_rounded, 'Build the foundations'),
+  'Strings': _TopicMeta(Icons.text_fields_rounded, 'Spot patterns in text'),
+  'Searching': _TopicMeta(Icons.search_rounded, 'Find answers fast'),
+  'Sorting': _TopicMeta(Icons.sort_rounded, 'Order reveals insight'),
+  'Linked List': _TopicMeta(Icons.link_rounded, 'Think in pointers'),
+  'Stack & Queue': _TopicMeta(Icons.layers_rounded, 'Control the order'),
+  'Recursion & Backtracking': _TopicMeta(
+    Icons.loop_rounded,
+    'Break it down, try every path',
+  ),
+  'Trees': _TopicMeta(Icons.account_tree_rounded, 'Branching structures'),
+  'Graphs': _TopicMeta(Icons.hub_rounded, 'Connections and networks'),
+  'Dynamic Programming': _TopicMeta(
+    Icons.trending_up_rounded,
+    'Reuse work, skip repeats',
+  ),
+};
+
+_TopicMeta _metaFor(String name) => _topicMeta[name] ?? _defaultTopicMeta;
+
+// ============================================================
+// STREAK HELPERS
+// ============================================================
+
+DateTime _dayOf(DateTime date) => DateTime(date.year, date.month, date.day);
+
+/// Number of consecutive days (ending today, or yesterday if nothing has
+/// been completed yet today) with at least one completed problem.
+int _computeStreak(List<DateTime> completions) {
+  final days = completions.map(_dayOf).toSet();
+  final now = DateTime.now();
+  var cursor = DateTime(now.year, now.month, now.day);
+  if (!days.contains(cursor)) {
+    cursor = DateTime(cursor.year, cursor.month, cursor.day - 1);
+  }
+  var count = 0;
+  while (days.contains(cursor)) {
+    count++;
+    cursor = DateTime(cursor.year, cursor.month, cursor.day - 1);
+  }
+  return count;
+}
+
+Color _heatColor(int count, bool isFuture) {
+  if (isFuture) return const Color(0xFF111A15);
+  if (count <= 0) return const Color(0xFF1B2B22);
+  final alpha = count == 1 ? 0.4 : (count == 2 ? 0.65 : 0.95);
+  return _green.withValues(alpha: alpha);
+}
 
 class DSAWorldHomeScreen extends StatefulWidget {
   const DSAWorldHomeScreen({super.key});
@@ -16,10 +105,23 @@ class _DSAWorldHomeScreenState extends State<DSAWorldHomeScreen> {
   int problemsAttempted = 0;
   bool isLoading = true;
 
+  // Data from the backend
+  List<_TopicInfo> topics = [];
+  bool topicsLoading = true;
+  String? topicsError;
+  List<DateTime> completions = [];
+  bool activityLoaded = false;
+  bool activityFailed = false;
+
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await _loadUserData();
+    await _loadRemoteData();
   }
 
   Future<void> _loadUserData() async {
@@ -41,8 +143,154 @@ class _DSAWorldHomeScreenState extends State<DSAWorldHomeScreen> {
     }
   }
 
-  void _openProblemList() {
-    Navigator.of(context).pushNamed('/dsa-problem-list');
+  Future<void> _loadRemoteData() async {
+    if (!mounted) return;
+    setState(() {
+      topicsLoading = topics.isEmpty;
+      topicsError = null;
+      activityFailed = false;
+    });
+
+    try {
+      final raw = await DSAService.getTopics();
+      if (!mounted) return;
+      setState(() {
+        topics = raw
+            .map(
+              (topic) => _TopicInfo(
+                name: (topic['name'] ?? '').toString(),
+                total: (topic['total'] as num?)?.toInt() ?? 0,
+                completed: (topic['completed'] as num?)?.toInt() ?? 0,
+              ),
+            )
+            .where((topic) => topic.name.isNotEmpty)
+            .toList();
+        topicsLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        topicsError = e.toString();
+        topicsLoading = false;
+      });
+    }
+
+    try {
+      final dates = await DSAService.getActivity();
+      if (!mounted) return;
+      final newStreak = _computeStreak(dates);
+      setState(() {
+        completions = dates;
+        activityLoaded = true;
+        streak = newStreak;
+      });
+      await prefs.setInt('streak', newStreak);
+    } catch (e) {
+      if (!mounted) return;
+      // Keep the streak saved on the device if the activity cannot load.
+      setState(() {
+        activityFailed = true;
+      });
+    }
+  }
+
+  // Completed problems per day, in local time.
+  Map<DateTime, int> get _dayCounts {
+    final counts = <DateTime, int>{};
+    for (final date in completions) {
+      final day = _dayOf(date);
+      counts[day] = (counts[day] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  bool get _doneToday => _dayCounts.containsKey(_dayOf(DateTime.now()));
+
+  bool get _allDone => topics.isNotEmpty && topics.every((t) => t.isDone);
+
+  // The first topic that still has unfinished problems.
+  _TopicInfo? get _nextTopic {
+    for (final topic in topics) {
+      if (!topic.isDone) return topic;
+    }
+    return null;
+  }
+
+  Future<void> _openProblemList({String? topic}) async {
+    await Navigator.of(context).pushNamed(
+      '/dsa-problem-list',
+      arguments: topic == null ? null : {'topic': topic},
+    );
+    if (!mounted) return;
+    // Coming back from a lesson: refresh XP, streak and topic progress.
+    await _loadUserData();
+    await _loadRemoteData();
+  }
+
+  void _openNextUp() {
+    _openProblemList(topic: _allDone ? null : _nextTopic?.name);
+  }
+
+  Widget _buildTopicsSection(bool wide) {
+    if (topicsLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 30),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (topicsError != null) {
+      return _TopicsMessage(
+        message: 'Could not load topics.\n$topicsError',
+        actionLabel: 'Try again',
+        onAction: _loadRemoteData,
+      );
+    }
+    if (topics.isEmpty) {
+      return const _TopicsMessage(
+        message:
+            'No topics yet. Add problems to the database and their topics '
+            'will appear here automatically.',
+      );
+    }
+
+    final cards = [
+      for (final topic in topics)
+        _TopicCard(
+          topic: topic,
+          onTap: () => _openProblemList(topic: topic.name),
+        ),
+    ];
+
+    if (!wide) {
+      return Column(
+        children: [
+          for (var i = 0; i < cards.length; i++)
+            Padding(
+              padding: EdgeInsets.only(bottom: i == cards.length - 1 ? 0 : 12),
+              child: cards[i],
+            ),
+        ],
+      );
+    }
+
+    final rows = <Widget>[];
+    for (var i = 0; i < cards.length; i += 2) {
+      final hasPair = i + 1 < cards.length;
+      rows.add(
+        Padding(
+          padding: EdgeInsets.only(bottom: i + 2 >= cards.length ? 0 : 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: cards[i]),
+              const SizedBox(width: 14),
+              Expanded(child: hasPair ? cards[i + 1] : const SizedBox.shrink()),
+            ],
+          ),
+        ),
+      );
+    }
+    return Column(children: rows);
   }
 
   @override
@@ -53,8 +301,23 @@ class _DSAWorldHomeScreenState extends State<DSAWorldHomeScreen> {
         : const Color(0xFFF4F8F5);
     final textColor = Theme.of(context).colorScheme.onSurface;
     final mutedColor = textColor.withValues(alpha: 0.62);
-    const green = Color(0xFF55D68A);
-    const borderGreen = Color(0xFF285541);
+
+    final doneToday = _doneToday;
+
+    final xpCard = _XPProgressCard(xp: xp, dsaTotalXP: dsaTotalXP);
+    final streakCard = _StreakActivityCard(
+      streak: streak,
+      dayCounts: _dayCounts,
+      loaded: activityLoaded,
+      failed: activityFailed,
+      doneToday: doneToday,
+    );
+    final nextUpCard = _NextUpCard(
+      topic: _nextTopic,
+      loading: topicsLoading,
+      allDone: _allDone,
+      onTap: _openNextUp,
+    );
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -144,7 +407,10 @@ class _DSAWorldHomeScreenState extends State<DSAWorldHomeScreen> {
                               const SizedBox(height: 14),
                               _Entrance(
                                 index: 2,
-                                child: _QuestCard(onTap: _openProblemList),
+                                child: _QuestCard(
+                                  doneToday: doneToday,
+                                  onTap: _openNextUp,
+                                ),
                               ),
                               const SizedBox(height: 30),
                               _Entrance(
@@ -181,87 +447,41 @@ class _DSAWorldHomeScreenState extends State<DSAWorldHomeScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
                                     children: [
-                                      Expanded(
-                                        child: _XPProgressCard(
-                                          xp: xp,
-                                          dsaTotalXP: dsaTotalXP,
-                                        ),
-                                      ),
+                                      Expanded(child: xpCard),
                                       const SizedBox(width: 14),
-                                      Expanded(
-                                        child: _StreakActivityCard(
-                                          streak: streak,
-                                        ),
-                                      ),
+                                      Expanded(child: streakCard),
                                       const SizedBox(width: 14),
-                                      Expanded(
-                                        child: _NextUpCard(
-                                          onTap: _openProblemList,
-                                        ),
-                                      ),
+                                      Expanded(child: nextUpCard),
                                     ],
                                   ),
                                 )
                               else if (medium)
                                 Column(
                                   children: [
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        Expanded(
-                                          child: SizedBox(
-                                            height: 365,
-                                            child: _XPProgressCard(
-                                              xp: xp,
-                                              dsaTotalXP: dsaTotalXP,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 14),
-                                        Expanded(
-                                          child: SizedBox(
-                                            height: 365,
-                                            child: _StreakActivityCard(
-                                              streak: streak,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 14),
                                     SizedBox(
                                       height: 365,
-                                      child: _NextUpCard(
-                                        onTap: _openProblemList,
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          Expanded(child: xpCard),
+                                          const SizedBox(width: 14),
+                                          Expanded(child: streakCard),
+                                        ],
                                       ),
                                     ),
+                                    const SizedBox(height: 14),
+                                    SizedBox(height: 365, child: nextUpCard),
                                   ],
                                 )
                               else
                                 Column(
                                   children: [
-                                    SizedBox(
-                                      height: 345,
-                                      child: _XPProgressCard(
-                                        xp: xp,
-                                        dsaTotalXP: dsaTotalXP,
-                                      ),
-                                    ),
+                                    SizedBox(height: 345, child: xpCard),
                                     const SizedBox(height: 14),
-                                    SizedBox(
-                                      height: 365,
-                                      child: _StreakActivityCard(
-                                        streak: streak,
-                                      ),
-                                    ),
+                                    SizedBox(height: 365, child: streakCard),
                                     const SizedBox(height: 14),
-                                    SizedBox(
-                                      height: 365,
-                                      child: _NextUpCard(
-                                        onTap: _openProblemList,
-                                      ),
-                                    ),
+                                    SizedBox(height: 365, child: nextUpCard),
                                   ],
                                 ),
                               const SizedBox(height: 30),
@@ -294,11 +514,7 @@ class _DSAWorldHomeScreenState extends State<DSAWorldHomeScreen> {
                               const SizedBox(height: 14),
                               _Entrance(
                                 index: 5,
-                                child: _TopicCard(
-                                  title: 'Arrays & Hashing',
-                                  problemsCount: 10,
-                                  onTap: _openProblemList,
-                                ),
+                                child: _buildTopicsSection(wide),
                               ),
                               const SizedBox(height: 20),
                             ],
@@ -485,9 +701,10 @@ class _QuickWinBadge extends StatelessWidget {
 }
 
 class _QuestCard extends StatelessWidget {
+  final bool doneToday;
   final VoidCallback onTap;
 
-  const _QuestCard({required this.onTap});
+  const _QuestCard({required this.doneToday, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -520,30 +737,32 @@ class _QuestCard extends StatelessWidget {
                   color: const Color(0xFF55D68A).withValues(alpha: 0.13),
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const Icon(
-                  Icons.flag_rounded,
-                  color: Color(0xFF55D68A),
+                child: Icon(
+                  doneToday ? Icons.check_circle_rounded : Icons.flag_rounded,
+                  color: const Color(0xFF55D68A),
                   size: 25,
                 ),
               ),
               const SizedBox(width: 13),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'DAILY MISSION',
-                      style: TextStyle(
+                      doneToday ? 'MISSION COMPLETE' : 'DAILY MISSION',
+                      style: const TextStyle(
                         color: Color(0xFF55D68A),
                         fontSize: 10,
                         letterSpacing: 1.2,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Text(
-                      'Complete 1 intuition challenge',
-                      style: TextStyle(
+                      doneToday
+                          ? "You finished today's challenge"
+                          : 'Complete 1 intuition challenge',
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                       ),
@@ -555,8 +774,11 @@ class _QuestCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            'Understand the why behind the algorithm. No code editor, '
-            'no hour-long grind.',
+            doneToday
+                ? 'Nice work. Solve one more to build momentum and keep '
+                      'your streak strong.'
+                : 'Understand the why behind the algorithm. No code editor, '
+                      'no hour-long grind.',
             style: TextStyle(
               fontSize: 12,
               height: 1.5,
@@ -571,7 +793,7 @@ class _QuestCard extends StatelessWidget {
             child: ElevatedButton.icon(
               onPressed: onTap,
               icon: const Icon(Icons.play_arrow_rounded),
-              label: const Text('Start learning'),
+              label: Text(doneToday ? 'Keep learning' : 'Start learning'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF3EAD58),
                 foregroundColor: Colors.white,
@@ -761,16 +983,67 @@ class _XPProgressCard extends StatelessWidget {
 
 class _StreakActivityCard extends StatelessWidget {
   final int streak;
+  final Map<DateTime, int> dayCounts;
+  final bool loaded;
+  final bool failed;
+  final bool doneToday;
 
-  const _StreakActivityCard({required this.streak});
+  const _StreakActivityCard({
+    required this.streak,
+    required this.dayCounts,
+    required this.loaded,
+    required this.failed,
+    required this.doneToday,
+  });
 
   @override
   Widget build(BuildContext context) {
     const green = Color(0xFF55D68A);
+    const weeks = 10;
     final muted = Theme.of(
       context,
     ).colorScheme.onSurface.withValues(alpha: 0.55);
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    // The heatmap shows the last 10 weeks. Each column is a week
+    // (Monday to Sunday) and the last column is the current week.
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final monday = DateTime(
+      today.year,
+      today.month,
+      today.day - (today.weekday - 1),
+    );
+    final windowStart = DateTime(
+      monday.year,
+      monday.month,
+      monday.day - (weeks - 1) * 7,
+    );
+
+    var recentTotal = 0;
+    dayCounts.forEach((date, count) {
+      if (!date.isBefore(windowStart) && !date.isAfter(today)) {
+        recentTotal += count;
+      }
+    });
+
+    String subtitle;
+    if (streak == 0) {
+      subtitle = 'Start a streak today.';
+    } else if (doneToday) {
+      subtitle = 'Keep it going!  🔥';
+    } else {
+      subtitle = 'Solve one today to keep your streak alive.';
+    }
+
+    String footnote;
+    if (loaded) {
+      footnote = '$recentTotal completed in the last 10 weeks';
+    } else if (failed) {
+      footnote = 'Activity history unavailable';
+    } else {
+      footnote = 'Loading activity…';
+    }
 
     return _CardShell(
       title: 'Learning Streak',
@@ -798,10 +1071,7 @@ class _StreakActivityCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 3),
-          Text(
-            streak > 0 ? 'Keep it going!  🔥' : 'Start a streak today.',
-            style: TextStyle(color: muted, fontSize: 12),
-          ),
+          Text(subtitle, style: TextStyle(color: muted, fontSize: 12)),
           const SizedBox(height: 18),
           Expanded(
             child: Column(
@@ -817,20 +1087,19 @@ class _StreakActivityCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 5),
-                      ...List.generate(10, (column) {
-                        // Decorative intensity only. Historical activity
-                        // is not stored by the current screen.
-                        final active =
-                            ((row * 3 + column * 2 + row * column) % 7) < 3;
+                      ...List.generate(weeks, (column) {
+                        final date = DateTime(
+                          monday.year,
+                          monday.month,
+                          monday.day + (column - (weeks - 1)) * 7 + row,
+                        );
+                        final isFuture = date.isAfter(today);
+                        final count = dayCounts[date] ?? 0;
                         return Expanded(
                           child: Container(
                             margin: const EdgeInsets.all(2),
                             decoration: BoxDecoration(
-                              color: active
-                                  ? green.withValues(
-                                      alpha: 0.25 + ((row + column) % 3) * 0.22,
-                                    )
-                                  : const Color(0xFF1B2B22),
+                              color: _heatColor(count, isFuture),
                               borderRadius: BorderRadius.circular(3),
                             ),
                           ),
@@ -864,10 +1133,7 @@ class _StreakActivityCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            'Activity history not connected yet',
-            style: TextStyle(fontSize: 9, color: muted),
-          ),
+          Text(footnote, style: TextStyle(fontSize: 9, color: muted)),
         ],
       ),
     );
@@ -875,9 +1141,17 @@ class _StreakActivityCard extends StatelessWidget {
 }
 
 class _NextUpCard extends StatelessWidget {
+  final _TopicInfo? topic;
+  final bool loading;
+  final bool allDone;
   final VoidCallback onTap;
 
-  const _NextUpCard({required this.onTap});
+  const _NextUpCard({
+    required this.topic,
+    required this.loading,
+    required this.allDone,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -885,6 +1159,43 @@ class _NextUpCard extends StatelessWidget {
     final muted = Theme.of(
       context,
     ).colorScheme.onSurface.withValues(alpha: 0.65);
+
+    final current = topic;
+    String label;
+    String name;
+    String description;
+    String buttonLabel;
+    var enabled = true;
+
+    if (loading) {
+      label = 'Next up:';
+      name = 'Loading…';
+      description = '';
+      buttonLabel = 'Start';
+      enabled = false;
+    } else if (allDone) {
+      label = 'Well done:';
+      name = 'Every topic complete';
+      description =
+          'You have finished every challenge. Revisit any problem to keep '
+          'your intuition sharp.';
+      buttonLabel = 'Review';
+    } else if (current == null) {
+      label = 'Next up:';
+      name = 'No topics yet';
+      description =
+          'Add problems to the database and your topics will appear here.';
+      buttonLabel = 'Start';
+      enabled = false;
+    } else {
+      final left = current.total - current.completed;
+      label = 'Next up:';
+      name = current.name;
+      description =
+          '${_metaFor(current.name).blurb}. '
+          '$left of ${current.total} challenges left.';
+      buttonLabel = current.completed > 0 ? 'Continue' : 'Start';
+    }
 
     return _CardShell(
       title: 'Next Up',
@@ -902,13 +1213,13 @@ class _NextUpCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text('Next up:', style: TextStyle(color: muted, fontSize: 12)),
+          Text(label, style: TextStyle(color: muted, fontSize: 12)),
           const SizedBox(height: 5),
-          const Text(
-            'Arrays & Hashing',
+          Text(
+            name,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 21,
               fontWeight: FontWeight.w800,
               height: 1.15,
@@ -916,8 +1227,7 @@ class _NextUpCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Spot patterns, reason through examples, and build '
-            'strong problem-solving intuition.',
+            description,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(color: muted, fontSize: 12, height: 1.45),
@@ -926,22 +1236,26 @@ class _NextUpCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: onTap,
+              onPressed: enabled ? onTap : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: green,
                 foregroundColor: const Color(0xFF07130B),
+                disabledBackgroundColor: green.withValues(alpha: 0.25),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 13),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Start', style: TextStyle(fontWeight: FontWeight.w800)),
-                  SizedBox(width: 10),
-                  Icon(Icons.arrow_forward_rounded, size: 19),
+                  Text(
+                    buttonLabel,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(width: 10),
+                  const Icon(Icons.arrow_forward_rounded, size: 19),
                 ],
               ),
             ),
@@ -1021,19 +1335,19 @@ class _AlgorithmPatternPainter extends CustomPainter {
 }
 
 class _TopicCard extends StatelessWidget {
-  final String title;
-  final int problemsCount;
+  final _TopicInfo topic;
   final VoidCallback onTap;
 
-  const _TopicCard({
-    required this.title,
-    required this.problemsCount,
-    required this.onTap,
-  });
+  const _TopicCard({required this.topic, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final meta = _metaFor(topic.name);
+    final muted = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.65);
+
     return Material(
       color: isDark ? const Color(0xFF151B17) : Colors.white,
       borderRadius: BorderRadius.circular(20),
@@ -1057,9 +1371,9 @@ class _TopicCard extends StatelessWidget {
                   color: const Color(0xFF55D68A).withValues(alpha: 0.13),
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const Icon(
-                  Icons.grid_view_rounded,
-                  color: Color(0xFF55D68A),
+                child: Icon(
+                  topic.isDone ? Icons.check_circle_rounded : meta.icon,
+                  color: const Color(0xFF55D68A),
                   size: 26,
                 ),
               ),
@@ -1068,31 +1382,45 @@ class _TopicCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            topic.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${topic.completed}/${topic.total}',
+                          style: const TextStyle(
+                            color: Color(0xFF55D68A),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '$problemsCount challenges · Build the foundations',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.65),
-                      ),
+                      '${topic.total} challenges · ${meta.blurb}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, color: muted),
                     ),
                     const SizedBox(height: 12),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: const LinearProgressIndicator(
-                        value: 0,
+                      child: LinearProgressIndicator(
+                        value: topic.progress,
                         minHeight: 5,
-                        backgroundColor: Color(0xFF20382A),
-                        valueColor: AlwaysStoppedAnimation<Color>(
+                        backgroundColor: const Color(0xFF20382A),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
                           Color(0xFF55D68A),
                         ),
                       ),
@@ -1105,6 +1433,48 @@ class _TopicCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TopicsMessage extends StatelessWidget {
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  const _TopicsMessage({
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.65);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF39784F).withValues(alpha: 0.7),
+        ),
+      ),
+      child: Column(
+        children: [
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: muted, fontSize: 13, height: 1.5),
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 14),
+            ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
+          ],
+        ],
       ),
     );
   }

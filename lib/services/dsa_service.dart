@@ -35,6 +35,8 @@ class DSAService {
     }
   }
 
+  /// All problems, or only the problems of one topic. Each problem also has a
+  /// `completed` flag for the logged-in user.
   static Future<List<Map<String, dynamic>>> getProblems({String? topic}) async {
     final token = await _getToken();
     if (token == null) {
@@ -58,6 +60,53 @@ class DSAService {
       return List<Map<String, dynamic>>.from(data['problems'] ?? []);
     }
     throw Exception('Failed to fetch problems: ${response.statusCode}');
+  }
+
+  /// One entry per topic: {name, total, completed}. Built by the backend from
+  /// the problems themselves, so new topics appear automatically.
+  static Future<List<Map<String, dynamic>>> getTopics() async {
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('No authentication token found');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/topics'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(data['topics'] ?? []);
+    }
+    throw Exception('Failed to fetch topics: ${response.statusCode}');
+  }
+
+  /// The moments (in local time) when the user completed problems.
+  /// Used for the streak and the activity heatmap.
+  static Future<List<DateTime>> getActivity() async {
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('No authentication token found');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/activity'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final raw = List<String>.from(data['completions'] ?? []);
+      return raw.map((value) => DateTime.parse(value).toLocal()).toList();
+    }
+    throw Exception('Failed to fetch activity: ${response.statusCode}');
   }
 
   static Future<Map<String, dynamic>> startAttempt(String problemId) async {

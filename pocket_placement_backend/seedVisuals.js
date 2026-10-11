@@ -19,12 +19,74 @@ const COLLECTION = "dsaproblems";
 const N = null;
 const T = (values, steps, extra = {}) => ({ type: "tree", values, steps, ...extra });
 const A = (values, steps) => ({ type: "array", values, steps });
+const L = (values, steps, extra = {}) => ({ type: "list", values, steps, ...extra });
+const G = (values, steps, extra = {}) => ({ type: "grid", values, steps, ...extra });
+const GR = (nodes, edges, steps, extra = {}) => ({ type: "graph", nodes, edges, steps, ...extra });
+const I = (intervals, steps, extra = {}) => ({ type: "intervals", intervals, steps, ...extra });
+// Cells equal to 0 in a grid, as [row, col] pairs (handy for fading water or empty cells)
+const zeros = (g) => g.flatMap((row, r) => row.flatMap((v, c) => (v === 0 ? [[r, c]] : [])));
 const s = (caption, o = {}) => ({ caption, ...o });
 const q = (items) => ({ label: "queue", items });
 
 // Reused trees
 const LEVEL_TREE = [3, 9, 20, N, N, 15, 7];
 const BST7 = [4, 2, 6, 1, 3, 5, 7];
+
+// Reused grids
+const ISLANDS = [
+  [1, 1, 0, 0, 0],
+  [1, 1, 0, 0, 0],
+  [0, 0, 1, 0, 0],
+  [0, 0, 0, 1, 1],
+];
+const FILL = [[1, 1, 1], [1, 1, 0], [1, 0, 1]];
+const ORANGES = [[2, 1, 1], [1, 1, 0], [0, 1, 1]];
+const PAH = [[1, 3, 2], [4, 2, 5], [3, 6, 1]];
+const UP_EMPTY = [["-", "-", "-"], ["-", "-", "-"], ["-", "-", "-"]];
+const LCS_S0 = [
+  [0, 0, 0, 0, 0, 0],
+  [0, "-", "-", "-", "-", "-"],
+  [0, "-", "-", "-", "-", "-"],
+  [0, "-", "-", "-", "-", "-"],
+];
+const ED_EMPTY = [["-", "-", "-", "-"], ["-", "-", "-", "-"], ["-", "-", "-", "-"], ["-", "-", "-", "-"]];
+
+// Reused graphs (positions are [x, y] between 0 and 1)
+const PROV_NODES = ["0", "1", "2", "3", "4", "5"];
+const PROV_EDGES = [[0, 1], [1, 2], [3, 4]];
+const PROV_POS = [[0.08, 0.25], [0.25, 0.75], [0.42, 0.25], [0.62, 0.75], [0.8, 0.25], [0.95, 0.75]];
+
+const PATH_A_NODES = ["0", "1", "2", "3", "4"];
+const PATH_A_EDGES = [[0, 1], [0, 2], [1, 3], [3, 4]];
+const PATH_A_POS = [[0.08, 0.5], [0.32, 0.2], [0.32, 0.8], [0.62, 0.2], [0.92, 0.2]];
+
+const PATH_B_NODES = ["0", "1", "2", "3", "4", "5"];
+const PATH_B_EDGES = [[0, 1], [0, 2], [3, 5], [5, 4], [4, 3]];
+const PATH_B_POS = [[0.1, 0.5], [0.3, 0.2], [0.3, 0.8], [0.62, 0.2], [0.9, 0.5], [0.62, 0.8]];
+
+const CLONE_NODES = ["1", "2", "3", "4"];
+const CLONE_EDGES = [[0, 1], [1, 2], [2, 3], [3, 0]];
+const CLONE_POS = [[0.25, 0.2], [0.75, 0.2], [0.75, 0.8], [0.25, 0.8]];
+
+const COURSE_NODES = ["0", "1", "2", "3"];
+const COURSE_EDGES = [[0, 1], [0, 2], [1, 3], [2, 3]];
+const COURSE_POS = [[0.1, 0.5], [0.45, 0.15], [0.45, 0.85], [0.88, 0.5]];
+
+const CYCLE_NODES = ["0", "1", "2"];
+const CYCLE_EDGES = [[0, 1], [1, 2], [2, 0]];
+const CYCLE_POS = [[0.5, 0.12], [0.85, 0.85], [0.15, 0.85]];
+
+const NET_A_NODES = ["1", "2", "3", "4"];
+const NET_A_EDGES = [[1, 0, 1], [1, 2, 1], [2, 3, 1]];
+const NET_A_POS = [[0.5, 0.15], [0.12, 0.5], [0.5, 0.85], [0.88, 0.85]];
+
+const NET_B_NODES = ["1", "2", "3", "4"];
+const NET_B_EDGES = [[0, 1, 4], [0, 2, 1], [2, 1, 1], [1, 3, 1]];
+const NET_B_POS = [[0.1, 0.5], [0.5, 0.15], [0.5, 0.85], [0.9, 0.15]];
+
+const WORD_NODES = ["hit", "hot", "dot", "lot", "dog", "log", "cog"];
+const WORD_EDGES = [[0, 1], [1, 2], [1, 3], [2, 3], [2, 4], [3, 5], [4, 5], [4, 6], [5, 6]];
+const WORD_POS = [[0.08, 0.5], [0.28, 0.5], [0.5, 0.2], [0.5, 0.8], [0.75, 0.2], [0.75, 0.8], [0.94, 0.5]];
 
 const visuals = {
   // ===============================================================
@@ -1153,9 +1215,6 @@ const visuals = {
   ],
 
   // ---------------------------------------------------------------
-  // Intervals do not fit the tree or array renderer.
-  // Needs a new renderer: Merge Intervals / challenge 1 and 2.
-  "Merge Intervals": [null, null],
 
   // ===============================================================
   // BATCH 5: Sorting, Heaps, Linked Lists (problems 33 to 40)
@@ -1233,9 +1292,6 @@ const visuals = {
   ],
 
   // ---------------------------------------------------------------
-  // Intervals do not fit the tree or array renderer.
-  // Needs a new renderer: Meeting Rooms / challenge 1 and 2.
-  "Meeting Rooms": [null, null],
 
   // ---------------------------------------------------------------
   "Sort an Array": [
@@ -1305,29 +1361,1671 @@ const visuals = {
   ],
 
   // ---------------------------------------------------------------
-  // Linked lists do not fit the tree or array renderer.
-  // Needs a new renderer: Insertion Sort List / challenge 1 and 2.
-  "Insertion Sort List": [null, null],
 
-  // Needs a new renderer: Reverse Linked List / challenge 1 and 2.
-  "Reverse Linked List": [null, null],
 
-  // Needs a new renderer: Merge Two Sorted Lists / challenge 1 and 2.
-  "Merge Two Sorted Lists": [null, null],
+
 
   // ===============================================================
-  // BATCH 6: Linked Lists (problems 41 to 48)
-  // All need a new "list" renderer, so these are null placeholders.
-  // Replace each [null, null] with real visuals once the renderer exists.
+  // BATCH 7: Stack and Queue (problems 49 to 58)
+  // Stack strips list items bottom first, so the LAST chip is the top.
   // ===============================================================
-  "Linked List Cycle": [null, null],
-  "Middle of the Linked List": [null, null],
-  "Remove Nth Node From End of List": [null, null],
-  "Palindrome Linked List": [null, null],
-  "Intersection of Two Linked Lists": [null, null],
-  "Remove Duplicates from Sorted List": [null, null],
-  "Reorder List": [null, null],
-  "Add Two Numbers": [null, null],
+
+  // ---------------------------------------------------------------
+  "Valid Parentheses": [
+    A(["(", "[", "]", ")"], [
+      s("Push every opening bracket onto a stack. The newest one sits on top.", {
+        hl: [0], ptrs: { i: 0 }, aux: { label: "stack", items: ["("] },
+      }),
+      s("[ is an opening bracket too. Push it.", {
+        ok: [0], hl: [1], ptrs: { i: 1 }, aux: { label: "stack", items: ["(", "["] },
+      }),
+      s("] is a closing bracket. We compare it with the top of the stack.", {
+        ok: [0], hl: [1, 2], ptrs: { i: 2 }, aux: { label: "stack", items: ["(", "["] },
+      }),
+      s("The top is [, which matches. Pop it.", {
+        ok: [0, 1, 2], ptrs: { i: 2 }, aux: { label: "stack", items: ["("] },
+      }),
+      s("Next ) matches the ( and pops it. The stack ends up empty. What does that tell us?", {
+        ok: [0, 1, 2, 3], ptrs: { i: 3 }, aux: { label: "stack", items: [] },
+      }),
+    ]),
+    A(["(", "[", ")", "]"], [
+      s("Now ( [ ) ]. Push ( and then push [.", {
+        hl: [1], ptrs: { i: 1 }, aux: { label: "stack", items: ["(", "["] },
+      }),
+      s(") arrives, a closing bracket. We look at the top of the stack: it is [.", {
+        hl: [2], ptrs: { i: 2 }, aux: { label: "stack", items: ["(", "["] },
+      }),
+      s("The ) needs a ( on top, but the top is [. They do not match.", {
+        bad: [1, 2], ptrs: { i: 2 }, aux: { label: "stack", items: ["(", "["] },
+      }),
+      s("A ( is still waiting lower down. Why must the match be with the top, not with any open bracket?", {
+        bad: [1, 2], hl: [0], ptrs: { i: 2 }, aux: { label: "stack", items: ["(", "["] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Min Stack": [
+    A([5, 3, 7, 2], [
+      s("Every pushed value also remembers the smallest value so far.", {
+        hl: [0], aux: { label: "stack", items: ["5 (min 5)"] },
+      }),
+      s("Push 3. It is smaller, so the smallest so far becomes 3.", {
+        ok: [0], hl: [1], aux: { label: "stack", items: ["5 (min 5)", "3 (min 3)"] },
+      }),
+      s("Push 7. The smallest so far stays 3.", {
+        ok: [0, 1], hl: [2],
+        aux: { label: "stack", items: ["5 (min 5)", "3 (min 3)", "7 (min 3)"] },
+      }),
+      s("Push 2. The smallest so far becomes 2.", {
+        ok: [0, 1, 2], hl: [3],
+        aux: { label: "stack", items: ["5 (min 5)", "3 (min 3)", "7 (min 3)", "2 (min 2)"] },
+      }),
+      s("To ask for the minimum we only read the top entry. How much work is that?", {
+        ok: [0, 1, 2, 3],
+        aux: { label: "stack", items: ["5 (min 5)", "3 (min 3)", "7 (min 3)", "2 (min 2)"] },
+      }),
+    ]),
+    A([5, 3, 7, 2], [
+      s("The stack holds 5, 3, 7, 2. The smallest value is 2.", {
+        ok: [3],
+        aux: { label: "stack", items: ["5 (min 5)", "3 (min 3)", "7 (min 3)", "2 (min 2)"] },
+      }),
+      s("Pop the 2. It was the smallest, so the minimum must change.", {
+        bad: [3],
+        aux: { label: "stack", items: ["5 (min 5)", "3 (min 3)", "7 (min 3)"] },
+      }),
+      s("The new top entry says min 3. The old minimum came back with no searching.", {
+        bad: [3], hl: [2],
+        aux: { label: "stack", items: ["5 (min 5)", "3 (min 3)", "7 (min 3)"] },
+      }),
+      s("Why would one single variable holding the minimum fail after this pop?", {
+        bad: [3], hl: [2],
+        aux: { label: "stack", items: ["5 (min 5)", "3 (min 3)", "7 (min 3)"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Implement Queue using Stacks": [
+    A([1, 2, 3], [
+      s("Items arrive in the order 1, 2, 3. A queue must hand back 1 first.", {
+        ptrs: { i: 0 }, aux: { label: "stack 1", items: [] },
+      }),
+      s("We push them onto a stack. 1 goes in first, so it sits at the bottom.", {
+        hl: [0], ptrs: { i: 0 }, aux: { label: "stack 1", items: ["1"] },
+      }),
+      s("2 and 3 pile on top of it.", {
+        ok: [0, 1, 2], ptrs: { i: 2 }, aux: { label: "stack 1", items: ["1", "2", "3"] },
+      }),
+      s("Pop from this stack and 3 comes out first, but a queue needs 1. What can we do?", {
+        ok: [0, 1], bad: [2], aux: { label: "stack 1", items: ["1", "2", "3"] },
+      }),
+    ]),
+    A([1, 2, 3], [
+      s("Pour stack 1 into a second stack, taking items from the top one by one.", {
+        hl: [2], aux: { label: "stack 2", items: [] },
+      }),
+      s("3 moves over first.", {
+        ok: [2], aux: { label: "stack 2", items: ["3"] },
+      }),
+      s("Then 2, then 1.", {
+        ok: [0, 1, 2], aux: { label: "stack 2", items: ["3", "2", "1"] },
+      }),
+      s("Now 1 is on top of stack 2. The order has flipped.", {
+        hl: [0], aux: { label: "stack 2", items: ["3", "2", "1"] },
+      }),
+      s("When must we pour, and when can we leave stack 2 alone?", {
+        hl: [0], aux: { label: "stack 2", items: ["3", "2", "1"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Implement Stack using Queues": [
+    A([1, 2, 3], [
+      s("A queue gives back the oldest item first. A stack must give back the newest.", {
+        aux: { label: "queue", items: [] },
+      }),
+      s("We add 1, 2, 3 to the queue, one at a time at the back.", {
+        ok: [0, 1, 2], aux: { label: "queue", items: ["1", "2", "3"] },
+      }),
+      s("The front of the queue is 1, but a stack should hand back 3.", {
+        hl: [0, 2], tags: { 0: "front", 2: "newest" },
+        aux: { label: "queue", items: ["1", "2", "3"] },
+      }),
+      s("How can we bring the newest item to the front?", {
+        hl: [2], tags: { 2: "newest" }, aux: { label: "queue", items: ["1", "2", "3"] },
+      }),
+    ]),
+    A([1, 2, 3], [
+      s("The queue holds 1, 2 and we have just added 3 at the back.", {
+        hl: [2], tags: { 0: "front" },
+      }),
+      s("Move 1 from the front to the back.", {
+        values: [2, 3, 1], hl: [2], tags: { 0: "front" },
+      }),
+      s("Move 2 from the front to the back as well.", {
+        values: [3, 1, 2], hl: [2], tags: { 0: "front" },
+      }),
+      s("Now 3 is at the front. Removing from the front gives the newest item.", {
+        values: [3, 1, 2], ok: [0], tags: { 0: "front" },
+      }),
+      s("How many items did we have to move, and when did we do it?", {
+        values: [3, 1, 2], ok: [0], tags: { 0: "front" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Daily Temperatures": [
+    A([73, 74, 75, 71, 69, 72, 76, 73], [
+      s("For each day, how many days until a warmer one? A stack keeps the days still waiting.", {
+        ptrs: { i: 0 }, aux: { label: "waiting", items: [] },
+      }),
+      s("Day 0 is 73. No warmer day yet, so it waits.", {
+        hl: [0], ptrs: { i: 0 }, aux: { label: "waiting", items: ["73"] },
+      }),
+      s("Day 1 is 74, warmer than 73. The wait of 73 is over: 1 day.", {
+        ok: [0], hl: [1], ptrs: { i: 1 }, tags: { 0: "1 day" },
+        aux: { label: "waiting", items: ["74"] },
+      }),
+      s("Day 2 is 75, warmer than 74. The wait of 74 is over: 1 day.", {
+        ok: [0, 1], hl: [2], ptrs: { i: 2 }, tags: { 0: "1 day", 1: "1 day" },
+        aux: { label: "waiting", items: ["75"] },
+      }),
+      s("Day 3 is 71, cooler than 75. So 75 keeps waiting, and 71 joins it.", {
+        ok: [0, 1], hl: [3], ptrs: { i: 3 }, tags: { 0: "1 day", 1: "1 day" },
+        aux: { label: "waiting", items: ["75", "71"] },
+      }),
+    ]),
+    A([73, 74, 75, 71, 69, 72, 76, 73], [
+      s("By day 4 the stack holds 75, 71, 69. All of them are still waiting.", {
+        hl: [2, 3, 4], ptrs: { i: 4 }, aux: { label: "waiting", items: ["75", "71", "69"] },
+      }),
+      s("Day 5 is 72, warmer than 69 on top. The wait of 69 is over: 1 day.", {
+        ok: [4], hl: [5], ptrs: { i: 5 }, tags: { 4: "1 day" },
+        aux: { label: "waiting", items: ["75", "71"] },
+      }),
+      s("72 is warmer than 71 as well. The wait of 71 is over: 2 days.", {
+        ok: [3, 4], hl: [5], ptrs: { i: 5 }, tags: { 3: "2 days", 4: "1 day" },
+        aux: { label: "waiting", items: ["75"] },
+      }),
+      s("72 is not warmer than 75, so we stop and push 72.", {
+        ok: [3, 4], hl: [5], ptrs: { i: 5 }, tags: { 3: "2 days", 4: "1 day" },
+        aux: { label: "waiting", items: ["75", "72"] },
+      }),
+      s("Day 6 is 76 and clears both 72 and 75. Is each day pushed and removed at most once?", {
+        ok: [2, 3, 4, 5], hl: [6], ptrs: { i: 6 },
+        tags: { 2: "4 days", 3: "2 days", 4: "1 day", 5: "1 day" },
+        aux: { label: "waiting", items: ["76"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Next Greater Element I": [
+    A([1, 3, 4, 2], [
+      s("Find the next greater number for each value in 1 3 4 2. A stack holds values still waiting.", {
+        aux: { label: "waiting", items: [] },
+      }),
+      s("1 goes on the stack to wait.", {
+        hl: [0], ptrs: { i: 0 }, aux: { label: "waiting", items: ["1"] },
+      }),
+      s("3 is greater than 1, so 3 is the answer for 1. 3 then waits.", {
+        ok: [0], hl: [1], ptrs: { i: 1 }, tags: { 0: "next 3" },
+        aux: { label: "waiting", items: ["3"] },
+      }),
+      s("4 is greater than 3, so 4 is the answer for 3. 4 then waits.", {
+        ok: [0, 1], hl: [2], ptrs: { i: 2 }, tags: { 0: "next 3", 1: "next 4" },
+        aux: { label: "waiting", items: ["4"] },
+      }),
+      s("2 is smaller than 4, so it just waits behind it. What happens to values still waiting at the end?", {
+        ok: [0, 1], hl: [3], ptrs: { i: 3 }, tags: { 0: "next 3", 1: "next 4" },
+        aux: { label: "waiting", items: ["4", "2"] },
+      }),
+    ]),
+    A([4, 1, 2], [
+      s("Answers are kept in a map: 1→3, 3→4, 4→-1, 2→-1. Here -1 means none. The queries are 4, 1, 2.", {
+        aux: { label: "map", items: ["1→3", "3→4", "4→-1", "2→-1"] },
+      }),
+      s("Look up 4 in the map.", {
+        hl: [0], tags: { 0: "-1" },
+        aux: { label: "map", items: ["1→3", "3→4", "4→-1", "2→-1"] },
+      }),
+      s("Look up 1.", {
+        ok: [0], hl: [1], tags: { 0: "-1", 1: "3" },
+        aux: { label: "map", items: ["1→3", "3→4", "4→-1", "2→-1"] },
+      }),
+      s("Look up 2.", {
+        ok: [0, 1], hl: [2], tags: { 0: "-1", 1: "3", 2: "-1" },
+        aux: { label: "map", items: ["1→3", "3→4", "4→-1", "2→-1"] },
+      }),
+      s("Each query was a single lookup. Why did we build the map from the second array?", {
+        ok: [0, 1, 2], tags: { 0: "-1", 1: "3", 2: "-1" },
+        aux: { label: "map", items: ["1→3", "3→4", "4→-1", "2→-1"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Evaluate Reverse Polish Notation": [
+    A(["2", "1", "+", "3", "*"], [
+      s("Numbers go onto a stack. An operator works on the top two numbers.", {
+        ptrs: { i: 0 }, aux: { label: "stack", items: [] },
+      }),
+      s("Push 2.", {
+        hl: [0], ptrs: { i: 0 }, aux: { label: "stack", items: ["2"] },
+      }),
+      s("Push 1.", {
+        ok: [0], hl: [1], ptrs: { i: 1 }, aux: { label: "stack", items: ["2", "1"] },
+      }),
+      s("+ takes the top two, 1 and 2, adds them and pushes the result back.", {
+        ok: [0, 1], hl: [2], ptrs: { i: 2 }, aux: { label: "stack", items: ["3"] },
+      }),
+      s("Push 3. Now * is next, with two numbers on the stack. What will it do?", {
+        ok: [0, 1, 2], hl: [3], ptrs: { i: 3 }, aux: { label: "stack", items: ["3", "3"] },
+      }),
+    ]),
+    A(["4", "3", "-"], [
+      s("Now 4 3 -. Push 4, then push 3.", {
+        hl: [1], ptrs: { i: 1 }, aux: { label: "stack", items: ["4", "3"] },
+      }),
+      s("- pops two numbers. The first popped is 3, the second is 4.", {
+        hl: [2], ptrs: { i: 2 }, tags: { 1: "popped 1st", 0: "popped 2nd" },
+        aux: { label: "stack", items: ["4", "3"] },
+      }),
+      s("Subtraction cares about order. Which one is on the left of the minus?", {
+        hl: [0, 1], ptrs: { i: 2 }, tags: { 1: "popped 1st", 0: "popped 2nd" },
+        aux: { label: "stack", items: ["4", "3"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Sliding Window Maximum": [
+    A([1, 3, -1, -3, 5, 3, 6, 7], [
+      s("A window of 3 slides along. A deque keeps candidates for the maximum, the biggest at the front.", {
+        hl: [0, 1, 2], ptrs: { l: 0, r: 2 }, aux: { label: "deque", items: [] },
+      }),
+      s("Add 1 to the deque.", {
+        hl: [0], ptrs: { r: 0 }, aux: { label: "deque", items: ["1"] },
+      }),
+      s("3 arrives and is bigger than 1. The 1 can never be the maximum again, so it goes.", {
+        bad: [0], hl: [1], ptrs: { r: 1 }, aux: { label: "deque", items: ["3"] },
+      }),
+      s("-1 arrives. It is smaller than 3, so it waits behind 3.", {
+        bad: [0], hl: [2], ptrs: { r: 2 }, aux: { label: "deque", items: ["3", "-1"] },
+      }),
+      s("The first window is full. Which number sits at the front of the deque?", {
+        bad: [0], hl: [1], ptrs: { l: 0, r: 2 }, tags: { 1: "front" },
+        aux: { label: "deque", items: ["3", "-1"] },
+      }),
+    ]),
+    A([1, 3, -1, -3, 5, 3, 6, 7], [
+      s("The window holds 3, -1, -3. The front of the deque is 3.", {
+        hl: [1], ptrs: { l: 1, r: 3 }, aux: { label: "deque", items: ["3", "-1", "-3"] },
+      }),
+      s("Slide right. The window now starts at -1, so that 3 has fallen out of it.", {
+        bad: [1], hl: [4], ptrs: { l: 2, r: 4 }, aux: { label: "deque", items: ["3", "-1", "-3"] },
+      }),
+      s("The front of the deque is outside the window, so we remove it from the front.", {
+        bad: [1], hl: [4], ptrs: { l: 2, r: 4 }, aux: { label: "deque", items: ["-1", "-3"] },
+      }),
+      s("5 arrives. It beats -3 and -1, so both leave from the back. Only 5 remains.", {
+        bad: [1, 2, 3], hl: [4], ptrs: { l: 2, r: 4 }, aux: { label: "deque", items: ["5"] },
+      }),
+      s("Two kinds of removal happened, one at each end. Why does each one make sense?", {
+        bad: [1, 2, 3], ok: [4], ptrs: { l: 2, r: 4 }, aux: { label: "deque", items: ["5"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Largest Rectangle in Histogram": [
+    A([2, 1, 5, 6, 2, 3], [
+      s("Bars have heights 2 1 5 6 2 3. A rectangle can only be as tall as its shortest bar.", {
+        hl: [0, 1, 2, 3, 4, 5],
+      }),
+      s("Pick the bar of height 5. How far can a rectangle of height 5 stretch?", {
+        hl: [2],
+      }),
+      s("To the right, the bar of height 6 is tall enough.", {
+        ok: [2, 3],
+      }),
+      s("The next bar, height 2, is shorter than 5, so the stretch stops there.", {
+        ok: [2, 3], bad: [4],
+      }),
+      s("To the left, the bar of height 1 is shorter, so it stops there too. What area is that?", {
+        ok: [2, 3], bad: [1, 4], tags: { 2: "h 5", 3: "w 2" },
+      }),
+    ]),
+    A([2, 1, 5, 6, 2, 3], [
+      s("Keep a stack of bars with growing heights. The 2 goes on first.", {
+        hl: [0], aux: { label: "stack", items: ["2"] },
+      }),
+      s("1 is shorter than 2, so the 2 can not stretch further right. Take it off.", {
+        bad: [0], hl: [1], aux: { label: "stack", items: ["1"] },
+      }),
+      s("5 and 6 keep growing, so both go on the stack.", {
+        hl: [2, 3], aux: { label: "stack", items: ["1", "5", "6"] },
+      }),
+      s("2 arrives, shorter than 6 and 5. Both stop here and get measured.", {
+        bad: [2, 3], hl: [4], aux: { label: "stack", items: ["1", "2"] },
+      }),
+      s("Each bar is pushed once and popped once. Why does a shorter bar settle the taller ones?", {
+        ok: [4], aux: { label: "stack", items: ["1", "2"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Number of Recent Calls": [
+    A([1, 100, 3001, 3002], [
+      s("Each ping time goes into a queue. We only count pings from the last 3000 ms.", {
+        aux: { label: "queue", items: [] },
+      }),
+      s("Ping at time 1 arrives.", {
+        hl: [0], aux: { label: "queue", items: ["1"] },
+      }),
+      s("Ping at time 100 arrives. Both pings are within 3000 ms.", {
+        ok: [0], hl: [1], aux: { label: "queue", items: ["1", "100"] },
+      }),
+      s("Ping at 3001 arrives. The window runs from 1 to 3001, so all three count.", {
+        ok: [0, 1], hl: [2], aux: { label: "queue", items: ["1", "100", "3001"] },
+      }),
+      s("Ping at 3002 arrives. The window now starts at 2. Is the ping at 1 still inside?", {
+        ok: [1, 2], bad: [0], hl: [3],
+        aux: { label: "queue", items: ["1", "100", "3001", "3002"] },
+      }),
+    ]),
+    A([1, 100, 3001, 3002], [
+      s("The window for 3002 is 2 to 3002. The oldest ping, at 1, is too old.", {
+        bad: [0], hl: [3], aux: { label: "queue", items: ["1", "100", "3001", "3002"] },
+      }),
+      s("We remove it from the front of the queue.", {
+        bad: [0], hl: [3], aux: { label: "queue", items: ["100", "3001", "3002"] },
+      }),
+      s("The next oldest ping, 100, is inside the window.", {
+        bad: [0], ok: [1, 2, 3], aux: { label: "queue", items: ["100", "3001", "3002"] },
+      }),
+      s("We stop removing. Why can we stop at the first ping that is still fresh?", {
+        bad: [0], ok: [1, 2, 3], aux: { label: "queue", items: ["100", "3001", "3002"] },
+      }),
+    ]),
+  ],
+
+
+  // ===============================================================
+  // BATCH 9: Dynamic Programming (new problems 1 to 10)
+  // Unique Paths, Longest Common Subsequence and Edit Distance are in BATCH 11
+  // below, because they use the "grid" renderer.
+  // ===============================================================
+
+  // ---------------------------------------------------------------
+  "House Robber": [
+    A([2, 7, 9, 3, 1], [
+      s("Each number is the cash in a house. Robbing two neighbors sets off the alarm.", {}),
+      s("Rob the first house, which holds 2.", {
+        hl: [0],
+      }),
+      s("Its neighbor holds 7, but robbing both would trigger the alarm.", {
+        ok: [0], bad: [1],
+      }),
+      s("Skip it, and the house after that is safe to rob. 2 and 9 are not neighbors.", {
+        ok: [0, 2], bad: [1],
+      }),
+      s("At every house we choose: rob it, or skip it. What should that choice depend on?", {
+        ok: [0, 2], bad: [1], hl: [3],
+      }),
+    ]),
+    A([2, 7, 9, 3, 1], [
+      s("Track the best total up to each house. At house 1 the best is 2.", {
+        hl: [0], tags: { 0: "2" }, aux: { label: "best", items: ["2"] },
+      }),
+      s("At house 2: rob 7 alone, or keep 2. The best is 7.", {
+        hl: [1], tags: { 0: "2", 1: "7" }, aux: { label: "best", items: ["2", "7"] },
+      }),
+      s("At house 3: rob 9 plus the best from two houses back (2), or keep 7. The best is 11.", {
+        ok: [0], hl: [2], tags: { 0: "2", 1: "7", 2: "11" },
+        aux: { label: "best", items: ["2", "7", "11"] },
+      }),
+      s("At house 4: 3 plus the best from two back (7) is 10, less than 11. The best stays 11.", {
+        ok: [1], hl: [3], tags: { 1: "7", 2: "11", 3: "11" },
+        aux: { label: "best", items: ["2", "7", "11", "11"] },
+      }),
+      s("Each answer only used the two answers before it. How many do we really need to remember?", {
+        ok: [2, 3], tags: { 2: "11", 3: "11" },
+        aux: { label: "best", items: ["2", "7", "11", "11"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Coin Change": [
+    A([0, "-", "-", "-", "-", "-", "-", "-"], [
+      s("Cell n holds the fewest coins to make n. The coins are 1, 2 and 5. Making 0 takes 0 coins.", {
+        hl: [0],
+      }),
+      s("To make 1, add a 1-coin to the answer for 0. That is 1 coin.", {
+        values: [0, 1, "-", "-", "-", "-", "-", "-"], ok: [0], hl: [1],
+      }),
+      s("To make 2, add a 2-coin to the answer for 0. That is 1 coin, better than 1 + 1.", {
+        values: [0, 1, 1, "-", "-", "-", "-", "-"], ok: [0], hl: [2], tags: { 2: "2-coin" },
+      }),
+      s("To make 3, add a 2-coin to the answer for 1. That is 2 coins.", {
+        values: [0, 1, 1, 2, "-", "-", "-", "-"], ok: [1], hl: [3],
+      }),
+      s("Each cell looks back at cells one coin away. Which cells would 7 look back at?", {
+        values: [0, 1, 1, 2, "-", "-", "-", "-"], hl: [7],
+      }),
+    ]),
+    A([0, 1, 1, 2, 2, 1, 2, 2], [
+      s("Now every cell is filled. Let us see how the cell for 7 got its value.", {
+        hl: [7],
+      }),
+      s("With a 1-coin we look at cell 6, which holds 2. That gives 3 coins.", {
+        hl: [7, 6], tags: { 6: "2 + 1 = 3" },
+      }),
+      s("With a 2-coin we look at cell 5, which holds 1. That gives 2 coins.", {
+        hl: [7, 5], tags: { 5: "1 + 1 = 2" },
+      }),
+      s("With a 5-coin we look at cell 2, which holds 1. That gives 2 coins.", {
+        hl: [7, 2], tags: { 2: "1 + 1 = 2" },
+      }),
+      s("We keep the smallest of these. What if none of the coins fits at all?", {
+        ok: [7],
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Longest Increasing Subsequence": [
+    A([10, 9, 2, 5, 3, 7, 101, 18], [
+      s("Each number can end a rising chain. We track the longest chain ending at each spot.", {
+        hl: [0], tags: { 0: "1" },
+      }),
+      s("9 is not bigger than 10, so it starts its own chain.", {
+        bad: [0], hl: [1], tags: { 0: "1", 1: "1" },
+      }),
+      s("2 starts a chain too.", {
+        hl: [2], tags: { 0: "1", 1: "1", 2: "1" },
+      }),
+      s("5 is bigger than 2, so it extends the chain of 2. Chain length 2.", {
+        ok: [2], hl: [3], tags: { 0: "1", 1: "1", 2: "1", 3: "2" },
+      }),
+      s("3 is also bigger than 2, so it extends that chain. Chain length 2.", {
+        ok: [2], hl: [4], tags: { 0: "1", 1: "1", 2: "1", 3: "2", 4: "2" },
+      }),
+      s("Now 7. Which earlier chains can it extend?", {
+        hl: [5], tags: { 0: "1", 1: "1", 2: "1", 3: "2", 4: "2" },
+      }),
+    ]),
+    A([10, 9, 2, 5, 3, 7, 101, 18], [
+      s("Here are the chain lengths ending at every number.", {
+        tags: { 0: "1", 1: "1", 2: "1", 3: "2", 4: "2", 5: "3", 6: "4", 7: "4" },
+      }),
+      s("101 ends a chain of 4: 2, 3, 7, 101.", {
+        ok: [2, 4, 5, 6], tags: { 0: "1", 1: "1", 2: "1", 3: "2", 4: "2", 5: "3", 6: "4", 7: "4" },
+      }),
+      s("18 also ends a chain of 4: 2, 3, 7, 18.", {
+        ok: [2, 4, 5, 7], tags: { 0: "1", 1: "1", 2: "1", 3: "2", 4: "2", 5: "3", 6: "4", 7: "4" },
+      }),
+      s("The longest chain can end at any spot. Where should we look for the final answer?", {
+        hl: [6, 7], tags: { 0: "1", 1: "1", 2: "1", 3: "2", 4: "2", 5: "3", 6: "4", 7: "4" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+
+
+  // ---------------------------------------------------------------
+  "Word Break": [
+    A(["l", "e", "e", "t", "c", "o", "d", "e"], [
+      s("Can leetcode be cut into dictionary words? The words are leet and code.", {
+        aux: { label: "words", items: ["leet", "code"] },
+      }),
+      s("Try the first 4 letters. leet is in the dictionary.", {
+        hl: [0, 1, 2, 3], aux: { label: "words", items: ["leet", "code"] },
+      }),
+      s("So the first 4 letters are fine. We mark this cut spot as reachable.", {
+        ok: [0, 1, 2, 3], tags: { 3: "reachable" }, aux: { label: "words", items: ["leet", "code"] },
+      }),
+      s("From that spot, the remaining letters spell code, which is also a word.", {
+        ok: [0, 1, 2, 3], hl: [4, 5, 6, 7], tags: { 3: "reachable" },
+        aux: { label: "words", items: ["leet", "code"] },
+      }),
+      s("Each cut spot is only useful if we could reach it. What does reachable mean here?", {
+        ok: [0, 1, 2, 3, 4, 5, 6, 7], tags: { 3: "reachable", 7: "end" },
+        aux: { label: "words", items: ["leet", "code"] },
+      }),
+    ]),
+    A(["c", "a", "t", "s", "a", "n", "d", "o", "g"], [
+      s("Now catsandog, with the words cat, cats, and, sand and dog. Try cat first.", {
+        hl: [0, 1, 2], aux: { label: "words", items: ["cat", "cats", "and", "sand", "dog"] },
+      }),
+      s("cat is a word, so the spot after it is reachable.", {
+        ok: [0, 1, 2], tags: { 2: "reachable" },
+        aux: { label: "words", items: ["cat", "cats", "and", "sand", "dog"] },
+      }),
+      s("From there, sand is a word, so we move on.", {
+        ok: [0, 1, 2], hl: [3, 4, 5, 6], tags: { 2: "reachable" },
+        aux: { label: "words", items: ["cat", "cats", "and", "sand", "dog"] },
+      }),
+      s("Only og is left, and it is not a word. This way is a dead end.", {
+        ok: [0, 1, 2, 3, 4, 5, 6], bad: [7, 8], tags: { 2: "reachable" },
+        aux: { label: "words", items: ["cat", "cats", "and", "sand", "dog"] },
+      }),
+      s("Cutting cats then and also ends with og. Why must we try every cut spot before saying no?", {
+        hl: [0, 1, 2, 3], bad: [7, 8],
+        aux: { label: "words", items: ["cat", "cats", "and", "sand", "dog"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Partition Equal Subset Sum": [
+    A([1, 5, 11, 5], [
+      s("Can we split the numbers into two groups with the same sum? The total is 22.", {
+        hl: [0, 1, 2, 3], out: "total 22",
+      }),
+      s("Two equal groups must each add up to half the total, which is 11.", {
+        hl: [0, 1, 2, 3], out: "each group 11",
+      }),
+      s("Try 11 on its own. That group reaches 11 exactly.", {
+        ok: [2], out: "group A: 11",
+      }),
+      s("The rest, 1, 5 and 5, also add up to 11.", {
+        ok: [2], hl: [0, 1, 3], out: "group A: 11 | group B: 11",
+      }),
+      s("So the question becomes: can some of the numbers add up to exactly 11?", {
+        ok: [0, 1, 2, 3], out: "can we reach 11?",
+      }),
+    ]),
+    A([1, 5, 11, 5], [
+      s("Track which sums we can make. At the start we can only make 0.", {
+        aux: { label: "reachable", items: ["0"] },
+      }),
+      s("Use the 1. Now 0 and 1 are reachable.", {
+        hl: [0], aux: { label: "reachable", items: ["0", "1"] },
+      }),
+      s("Use the 5. Every old sum plus 5 is reachable too, which adds 5 and 6.", {
+        ok: [0], hl: [1], aux: { label: "reachable", items: ["0", "1", "5", "6"] },
+      }),
+      s("Use the 11. Starting from 0, that reaches 11, our target.", {
+        ok: [0, 1], hl: [2], aux: { label: "reachable", items: ["0", "1", "5", "6", "11"] },
+      }),
+      s("We reached the target half. Does it matter which numbers were used to get there?", {
+        ok: [0, 1, 2], aux: { label: "reachable", items: ["0", "1", "5", "6", "11"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Min Cost Climbing Stairs": [
+    A([10, 15, 20], [
+      s("Each step has a cost. We can start on step 0 or step 1, and climb 1 or 2 steps at a time.", {
+        hl: [0, 1],
+      }),
+      s("The top is just past the last step.", {
+        hl: [2], tags: { 2: "last step" },
+      }),
+      s("To land on the top, we jump from step 2 or from step 1.", {
+        hl: [1, 2],
+      }),
+      s("Jumping from step 1 means paying 15 and skipping over step 2.", {
+        ok: [1], bad: [2], tags: { 1: "pay 15" },
+      }),
+      s("Jumping from step 2 means paying 20. Which way costs less to reach the top?", {
+        hl: [2], tags: { 1: "pay 15", 2: "pay 20" },
+      }),
+    ]),
+    A([10, 15, 20], [
+      s("Track the cheapest cost to stand on each step, counting its own cost. Step 0 costs 10.", {
+        hl: [0], tags: { 0: "10" },
+      }),
+      s("Step 1 can also be a starting step. It costs 15.", {
+        hl: [1], tags: { 0: "10", 1: "15" },
+      }),
+      s("Step 2 comes from step 1 (15) or step 0 (10). The cheaper is 10, plus 20 for this step.", {
+        ok: [0], hl: [2], tags: { 0: "10", 1: "15", 2: "30" },
+      }),
+      s("The top can be reached from step 2 (30) or step 1 (15). Which do we compare for the final answer?", {
+        hl: [1, 2], tags: { 0: "10", 1: "15", 2: "30" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+
+  // ---------------------------------------------------------------
+  "Decode Ways": [
+    A(["2", "2", "6"], [
+      s("Each letter is a number from 1 to 26. How many ways can 226 be read?", {
+        hl: [0, 1, 2],
+      }),
+      s("Read 2, 2 and 6 one at a time: B, B, F.", {
+        hl: [0], out: "2 | 2 | 6",
+      }),
+      s("Or read 22 together as one letter, then 6 alone.", {
+        hl: [0, 1], out: "22 | 6",
+      }),
+      s("Or read 2 alone, then 26 together as one letter.", {
+        hl: [1, 2], out: "2 | 26",
+      }),
+      s("Some cuts worked here. Which pairs of digits are allowed to be read as one letter?", {
+        ok: [0, 1, 2], out: "2 | 2 | 6",
+      }),
+    ]),
+    A(["1", "0", "6"], [
+      s("Now 106. There is a 0 in the middle, and no letter is 0.", {
+        hl: [1],
+      }),
+      s("A lone 0 cannot be read as a letter.", {
+        bad: [1],
+      }),
+      s("So the 0 has to join the digit before it. 10 is allowed.", {
+        ok: [0, 1],
+      }),
+      s("Then the 6 stands alone as the last letter.", {
+        ok: [0, 1, 2], out: "10 | 6",
+      }),
+      s("What if the digits were 306 instead? Would 30 be allowed as one letter?", {
+        hl: [0, 1], out: "10 | 6",
+      }),
+    ]),
+  ],
+
+  // ===============================================================
+  // BATCH 10: Linked Lists, using the "list" renderer (problems 38 to 48)
+  // A top-level next: {...} is the starting wiring for every step.
+  // A step's own next: {...} replaces it for that step, so repeat the full map.
+  // A pointer index equal to values.length points at the "null" slot.
+  // ===============================================================
+
+  // ---------------------------------------------------------------
+  "Insertion Sort List": [
+    L([4, 2, 1, 3], [
+      s("Insertion sort keeps a sorted part on the left and takes the next node from the rest.", {
+        ok: [0], ptrs: { next: 1 },
+      }),
+      s("Take 2. It is smaller than 4, so it has to go in front of it.", {
+        ok: [0], hl: [1], ptrs: { next: 1 },
+      }),
+      s("Insert it before 4. The sorted part is now 2, 4.", {
+        values: [2, 4, 1, 3], ok: [0, 1], ptrs: { next: 2 },
+      }),
+      s("Take 1. It is smaller than everything sorted so far, so it goes to the very front.", {
+        values: [1, 2, 4, 3], ok: [0, 1, 2], hl: [0], ptrs: { next: 3 },
+      }),
+      s("Now 3. Where in the sorted part does it belong?", {
+        values: [1, 2, 4, 3], ok: [0, 1, 2], hl: [3], ptrs: { next: 3 },
+      }),
+    ]),
+    L([1, 2, 4, 3], [
+      s("The sorted part is 1, 2, 4. The next node to place is 3.", {
+        ok: [0, 1, 2], hl: [3], ptrs: { take: 3 },
+      }),
+      s("Walk along the sorted part until the next value is bigger than 3.", {
+        ok: [0, 1, 2], hl: [3], ptrs: { look: 1 }, tags: { 1: "2 < 3", 2: "4 > 3" },
+      }),
+      s("Lift 3 out of its place. The 4 before it now points to nothing.", {
+        ok: [0, 1, 2], hl: [3], next: { 2: N }, hlNext: [2],
+      }),
+      s("Insert 3 after 2: the 2 points to 3, and the 3 points to 4.", {
+        ok: [0, 1, 2], hl: [3], next: { 1: 3, 3: 2, 2: N }, hlNext: [1, 3],
+      }),
+      s("Only a few arrows changed and no value moved. How is that different from shifting values in an array?", {
+        ok: [0, 1, 2, 3], next: { 1: 3, 3: 2, 2: N },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Reverse Linked List": [
+    L([1, 2, 3, 4], [
+      s("Reversing means every arrow must flip. prev starts at nothing and curr at the head.", {
+        hl: [0], ptrs: { prev: 4, curr: 0 },
+      }),
+      s("Flip the arrow of 1 so it points at prev, which is nothing.", {
+        hl: [0], next: { 0: N }, hlNext: [0], ptrs: { prev: 4, curr: 0 },
+      }),
+      s("Move forward: prev steps onto 1 and curr steps onto 2.", {
+        hl: [1], ok: [0], next: { 0: N }, ptrs: { prev: 0, curr: 1 },
+      }),
+      s("Flip the arrow of 2 so it points back at 1.", {
+        hl: [1], ok: [0], next: { 0: N, 1: 0 }, hlNext: [1], ptrs: { prev: 0, curr: 1 },
+      }),
+      s("Move forward again. Each step flips one arrow and moves both pointers. How does it finish?", {
+        hl: [2], ok: [0, 1], next: { 0: N, 1: 0 }, ptrs: { prev: 1, curr: 2 },
+      }),
+    ]),
+    L([1, 2, 3, 4], [
+      s("Look at the node 2. Its arrow still leads on to 3.", {
+        hl: [1], ok: [0], next: { 0: N }, ptrs: { prev: 0, curr: 1 },
+      }),
+      s("If we flip it back at 1 right away, the way to 3 and 4 is lost.", {
+        hl: [1], bad: [2, 3], next: { 0: N, 1: 0 }, hlNext: [1], ptrs: { prev: 0, curr: 1 },
+      }),
+      s("So first we save where the arrow led. A third pointer, next, remembers node 3.", {
+        hl: [2], ok: [0], next: { 0: N }, ptrs: { prev: 0, curr: 1, next: 2 },
+      }),
+      s("Now it is safe to flip the arrow of 2.", {
+        hl: [1], ok: [0], next: { 0: N, 1: 0 }, hlNext: [1], ptrs: { prev: 0, curr: 1, next: 2 },
+      }),
+      s("Then everything moves forward, and curr goes to the saved node. What would go wrong without it?", {
+        hl: [2], ok: [0, 1], next: { 0: N, 1: 0 }, ptrs: { prev: 1, curr: 2 },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Merge Two Sorted Lists": [
+    L([1, 2, 4], [
+      s("Two sorted lists. A pointer sits at the head of each.", {
+        ptrs: { a: 0 }, ptrs2: { b: 0 }, aux: { label: "merged", items: [] },
+      }),
+      s("Compare 1 and 1. They are equal, so we can take either. We take the one from l1.", {
+        hl: [0], hl2: [0], ptrs: { a: 0 }, ptrs2: { b: 0 }, aux: { label: "merged", items: [] },
+      }),
+      s("The 1 from l1 joins the merged list, and l1's pointer moves on.", {
+        ok: [0], ptrs: { a: 1 }, ptrs2: { b: 0 }, aux: { label: "merged", items: ["1"] },
+      }),
+      s("Compare 2 and 1. The 1 in l2 is smaller, so it comes next.", {
+        ok: [0], hl: [1], hl2: [0], ptrs: { a: 1 }, ptrs2: { b: 0 },
+        aux: { label: "merged", items: ["1"] },
+      }),
+      s("It joins the merged list, and l2's pointer moves on.", {
+        ok: [0], ok2: [0], ptrs: { a: 1 }, ptrs2: { b: 1 },
+        aux: { label: "merged", items: ["1", "1"] },
+      }),
+      s("Compare 2 and 3. Which one goes next?", {
+        ok: [0], ok2: [0], hl: [1], hl2: [1], ptrs: { a: 1 }, ptrs2: { b: 1 },
+        aux: { label: "merged", items: ["1", "1"] },
+      }),
+    ], { values2: [1, 3, 4], names: ["l1", "l2"] }),
+    L([5], [
+      s("Now the lists are 5 and 1, 2, 3. A pointer sits at the head of each.", {
+        ptrs: { a: 0 }, ptrs2: { b: 0 }, aux: { label: "merged", items: [] },
+      }),
+      s("1, 2 and 3 are all smaller than 5, so all of them are taken first.", {
+        ok2: [0, 1, 2], ptrs: { a: 0 }, ptrs2: { b: 3 },
+        aux: { label: "merged", items: ["1", "2", "3"] },
+      }),
+      s("The second list is finished. The 5 is still waiting in the first list.", {
+        hl: [0], ok2: [0, 1, 2], ptrs: { a: 0 }, ptrs2: { b: 3 }, tags2: { 3: "end" },
+        aux: { label: "merged", items: ["1", "2", "3"] },
+      }),
+      s("Nothing is left to compare. What happens to the rest of the first list?", {
+        hl: [0], ok2: [0, 1, 2], ptrs: { a: 0 }, ptrs2: { b: 3 },
+        aux: { label: "merged", items: ["1", "2", "3"] },
+      }),
+    ], { values2: [1, 2, 3], names: ["l1", "l2"] }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Linked List Cycle": [
+    L([3, 2, 0, -4], [
+      s("Two pointers start at the head. The last node points back to the second node.", {
+        hlNext: [3], ptrs: { slow: 0, fast: 0 },
+      }),
+      s("Each round, slow moves 1 step and fast moves 2 steps.", {
+        hl: [1, 2], ptrs: { slow: 1, fast: 2 },
+      }),
+      s("Next round. Fast ran off the tail into the loop and came back around, and it is now behind slow.", {
+        hl: [2, 1], ptrs: { slow: 2, fast: 1 },
+      }),
+      s("One more round. Slow steps to the last node, and fast lands on the very same node.", {
+        ok: [3], ptrs: { slow: 3, fast: 3 },
+      }),
+      s("The two pointers meet on one node. What does that tell us about the list?", {
+        ok: [3], ptrs: { slow: 3, fast: 3 },
+      }),
+    ], { next: { 3: 1 } }),
+    L([3, 2, 0, -4], [
+      s("This list has no loop. The last node points at nothing.", {
+        ptrs: { slow: 0, fast: 0 },
+      }),
+      s("Slow moves 1 step and fast moves 2.", {
+        hl: [1, 2], ptrs: { slow: 1, fast: 2 },
+      }),
+      s("Again. Fast jumps past the last node and reaches the end of the list.", {
+        hl: [2], ptrs: { slow: 2, fast: 4 }, tags: { 4: "end" },
+      }),
+      s("Fast ran out of list, so it can never come back around to meet slow. What should we conclude?", {
+        hl: [2], ptrs: { slow: 2, fast: 4 }, tags: { 4: "end" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Middle of the Linked List": [
+    L([1, 2, 3, 4, 5], [
+      s("Slow and fast both start at the head.", {
+        ptrs: { slow: 0, fast: 0 },
+      }),
+      s("Slow takes 1 step. Fast takes 2.", {
+        ptrs: { slow: 1, fast: 2 },
+      }),
+      s("Again. Slow is on 3 and fast is on 5.", {
+        hl: [2], ptrs: { slow: 2, fast: 4 },
+      }),
+      s("Fast is on the last node and cannot take another full step. Where is slow sitting?", {
+        hl: [2, 4], ptrs: { slow: 2, fast: 4 }, tags: { 4: "last" },
+      }),
+    ]),
+    L([1, 2, 3, 4, 5, 6], [
+      s("Now there are 6 nodes. Both pointers start at the head.", {
+        ptrs: { slow: 0, fast: 0 },
+      }),
+      s("Slow takes 1 step. Fast takes 2.", {
+        ptrs: { slow: 1, fast: 2 },
+      }),
+      s("Again. Slow is on 3 and fast is on 5.", {
+        ptrs: { slow: 2, fast: 4 },
+      }),
+      s("Slow moves to 4, and fast jumps off the end.", {
+        ptrs: { slow: 3, fast: 6 }, tags: { 6: "end" },
+      }),
+      s("With 6 nodes there are two middle nodes, 3 and 4. Which one should we return?", {
+        hl: [2, 3], ptrs: { slow: 3, fast: 6 }, tags: { 6: "end" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Remove Nth Node From End of List": [
+    L([1, 2, 3, 4, 5], [
+      s("To remove the 2nd node from the end, give fast a head start of 2 steps.", {
+        ptrs: { slow: 0, fast: 0 },
+      }),
+      s("Fast takes step 1.", {
+        ptrs: { slow: 0, fast: 1 },
+      }),
+      s("Fast takes step 2. There is now a gap of 2 nodes between the pointers.", {
+        hl: [0, 2], ptrs: { slow: 0, fast: 2 },
+      }),
+      s("From now on both pointers move together. Why does keeping this gap matter once fast reaches the end?", {
+        hl: [0, 2], ptrs: { slow: 0, fast: 2 },
+      }),
+    ]),
+    L([1, 2, 3, 4, 5], [
+      s("Both pointers move one step at a time, keeping the same gap.", {
+        ptrs: { slow: 1, fast: 3 },
+      }),
+      s("Again.", {
+        ptrs: { slow: 2, fast: 4 },
+      }),
+      s("Fast is on the last node. Slow is just before the node we want to remove.", {
+        bad: [3], tags: { 3: "remove" }, ptrs: { slow: 2, fast: 4 },
+      }),
+      s("Slow's arrow now jumps over 4, straight to 5. Node 4 is out of the list.", {
+        bad: [3], next: { 2: 4 }, hlNext: [2], ptrs: { slow: 2, fast: 4 },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Palindrome Linked List": [
+    L([1, 2, 2, 1], [
+      s("First find the middle with slow and fast pointers.", {
+        ptrs: { slow: 0, fast: 0 },
+      }),
+      s("Slow takes 1 step. Fast takes 2.", {
+        ptrs: { slow: 1, fast: 2 },
+      }),
+      s("Again. Fast reaches the end, and slow sits where the second half begins.", {
+        hl: [2, 3], ok: [0, 1], ptrs: { slow: 2, fast: 4 },
+      }),
+      s("Cut the list here. The first half is 1, 2 and the second half is 2, 1.", {
+        hl: [2, 3], ok: [0, 1], next: { 1: N }, hlNext: [1], tags: { 0: "first", 2: "second" },
+      }),
+      s("The second half only has forward arrows. How can we compare it with the first half?", {
+        hl: [2, 3], ok: [0, 1], next: { 1: N }, tags: { 0: "first", 2: "second" },
+      }),
+    ]),
+    L([1, 2, 2, 1], [
+      s("The list is cut into two halves: 1, 2 and 2, 1.", {
+        ok: [0, 1], hl: [2, 3], next: { 1: N },
+      }),
+      s("Reverse the second half. The last 1 now points back at 2.", {
+        ok: [0, 1], hl: [2, 3], next: { 1: N, 2: N, 3: 2 }, hlNext: [3],
+      }),
+      s("Put one pointer at the head of the first half and one at the head of the reversed half.", {
+        hl: [0, 3], next: { 1: N, 2: N, 3: 2 }, ptrs: { a: 0, b: 3 },
+      }),
+      s("1 and 1 match. Both pointers step inward.", {
+        ok: [0, 3], hl: [1, 2], next: { 1: N, 2: N, 3: 2 }, ptrs: { a: 1, b: 2 },
+      }),
+      s("2 and 2 match too. Every pair matched. What can we say about the list?", {
+        ok: [0, 1, 2, 3], next: { 1: N, 2: N, 3: 2 }, ptrs: { a: 1, b: 2 },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Intersection of Two Linked Lists": [
+    L([4, 1, 8, 4, 5], [
+      s("These two lists join and share their last nodes: 8, 4, 5.", {
+        ok: [2, 3, 4], ok2: [3, 4, 5], tags: { 2: "shared" }, tags2: { 3: "shared" },
+      }),
+      s("Put a pointer at the head of each list and move them in step.", {
+        ptrs: { pa: 0 }, ptrs2: { pb: 0 },
+      }),
+      s("A has 5 nodes and B has 6, so the pointers reach the shared part at different times.", {
+        hl: [2], hl2: [2], ptrs: { pa: 2 }, ptrs2: { pb: 2 },
+      }),
+      s("A's pointer is already on 8, while B's pointer is still on 1. How can we line them up?", {
+        hl: [2], hl2: [2], ptrs: { pa: 2 }, ptrs2: { pb: 2 },
+      }),
+    ], { values2: [5, 6, 1, 8, 4, 5], names: ["A", "B"] }),
+    L([4, 1, 8, 4, 5], [
+      s("Idea: when a pointer reaches the end of its list, send it to the head of the other list.", {
+        ptrs: { pa: 5 }, ptrs2: { pb: 5 }, tags: { 5: "end" },
+      }),
+      s("A's pointer jumps to the head of B. B's pointer reaches the end of B.", {
+        ptrs2: { pa: 0, pb: 6 }, tags2: { 6: "end" },
+      }),
+      s("B's pointer jumps to the head of A. A's pointer keeps walking through B.", {
+        ptrs: { pb: 0 }, ptrs2: { pa: 1 },
+      }),
+      s("Now each pointer has walked both lists, and both stand on the same node, 8. Why at the same time?", {
+        ok: [2], ok2: [3], ptrs: { pb: 2 }, ptrs2: { pa: 3 },
+        tags: { 2: "same node" }, tags2: { 3: "same node" },
+      }),
+    ], { values2: [5, 6, 1, 8, 4, 5], names: ["A", "B"] }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Remove Duplicates from Sorted List": [
+    L([1, 1, 2, 3, 3], [
+      s("The list is sorted, so equal values sit side by side.", {
+        hl: [0, 1],
+      }),
+      s("Compare each node with the one after it. The first two are both 1.", {
+        hl: [0, 1], ptrs: { cur: 0 },
+      }),
+      s("Equal values mean the second 1 is a duplicate and has to go.", {
+        hl: [0], bad: [1], ptrs: { cur: 0 },
+      }),
+      s("What should the arrow from the first 1 point at now?", {
+        hl: [0], bad: [1], ptrs: { cur: 0 },
+      }),
+    ]),
+    L([1, 1, 2, 3, 3], [
+      s("The first 1 skips its duplicate and points straight at 2.", {
+        bad: [1], hl: [0], next: { 0: 2 }, hlNext: [0], ptrs: { cur: 0 },
+      }),
+      s("The next node, 2, is different, so cur can move on to it.", {
+        bad: [1], ok: [0], hl: [2], next: { 0: 2 }, ptrs: { cur: 2 },
+      }),
+      s("Then cur moves to 3. The node after it is also 3, so that duplicate is skipped as well.", {
+        bad: [1, 4], ok: [0, 2], hl: [3], next: { 0: 2, 3: N }, hlNext: [3], ptrs: { cur: 3 },
+      }),
+      s("After skipping a duplicate, cur stayed put instead of moving ahead. Why?", {
+        bad: [1, 4], ok: [0, 2, 3], next: { 0: 2, 3: N }, ptrs: { cur: 3 },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Reorder List": [
+    L([1, 2, 3, 4], [
+      s("We want 1, 4, 2, 3 from 1, 2, 3, 4, taking from the front and the back in turn.", {
+        hl: [0, 3],
+      }),
+      s("First find the middle with slow and fast pointers.", {
+        ptrs: { slow: 1, fast: 2 },
+      }),
+      s("Cut the list after the middle. The second half is 3, 4.", {
+        ok: [0, 1], hl: [2, 3], next: { 1: N }, hlNext: [1],
+      }),
+      s("Reverse the second half so it reads 4, 3. How will we weave 1, 2 with 4, 3?", {
+        ok: [0, 1], hl: [2, 3], next: { 1: N, 2: N, 3: 2 }, hlNext: [3],
+      }),
+    ]),
+    L([1, 2, 3, 4], [
+      s("Two halves: 1, 2 and the reversed 4, 3.", {
+        ok: [0, 1], hl: [2, 3], next: { 1: N, 2: N, 3: 2 },
+      }),
+      s("Take 1 and link it to 4, the head of the other half.", {
+        hl: [0, 3], next: { 0: 3, 1: N, 2: N, 3: 2 }, hlNext: [0],
+      }),
+      s("Link 4 back to 2, the next node of the first half.", {
+        hl: [3, 1], next: { 0: 3, 1: N, 2: N, 3: 1 }, hlNext: [3],
+      }),
+      s("Link 2 to 3, the next node of the second half.", {
+        hl: [1, 2], next: { 0: 3, 1: 2, 2: N, 3: 1 }, hlNext: [1],
+      }),
+      s("The list now reads 1, 4, 2, 3. We changed arrows, not values. Why can this be done in place?", {
+        ok: [0, 1, 2, 3], next: { 0: 3, 1: 2, 2: N, 3: 1 },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Add Two Numbers": [
+    L([2, 4, 3], [
+      s("Digits are stored backwards: 342 is 2, 4, 3. We start at the head, like adding from the ones place.", {
+        ptrs: { a: 0 }, ptrs2: { b: 0 }, aux: { label: "sum", items: [] },
+      }),
+      s("2 + 5 = 7. No carry.", {
+        hl: [0], hl2: [0], ptrs: { a: 0 }, ptrs2: { b: 0 }, aux: { label: "sum", items: ["7"] },
+      }),
+      s("4 + 6 = 10. Write 0 and carry 1 into the next column.", {
+        ok: [0], ok2: [0], hl: [1], hl2: [1], tags: { 1: "carry 1" },
+        ptrs: { a: 1 }, ptrs2: { b: 1 }, aux: { label: "sum", items: ["7", "0"] },
+      }),
+      s("3 + 4 plus the carry 1 makes 8. Write 8.", {
+        ok: [0, 1], ok2: [0, 1], hl: [2], hl2: [2],
+        ptrs: { a: 2 }, ptrs2: { b: 2 }, aux: { label: "sum", items: ["7", "0", "8"] },
+      }),
+      s("The sum is also stored backwards. Why does starting at the head work so well here?", {
+        ok: [0, 1, 2], ok2: [0, 1, 2], aux: { label: "sum", items: ["7", "0", "8"] },
+      }),
+    ], { values2: [5, 6, 4], names: ["l1", "l2"] }),
+    L([9, 9], [
+      s("Now 99 and 1. The digits are 9, 9 and 1.", {
+        ptrs: { a: 0 }, ptrs2: { b: 0 }, aux: { label: "sum", items: [] },
+      }),
+      s("9 + 1 = 10. Write 0 and carry 1.", {
+        hl: [0], hl2: [0], tags: { 1: "carry 1" }, ptrs: { a: 0 }, ptrs2: { b: 0 },
+        aux: { label: "sum", items: ["0"] },
+      }),
+      s("The second list has run out, so it counts as 0. 9 + 0 + 1 = 10: write 0, carry 1 again.", {
+        ok: [0], ok2: [0], hl: [1], tags: { 2: "carry 1" }, ptrs: { a: 1 }, ptrs2: { b: 1 },
+        aux: { label: "sum", items: ["0", "0"] },
+      }),
+      s("Both lists are finished, but a carry of 1 is left over. What do we do with it?", {
+        ok: [0, 1], ok2: [0], tags: { 2: "carry 1" }, ptrs: { a: 2 }, ptrs2: { b: 1 },
+        aux: { label: "sum", items: ["0", "0"] },
+      }),
+    ], { values2: [1], names: ["l1", "l2"] }),
+  ],
+
+  // ===============================================================
+  // BATCH 11: Grids and DP tables, using the "grid" renderer
+  // Cells are [row, col] pairs, for example hl: [[1, 2]]. Tag keys are "row,col".
+  // values are 2D arrays. A top-level dim: [...] fades cells (water, empty cells).
+  // rowLabels / colLabels label the rows and columns of a DP table.
+  // ===============================================================
+
+  // ---------------------------------------------------------------
+  "Number of Islands": [
+    G(ISLANDS, [
+      s("Land is 1 and water is 0. An island is land that touches up, down, left or right.", {}),
+      s("Scan cell by cell. The first land we meet starts a new island.", {
+        hl: [[0, 0]], tags: { "0,0": "#1" },
+      }),
+      s("Everything connected to it belongs to the same island.", {
+        ok: [[0, 0], [0, 1], [1, 0], [1, 1]], tags: { "0,0": "#1" },
+      }),
+      s("Keep scanning. This land is not connected to the first island, so it is a new one.", {
+        ok: [[0, 0], [0, 1], [1, 0], [1, 1]], hl: [[2, 2]], tags: { "0,0": "#1", "2,2": "#2" },
+      }),
+      s("The land at the bottom right touches the middle one only at a corner. Is it the same island?", {
+        ok: [[0, 0], [0, 1], [1, 0], [1, 1], [2, 2]], hl: [[3, 3], [3, 4]],
+        tags: { "0,0": "#1", "2,2": "#2" },
+      }),
+    ], { dim: zeros(ISLANDS) }),
+    G(ISLANDS, [
+      s("While walking an island, we must remember which cells we have already visited.", {
+        hl: [[0, 0]], tags: { "0,0": "start" },
+      }),
+      s("Mark the start as visited, then step right.", {
+        ok: [[0, 0]], hl: [[0, 1]],
+      }),
+      s("From there we can step down.", {
+        ok: [[0, 0], [0, 1]], hl: [[1, 1]],
+      }),
+      s("Then step left.", {
+        ok: [[0, 0], [0, 1], [1, 1]], hl: [[1, 0]],
+      }),
+      s("From here, the cell above is the start again. What stops us from circling forever?", {
+        ok: [[0, 1], [1, 1], [1, 0]], hl: [[0, 0]], tags: { "0,0": "seen" },
+      }),
+    ], { dim: zeros(ISLANDS) }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Flood Fill": [
+    G(FILL, [
+      s("Start at the middle cell, which has color 1. We repaint it and all connected 1s with color 2.", {
+        hl: [[1, 1]],
+      }),
+      s("Repaint the start cell.", {
+        values: [[1, 1, 1], [1, 2, 0], [1, 0, 1]], ok: [[1, 1]],
+      }),
+      s("Look at its neighbors. Cells with color 1 get repainted. Cells with another color do not.", {
+        values: [[1, 1, 1], [1, 2, 0], [1, 0, 1]], ok: [[1, 1]], hl: [[0, 1], [1, 0]], bad: [[1, 2], [2, 1]],
+      }),
+      s("Repaint those two, then keep spreading outward from them.", {
+        values: [[1, 2, 1], [2, 2, 0], [1, 0, 1]], ok: [[1, 1], [0, 1], [1, 0]],
+      }),
+      s("The 1 in the bottom corner touches only 0s. Will it be repainted?", {
+        values: [[2, 2, 2], [2, 2, 0], [2, 0, 1]],
+        ok: [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [2, 0]], hl: [[2, 2]],
+      }),
+    ]),
+    G([[1, 1], [1, 0]], [
+      s("What if the new color is 1, the same color that is already there?", {
+        hl: [[0, 0]],
+      }),
+      s("We repaint the start cell with 1. It looks exactly the same as before.", {
+        ok: [[0, 0]],
+      }),
+      s("Its neighbors have color 1 too, so we visit them. Each one sees the start, still color 1.", {
+        ok: [[0, 0]], hl: [[0, 1], [1, 0]],
+      }),
+      s("A repainted cell still looks unpainted, so we keep walking in circles. How can we avoid that?", {
+        bad: [[0, 0], [0, 1], [1, 0]],
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Rotting Oranges": [
+    G(ORANGES, [
+      s("2 is rotten, 1 is fresh and 0 is empty. Each minute, rot spreads to fresh neighbors.", {
+        ok: [[0, 0]], aux: { label: "minute", items: ["0"] },
+      }),
+      s("Minute 1: the rotten orange infects the two fresh oranges next to it.", {
+        values: [[2, 2, 1], [2, 1, 0], [0, 1, 1]], ok: [[0, 0]], hl: [[0, 1], [1, 0]],
+        aux: { label: "minute", items: ["1"] },
+      }),
+      s("Minute 2: both new rotten oranges spread. The empty cell below the left one stays empty.", {
+        values: [[2, 2, 2], [2, 2, 0], [0, 1, 1]], ok: [[0, 0], [0, 1], [1, 0]], hl: [[0, 2], [1, 1]],
+        aux: { label: "minute", items: ["2"] },
+      }),
+      s("Minute 3: only the orange below the center has a rotten neighbor and is still fresh.", {
+        values: [[2, 2, 2], [2, 2, 0], [0, 2, 1]], ok: [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1]],
+        hl: [[2, 1]], aux: { label: "minute", items: ["3"] },
+      }),
+      s("Minute 4: the last orange rots. Rot spread outward in waves. Which search works like that?", {
+        values: [[2, 2, 2], [2, 2, 0], [0, 2, 2]],
+        ok: [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [2, 1]], hl: [[2, 2]],
+        aux: { label: "minute", items: ["4"] },
+      }),
+    ], { dim: zeros(ORANGES) }),
+    G([[2, 1, 0], [0, 0, 1]], [
+      s("A new grid. The top row is 2, 1, 0 and the bottom row is 0, 0, 1.", {
+        ok: [[0, 0]], aux: { label: "minute", items: ["0"] },
+      }),
+      s("Minute 1: the fresh orange next to the rotten one rots.", {
+        values: [[2, 2, 0], [0, 0, 1]], ok: [[0, 0]], hl: [[0, 1]],
+        aux: { label: "minute", items: ["1"] },
+      }),
+      s("Nothing else can rot. The last fresh orange is walled in by empty cells.", {
+        values: [[2, 2, 0], [0, 0, 1]], ok: [[0, 0], [0, 1]], bad: [[1, 2]],
+        aux: { label: "minute", items: ["1"] },
+      }),
+      s("No rotten neighbor is left, yet a fresh orange remains. What should we answer?", {
+        values: [[2, 2, 0], [0, 0, 1]], ok: [[0, 0], [0, 1]], bad: [[1, 2]],
+        aux: { label: "minute", items: ["1"] },
+      }),
+    ], { dim: zeros([[2, 1, 0], [0, 0, 1]]) }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Pacific Atlantic Water Flow": [
+    G(PAH, [
+      s("Numbers are heights. Water flows to equal or lower neighbors. The Pacific touches the top and left edges.", {
+        hl: [[0, 0], [0, 1], [0, 2], [1, 0], [2, 0]],
+        tags: { "0,0": "P", "0,1": "P", "0,2": "P", "1,0": "P", "2,0": "P" },
+      }),
+      s("Checking every cell downhill repeats a lot of work. Instead, start at the ocean and walk uphill.", {
+        ok: [[0, 0], [0, 1], [0, 2], [1, 0], [2, 0]],
+        tags: { "0,0": "P", "0,1": "P", "0,2": "P", "1,0": "P", "2,0": "P" },
+      }),
+      s("From the 2 on the top edge, the 5 below it is higher, so water there can reach the Pacific.", {
+        ok: [[0, 0], [0, 1], [0, 2], [1, 0], [2, 0]], hl: [[1, 2]],
+        tags: { "0,2": "P", "1,2": "reached" },
+      }),
+      s("From the 3 on the left edge, the 6 beside it is higher, so it is reached too.", {
+        ok: [[0, 0], [0, 1], [0, 2], [1, 0], [2, 0], [1, 2]], hl: [[2, 1]],
+        tags: { "2,0": "P", "2,1": "reached" },
+      }),
+      s("The middle cell, 2, is lower than all its neighbors. Can the walk ever reach it?", {
+        ok: [[0, 0], [0, 1], [0, 2], [1, 0], [2, 0], [1, 2], [2, 1]], hl: [[1, 1]],
+      }),
+    ]),
+    G(PAH, [
+      s("The uphill walk from the Pacific edges reaches these cells.", {
+        ok: [[0, 0], [0, 1], [0, 2], [1, 0], [2, 0], [1, 2], [2, 1]],
+        tags: { "0,0": "P", "0,1": "P", "0,2": "P", "1,0": "P", "2,0": "P", "1,2": "P", "2,1": "P" },
+      }),
+      s("The walk from the Atlantic edges, the bottom and the right, reaches these cells.", {
+        ok: [[2, 0], [2, 1], [2, 2], [0, 2], [1, 2], [0, 1], [1, 0]],
+        tags: { "2,0": "A", "2,1": "A", "2,2": "A", "0,2": "A", "1,2": "A", "0,1": "A", "1,0": "A" },
+      }),
+      s("Now put the two together. Some cells were reached by one walk, some by both, one by neither.", {
+        tags: {
+          "0,0": "P", "2,2": "A", "1,1": "none",
+          "0,1": "P+A", "0,2": "P+A", "1,0": "P+A", "2,0": "P+A", "1,2": "P+A", "2,1": "P+A",
+        },
+      }),
+      s("Which cells can send water to both oceans?", {
+        ok: [[0, 1], [0, 2], [1, 0], [2, 0], [1, 2], [2, 1]], bad: [[0, 0], [2, 2], [1, 1]],
+        tags: {
+          "0,0": "P", "2,2": "A", "1,1": "none",
+          "0,1": "P+A", "0,2": "P+A", "1,0": "P+A", "2,0": "P+A", "1,2": "P+A", "2,1": "P+A",
+        },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Unique Paths": [
+    G(UP_EMPTY, [
+      s("Each cell shows how many ways lead to it. The robot may only move right or down.", {
+        hl: [[0, 0]],
+      }),
+      s("The start cell has 1 way: the robot is already standing there.", {
+        values: [[1, "-", "-"], ["-", "-", "-"], ["-", "-", "-"]], ok: [[0, 0]],
+      }),
+      s("Anywhere in the top row can only be reached by moving right, so each has 1 way.", {
+        values: [[1, 1, 1], ["-", "-", "-"], ["-", "-", "-"]], ok: [[0, 0], [0, 1], [0, 2]],
+      }),
+      s("The left column can only be reached by moving down. That is 1 way each as well.", {
+        values: [[1, 1, 1], [1, "-", "-"], [1, "-", "-"]],
+        ok: [[0, 0], [0, 1], [0, 2], [1, 0], [2, 0]],
+      }),
+      s("Cells inside can be reached from above or from the left. How do those two combine?", {
+        values: [[1, 1, 1], [1, "-", "-"], [1, "-", "-"]],
+        ok: [[0, 0], [0, 1], [0, 2], [1, 0], [2, 0]], hl: [[1, 1]],
+      }),
+    ]),
+    G(UP_EMPTY, [
+      s("Cell (1, 1) can be reached from the cell above it or from the cell to its left.", {
+        values: [[1, 1, 1], [1, "-", "-"], [1, "-", "-"]], hl: [[1, 1]], ok: [[0, 1], [1, 0]],
+      }),
+      s("The cell above holds 1 way and the cell on the left holds 1 way. Every route to either can step in.", {
+        values: [[1, 1, 1], [1, "-", "-"], [1, "-", "-"]], hl: [[1, 1]], ok: [[0, 1], [1, 0]],
+        tags: { "0,1": "1", "1,0": "1" },
+      }),
+      s("So this cell holds 2 ways.", {
+        values: [[1, 1, 1], [1, 2, "-"], [1, "-", "-"]], hl: [[1, 1]], ok: [[0, 1], [1, 0]],
+      }),
+      s("Now cell (1, 2): the cell above holds 1 and the cell on the left holds 2. What goes here?", {
+        values: [[1, 1, 1], [1, 2, "-"], [1, "-", "-"]], hl: [[1, 2]], ok: [[0, 2], [1, 1]],
+        tags: { "0,2": "1", "1,1": "2" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Longest Common Subsequence": [
+    G(LCS_S0, [
+      s("Rows are the letters of ace and columns the letters of abcde. A cell holds the longest common length so far.", {}),
+      s("a and a match. We take the diagonal cell, 0, and add 1.", {
+        values: [[0, 0, 0, 0, 0, 0], [0, 1, "-", "-", "-", "-"], [0, "-", "-", "-", "-", "-"], [0, "-", "-", "-", "-", "-"]],
+        hl: [[1, 1]], ok: [[0, 0]], tags: { "0,0": "diag" },
+      }),
+      s("Later, c and c match too. The diagonal cell holds 1, so this cell becomes 2.", {
+        values: [[0, 0, 0, 0, 0, 0], [0, 1, 1, 1, 1, 1], [0, 1, 1, 2, "-", "-"], [0, "-", "-", "-", "-", "-"]],
+        hl: [[2, 3]], ok: [[1, 2]], tags: { "1,2": "diag" },
+      }),
+      s("What should a cell hold when its two letters differ?", {
+        values: [[0, 0, 0, 0, 0, 0], [0, 1, 1, 1, 1, 1], [0, 1, 1, 2, "-", "-"], [0, "-", "-", "-", "-", "-"]],
+        hl: [[2, 4]],
+      }),
+    ], { rowLabels: ["", "a", "c", "e"], colLabels: ["", "a", "b", "c", "d", "e"] }),
+    G(LCS_S0, [
+      s("Now c against d, in row 2, column 4. The letters differ.", {
+        values: [[0, 0, 0, 0, 0, 0], [0, 1, 1, 1, 1, 1], [0, 1, 1, 2, "-", "-"], [0, "-", "-", "-", "-", "-"]],
+        hl: [[2, 4]],
+      }),
+      s("Look at the cell above. It holds 1.", {
+        values: [[0, 0, 0, 0, 0, 0], [0, 1, 1, 1, 1, 1], [0, 1, 1, 2, "-", "-"], [0, "-", "-", "-", "-", "-"]],
+        hl: [[2, 4], [1, 4]],
+      }),
+      s("Now the cell to the left. It holds 2.", {
+        values: [[0, 0, 0, 0, 0, 0], [0, 1, 1, 1, 1, 1], [0, 1, 1, 2, "-", "-"], [0, "-", "-", "-", "-", "-"]],
+        hl: [[2, 4], [2, 3]],
+      }),
+      s("Which value should this cell hold?", {
+        values: [[0, 0, 0, 0, 0, 0], [0, 1, 1, 1, 1, 1], [0, 1, 1, 2, "-", "-"], [0, "-", "-", "-", "-", "-"]],
+        hl: [[2, 4]], ok: [[1, 4], [2, 3]],
+      }),
+      s("It takes the larger one, 2. Why is copying the bigger neighbor always safe when the letters differ?", {
+        values: [[0, 0, 0, 0, 0, 0], [0, 1, 1, 1, 1, 1], [0, 1, 1, 2, 2, "-"], [0, "-", "-", "-", "-", "-"]],
+        hl: [[2, 4]], ok: [[2, 3]],
+      }),
+    ], { rowLabels: ["", "a", "c", "e"], colLabels: ["", "a", "b", "c", "d", "e"] }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Edit Distance": [
+    G(ED_EMPTY, [
+      s("Rows are the letters of cat, columns the letters of cut. A cell holds the fewest edits so far.", {}),
+      s("Top row: turning an empty word into c, cu, cut takes 1, 2, 3 insertions.", {
+        values: [[0, 1, 2, 3], ["-", "-", "-", "-"], ["-", "-", "-", "-"], ["-", "-", "-", "-"]],
+        ok: [[0, 0], [0, 1], [0, 2], [0, 3]],
+      }),
+      s("Left column: turning c, ca, cat into an empty word takes 1, 2, 3 deletions.", {
+        values: [[0, 1, 2, 3], [1, "-", "-", "-"], [2, "-", "-", "-"], [3, "-", "-", "-"]],
+        ok: [[0, 0], [0, 1], [0, 2], [0, 3], [1, 0], [2, 0], [3, 0]],
+      }),
+      s("Every other cell builds on these edges. What happens when two letters match, like c and c?", {
+        values: [[0, 1, 2, 3], [1, "-", "-", "-"], [2, "-", "-", "-"], [3, "-", "-", "-"]],
+        ok: [[0, 0], [0, 1], [0, 2], [0, 3], [1, 0], [2, 0], [3, 0]], hl: [[1, 1]],
+      }),
+    ], { rowLabels: ["", "c", "a", "t"], colLabels: ["", "c", "u", "t"] }),
+    G(ED_EMPTY, [
+      s("The cell for a against u. The letters differ, so we must make one edit.", {
+        values: [[0, 1, 2, 3], [1, 0, 1, 2], [2, 1, "-", "-"], [3, "-", "-", "-"]], hl: [[2, 2]],
+      }),
+      s("Replace a with u: take the diagonal cell, 0, and add 1.", {
+        values: [[0, 1, 2, 3], [1, 0, 1, 2], [2, 1, "-", "-"], [3, "-", "-", "-"]],
+        hl: [[2, 2], [1, 1]], tags: { "1,1": "0+1" },
+      }),
+      s("Delete a: take the cell above, 1, and add 1.", {
+        values: [[0, 1, 2, 3], [1, 0, 1, 2], [2, 1, "-", "-"], [3, "-", "-", "-"]],
+        hl: [[2, 2], [1, 2]], tags: { "1,2": "1+1" },
+      }),
+      s("Insert u: take the cell on the left, 1, and add 1.", {
+        values: [[0, 1, 2, 3], [1, 0, 1, 2], [2, 1, "-", "-"], [3, "-", "-", "-"]],
+        hl: [[2, 2], [2, 1]], tags: { "2,1": "1+1" },
+      }),
+      s("We keep the smallest of the three. Which one is it?", {
+        values: [[0, 1, 2, 3], [1, 0, 1, 2], [2, 1, "-", "-"], [3, "-", "-", "-"]],
+        hl: [[2, 2]], ok: [[1, 1], [1, 2], [2, 1]],
+        tags: { "1,1": "0+1", "1,2": "1+1", "2,1": "1+1" },
+      }),
+    ], { rowLabels: ["", "c", "a", "t"], colLabels: ["", "c", "u", "t"] }),
+  ],
+
+  // ===============================================================
+  // BATCH 12: Graphs, using the "graph" renderer
+  // GR(nodes, edges, steps, { pos, directed, height }). Edges are node index pairs,
+  // with an optional weight as the third value. hlE / okE / badE color edges by node pair.
+  // ===============================================================
+
+  // ---------------------------------------------------------------
+  "Number of Provinces": [
+    GR(PROV_NODES, PROV_EDGES, [
+      s("Each circle is a city and each line a direct link. A province is a group of connected cities.", {}),
+      s("Start at city 0, which is not visited yet. That begins a province.", {
+        hl: [0], tags: { 0: "#1" },
+      }),
+      s("Follow its link to city 1, then on to city 2. All three belong to the same province.", {
+        ok: [0, 1, 2], okE: [[0, 1], [1, 2]], tags: { 0: "#1" },
+      }),
+      s("City 3 is not visited, so a new province begins. Its link leads on to city 4.", {
+        ok: [0, 1, 2], okE: [[0, 1], [1, 2]], hl: [3, 4], hlE: [[3, 4]], tags: { 0: "#1", 3: "#2" },
+      }),
+      s("City 5 has no links at all. Does it still count as a province?", {
+        ok: [0, 1, 2, 3, 4], okE: [[0, 1], [1, 2], [3, 4]], hl: [5], tags: { 0: "#1", 3: "#2" },
+      }),
+    ], { pos: PROV_POS, height: 190 }),
+    GR(PROV_NODES, PROV_EDGES, [
+      s("Start at city 1. It links to city 0 and city 2.", {
+        hl: [1], hlE: [[0, 1], [1, 2]],
+      }),
+      s("Visit city 0 first. Its only link goes straight back to city 1.", {
+        ok: [1], hl: [0], hlE: [[0, 1]],
+      }),
+      s("City 1 is already visited, so we do not walk there again.", {
+        ok: [1], hl: [0], badE: [[0, 1]],
+      }),
+      s("Then city 2 is visited from city 1. What would happen on this back-and-forth if we never marked cities?", {
+        ok: [0, 1], hl: [2], okE: [[0, 1]], hlE: [[1, 2]],
+      }),
+    ], { pos: PROV_POS, height: 190 }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Find if Path Exists in Graph": [
+    GR(PATH_A_NODES, PATH_A_EDGES, [
+      s("Is there a path from 0 to 4? Start at the source and look at its links.", {
+        hl: [0], tags: { 0: "from", 4: "to" },
+      }),
+      s("Node 0 links to 1 and 2. Both get explored.", {
+        ok: [0], hl: [1, 2], hlE: [[0, 1], [0, 2]], tags: { 0: "from", 4: "to" },
+      }),
+      s("Node 2 has no other links, so that branch ends. Node 1 leads on to node 3.", {
+        ok: [0, 1, 2], okE: [[0, 1], [0, 2]], hl: [3], hlE: [[1, 3]], tags: { 0: "from", 4: "to" },
+      }),
+      s("Node 3 links to node 4, our destination. What does reaching it tell us?", {
+        ok: [0, 1, 2, 3], okE: [[0, 1], [0, 2], [1, 3]], hl: [4], hlE: [[3, 4]], tags: { 0: "from", 4: "to" },
+      }),
+    ], { pos: PATH_A_POS, height: 190 }),
+    GR(PATH_B_NODES, PATH_B_EDGES, [
+      s("Now a graph in two separate pieces. Can we get from 0 to 5?", {
+        hl: [0, 5], tags: { 0: "from", 5: "to" },
+      }),
+      s("Explore from 0. Its links lead to nodes 1 and 2.", {
+        ok: [0], hl: [1, 2], hlE: [[0, 1], [0, 2]], tags: { 0: "from", 5: "to" },
+      }),
+      s("Neither 1 nor 2 has any other link, so the exploration runs dry.", {
+        ok: [0, 1, 2], okE: [[0, 1], [0, 2]], tags: { 0: "from", 5: "to" },
+      }),
+      s("We never reached 5, which sits in a different piece. What should we answer?", {
+        ok: [0, 1, 2], okE: [[0, 1], [0, 2]], bad: [3, 4, 5], tags: { 0: "from", 5: "to" },
+      }),
+    ], { pos: PATH_B_POS, height: 200 }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Clone Graph": [
+    GR(CLONE_NODES, CLONE_EDGES, [
+      s("We must build a brand new copy of every node, with the same links. Start at node 1.", {
+        hl: [0], aux: { label: "copies", items: [] },
+      }),
+      s("Make a copy of node 1 and note it in a map.", {
+        hl: [0], aux: { label: "copies", items: ["1→1'"] },
+      }),
+      s("Move to a neighbor, node 2, and copy it too.", {
+        ok: [0], hl: [1], hlE: [[0, 1]], aux: { label: "copies", items: ["1→1'", "2→2'"] },
+      }),
+      s("Walk on to nodes 3 and 4, copying each one as we reach it.", {
+        ok: [0, 1], okE: [[0, 1]], hl: [2, 3], hlE: [[1, 2], [2, 3]],
+        aux: { label: "copies", items: ["1→1'", "2→2'", "3→3'", "4→4'"] },
+      }),
+      s("Every node has exactly one copy. What would go wrong if one node got two copies?", {
+        ok: [0, 1, 2, 3], okE: [[0, 1], [1, 2], [2, 3]],
+        aux: { label: "copies", items: ["1→1'", "2→2'", "3→3'", "4→4'"] },
+      }),
+    ], { pos: CLONE_POS, height: 220 }),
+    GR(CLONE_NODES, CLONE_EDGES, [
+      s("Now we are at node 4, which links back to node 1. Node 1 already has a copy.", {
+        ok: [0, 1, 2], okE: [[0, 1], [1, 2], [2, 3]], hl: [3, 0], hlE: [[3, 0]],
+        aux: { label: "copies", items: ["1→1'", "2→2'", "3→3'", "4→4'"] },
+      }),
+      s("We must not make another copy of node 1.", {
+        ok: [1, 2], okE: [[0, 1], [1, 2], [2, 3]], hl: [3], bad: [0], badE: [[3, 0]],
+        aux: { label: "copies", items: ["1→1'", "2→2'", "3→3'", "4→4'"] },
+      }),
+      s("We look node 1 up in the map instead, and link the copy of 4 to the copy of 1.", {
+        ok: [1, 2, 3], okE: [[0, 1], [1, 2], [2, 3]], hl: [0], hlE: [[3, 0]],
+        aux: { label: "copies", items: ["1→1'", "2→2'", "3→3'", "4→4'"] },
+      }),
+      s("The map answers 'have we copied this node?' in one step. What does that stop when the graph has a loop?", {
+        ok: [0, 1, 2, 3], okE: [[0, 1], [1, 2], [2, 3], [3, 0]],
+        aux: { label: "copies", items: ["1→1'", "2→2'", "3→3'", "4→4'"] },
+      }),
+    ], { pos: CLONE_POS, height: 220 }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Course Schedule": [
+    GR(COURSE_NODES, COURSE_EDGES, [
+      s("An arrow from 0 to 1 means: take course 0 before course 1.", {
+        hl: [0, 1], hlE: [[0, 1]],
+      }),
+      s("Course 0 has no arrows pointing into it, so it can be taken right away.", {
+        hl: [0], tags: { 0: "waits: 0", 1: "waits: 1", 2: "waits: 1", 3: "waits: 2" },
+      }),
+      s("Take 0. Its arrows are removed, and courses 1 and 2 no longer wait for anything.", {
+        ok: [0], hl: [1, 2], okE: [[0, 1], [0, 2]], tags: { 1: "waits: 0", 2: "waits: 0", 3: "waits: 2" },
+      }),
+      s("Take 1 and 2. Now course 3 has nothing left to wait for.", {
+        ok: [0, 1, 2], hl: [3], okE: [[0, 1], [0, 2], [1, 3], [2, 3]], tags: { 3: "waits: 0" },
+      }),
+      s("All four courses could be taken. Why did we always pick a course that was waiting for nothing?", {
+        ok: [0, 1, 2, 3], okE: [[0, 1], [0, 2], [1, 3], [2, 3]],
+      }),
+    ], { pos: COURSE_POS, directed: true, height: 220 }),
+    GR(CYCLE_NODES, CYCLE_EDGES, [
+      s("Now course 1 needs 0, course 2 needs 1, and course 0 needs 2.", {
+        hl: [0, 1, 2],
+      }),
+      s("Look for a course with no arrows pointing into it. Each one is waiting for one other course.", {
+        tags: { 0: "waits: 1", 1: "waits: 1", 2: "waits: 1" },
+      }),
+      s("Every course is waiting for another one, so none can be taken first.", {
+        bad: [0, 1, 2], badE: [[0, 1], [1, 2], [2, 0]], tags: { 0: "waits: 1", 1: "waits: 1", 2: "waits: 1" },
+      }),
+      s("Following the arrows brings us back to where we began. What should we answer for this schedule?", {
+        bad: [0, 1, 2], badE: [[0, 1], [1, 2], [2, 0]],
+      }),
+    ], { pos: CYCLE_POS, directed: true, height: 220 }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Network Delay Time": [
+    GR(NET_A_NODES, NET_A_EDGES, [
+      s("A signal starts at node 2. Each arrow shows how long it takes to cross.", {
+        hl: [1], tags: { 1: "t=0" },
+      }),
+      s("After 1 time unit, it reaches nodes 1 and 3.", {
+        ok: [1], hl: [0, 2], hlE: [[1, 0], [1, 2]], tags: { 1: "t=0", 0: "t=1", 2: "t=1" },
+      }),
+      s("From node 3, the signal needs 1 more unit to reach node 4.", {
+        ok: [1, 0, 2], okE: [[1, 0], [1, 2]], hl: [3], hlE: [[2, 3]],
+        tags: { 1: "t=0", 0: "t=1", 2: "t=1", 3: "t=2" },
+      }),
+      s("Every node has heard the signal. The network is done when the last node hears it. When is that?", {
+        ok: [0, 1, 2, 3], okE: [[1, 0], [1, 2], [2, 3]],
+        tags: { 1: "t=0", 0: "t=1", 2: "t=1", 3: "t=2" },
+      }),
+    ], { pos: NET_A_POS, directed: true, height: 210 }),
+    GR(NET_B_NODES, NET_B_EDGES, [
+      s("Start at node 1. Node 2 can be reached directly in 4, or through node 3.", {
+        hl: [0], tags: { 0: "t=0" },
+      }),
+      s("Directly to node 2 costs 4. We note that time for now.", {
+        ok: [0], hl: [1], hlE: [[0, 1]], tags: { 0: "t=0", 1: "t=4" },
+      }),
+      s("Through node 3 it costs 1 + 1 = 2, which beats the 4 we noted.", {
+        ok: [0], hl: [2, 1], hlE: [[0, 2], [2, 1]], tags: { 0: "t=0", 2: "t=1", 1: "t=2" },
+      }),
+      s("We keep the smaller time. The slow direct arrow is no longer needed.", {
+        ok: [0, 2, 1], okE: [[0, 2], [2, 1]], badE: [[0, 1]], tags: { 0: "t=0", 2: "t=1", 1: "t=2" },
+      }),
+      s("Node 4 hears the signal one unit after node 2. Why must we keep the smallest time for every node?", {
+        ok: [0, 2, 1], okE: [[0, 2], [2, 1]], hl: [3], hlE: [[1, 3]],
+        tags: { 0: "t=0", 2: "t=1", 1: "t=2", 3: "t=?" },
+      }),
+    ], { pos: NET_B_POS, directed: true, height: 210 }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Word Ladder": [
+    GR(WORD_NODES, WORD_EDGES, [
+      s("Each word is a node. Two words are linked when they differ by exactly one letter.", {
+        tags: { 0: "begin", 6: "end" },
+      }),
+      s("hit and hot differ only in the middle letter, so they are linked.", {
+        hl: [0, 1], hlE: [[0, 1]], tags: { 0: "begin", 6: "end" },
+      }),
+      s("hot and dot also differ in one letter.", {
+        hl: [1, 2], hlE: [[1, 2]], tags: { 0: "begin", 6: "end" },
+      }),
+      s("hit and cog differ in three letters, so there is no direct link. How can we get from hit to cog?", {
+        bad: [0, 6], tags: { 0: "begin", 6: "end" },
+      }),
+    ], { pos: WORD_POS, height: 250 }),
+    GR(WORD_NODES, WORD_EDGES, [
+      s("Search outward from hit, one layer at a time. Layer 0 is hit itself.", {
+        ok: [0], tags: { 0: "layer 0" },
+      }),
+      s("Layer 1: every word one change away from hit. That is only hot.", {
+        ok: [0], hl: [1], hlE: [[0, 1]], tags: { 0: "layer 0", 1: "layer 1" },
+      }),
+      s("Layer 2: dot and lot, both one change away from hot.", {
+        ok: [0, 1], hl: [2, 3], hlE: [[1, 2], [1, 3]],
+        tags: { 0: "layer 0", 1: "layer 1", 2: "layer 2", 3: "layer 2" },
+      }),
+      s("Layer 3: dog and log.", {
+        ok: [0, 1, 2, 3], hl: [4, 5], hlE: [[2, 4], [3, 5]],
+        tags: { 2: "layer 2", 3: "layer 2", 4: "layer 3", 5: "layer 3" },
+      }),
+      s("Layer 4 contains cog, the first time we meet it. Why does that make this the shortest ladder?", {
+        ok: [0, 1, 2, 3, 4, 5], hl: [6], hlE: [[4, 6], [5, 6]],
+        tags: { 4: "layer 3", 5: "layer 3", 6: "layer 4" },
+      }),
+    ], { pos: WORD_POS, height: 250 }),
+  ],
+
+  // ===============================================================
+  // BATCH 13: Intervals, using the "intervals" renderer
+  // I(intervals, steps, { range }). A step's own intervals: [...] replaces the list for that step.
+  // marker: 3 draws a dashed line at time 3, and markerLabel: "end 3" names it.
+  // ===============================================================
+
+  // ---------------------------------------------------------------
+  "Merge Intervals": [
+    I([[1, 3], [2, 6], [8, 10], [9, 12]], [
+      s("Each bar is a span of time. Two spans that overlap should become one.", {}),
+      s("The first two spans overlap: the second starts at 2, before the first ends at 3.", {
+        hl: [0, 1], marker: 3, markerLabel: "end 3",
+      }),
+      s("Merge them into one span. It starts at 1 and stretches to 6.", {
+        intervals: [[1, 6], [8, 10], [9, 12]], ok: [0],
+      }),
+      s("Compare the merged span, which ends at 6, with the next one, which starts at 8. There is a gap.", {
+        intervals: [[1, 6], [8, 10], [9, 12]], ok: [0], hl: [1], marker: 6, markerLabel: "end 6",
+      }),
+      s("So the next span stays separate. Why is it enough to compare only with the last merged span?", {
+        intervals: [[1, 6], [8, 10], [9, 12]], ok: [0], hl: [1],
+      }),
+    ], { range: [0, 13] }),
+    I([[1, 10], [2, 5]], [
+      s("Now one span sits completely inside another.", {
+        hl: [0, 1],
+      }),
+      s("They overlap, so they merge. The new span starts at 1, the start of the first.", {
+        hl: [0, 1], marker: 1, markerLabel: "start 1",
+      }),
+      s("For the end, the first span ends at 10 and the second ends at 5.", {
+        hl: [0, 1], tags: { 0: "ends 10", 1: "ends 5" },
+      }),
+      s("If we copied the second end, the merged span would be this short one. Which end should we keep?", {
+        intervals: [[1, 5]], bad: [0], tags: { 0: "too short?" },
+      }),
+    ], { range: [0, 11] }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Meeting Rooms": [
+    I([[7, 10], [2, 4]], [
+      s("Two meetings, shown as spans of time. Can one person attend both?", {}),
+      s("Sort the meetings by start time, so the earliest one comes first.", {
+        intervals: [[2, 4], [7, 10]], hl: [0, 1],
+      }),
+      s("The first meeting ends at 4. The next one starts at 7.", {
+        intervals: [[2, 4], [7, 10]], ok: [0], hl: [1], marker: 4, markerLabel: "end 4",
+      }),
+      s("There is a gap, so no clash. Why is it enough to compare each meeting only with the one before it?", {
+        intervals: [[2, 4], [7, 10]], ok: [0, 1],
+      }),
+    ], { range: [0, 11] }),
+    I([[1, 5], [3, 6], [8, 9]], [
+      s("Now three meetings, already sorted by start time.", {}),
+      s("The first meeting ends at 5.", {
+        hl: [0], marker: 5, markerLabel: "end 5",
+      }),
+      s("The second one starts at 3, before time 5 has passed. The two meetings overlap.", {
+        bad: [0, 1], marker: 5, markerLabel: "end 5",
+      }),
+      s("We do not need to look at the third meeting. Why does one overlap settle the question?", {
+        bad: [0, 1], hl: [2],
+      }),
+    ], { range: [0, 10] }),
+  ],
 
   // ===============================================================
   // TREES (existing)
@@ -1693,11 +3391,136 @@ function validate() {
     list.forEach((v, i) => {
       if (!v) return; // null = this challenge has no visual (needs a new renderer)
       const where = `"${title}" challenge ${i + 1}`;
-      if (!["tree", "array"].includes(v.type)) throw new Error(`${where}: bad type`);
+      if (!["tree", "array", "list", "grid", "graph", "intervals"].includes(v.type)) throw new Error(`${where}: bad type`);
       if (!Array.isArray(v.steps) || v.steps.length === 0)
         throw new Error(`${where}: needs steps`);
       if (v.type === "tree" && v.values.length > 15)
         throw new Error(`${where}: tree too big (max 15 slots)`);
+      if (v.type === "grid") {
+        const R = v.values.length;
+        const C = R ? (v.values[0] || []).length : 0;
+        if (R === 0 || R > 8 || C === 0 || C > 8 || v.values.some((row) => !Array.isArray(row) || row.length !== C))
+          throw new Error(`${where}: grid must be a rectangle, at most 8 x 8`);
+        if (v.rowLabels && v.rowLabels.length !== R) throw new Error(`${where}: rowLabels length`);
+        if (v.colLabels && v.colLabels.length !== C) throw new Error(`${where}: colLabels length`);
+        const inGrid = (p) =>
+          Array.isArray(p) && p.length === 2 && Number.isInteger(p[0]) && Number.isInteger(p[1]) &&
+          p[0] >= 0 && p[0] < R && p[1] >= 0 && p[1] < C;
+        const checkCells = (list, label) =>
+          (list || []).forEach((p) => {
+            if (!inGrid(p)) throw new Error(`${where}: bad cell in ${label}`);
+          });
+        checkCells(v.dim, "dim");
+        v.steps.forEach((st, k) => {
+          if (!st.caption) throw new Error(`${where} step ${k + 1}: missing caption`);
+          if (st.values && (st.values.length !== R || st.values.some((row) => !Array.isArray(row) || row.length !== C)))
+            throw new Error(`${where} step ${k + 1}: values must keep the grid size`);
+          ["hl", "ok", "bad", "dim"].forEach((key) => checkCells(st[key], `step ${k + 1} ${key}`));
+          Object.keys(st.tags || {}).forEach((key) => {
+            const [r, c] = key.split(",").map(Number);
+            if (!inGrid([r, c])) throw new Error(`${where} step ${k + 1}: bad tag key ${key}`);
+          });
+        });
+        return;
+      }
+      if (v.type === "graph") {
+        const NN = (v.nodes || []).length;
+        if (!Array.isArray(v.nodes) || NN < 1 || NN > 10)
+          throw new Error(`${where}: graph needs 1 to 10 nodes`);
+        if (v.pos && (v.pos.length !== NN || v.pos.some((p) => !Array.isArray(p) || p.length !== 2 || p.some((x) => typeof x !== "number" || x < 0 || x > 1))))
+          throw new Error(`${where}: pos needs [x, y] between 0 and 1 for every node`);
+        const edgeOk = (e) =>
+          Array.isArray(e) && Number.isInteger(e[0]) && Number.isInteger(e[1]) &&
+          e[0] >= 0 && e[0] < NN && e[1] >= 0 && e[1] < NN && e[0] !== e[1];
+        if (!Array.isArray(v.edges) || !v.edges.every(edgeOk))
+          throw new Error(`${where}: bad edge`);
+        const has = (a, b) =>
+          v.edges.some((e) => (e[0] === a && e[1] === b) || (!v.directed && e[0] === b && e[1] === a));
+        v.steps.forEach((st, k) => {
+          if (!st.caption) throw new Error(`${where} step ${k + 1}: missing caption`);
+          ["hl", "ok", "bad"].forEach((key) =>
+            (st[key] || []).forEach((idx) => {
+              if (!Number.isInteger(idx) || idx < 0 || idx >= NN)
+                throw new Error(`${where} step ${k + 1}: bad node in ${key}`);
+            })
+          );
+          ["hlE", "okE", "badE"].forEach((key) =>
+            (st[key] || []).forEach((pr) => {
+              if (!Array.isArray(pr) || pr.length !== 2 || !has(pr[0], pr[1]))
+                throw new Error(`${where} step ${k + 1}: ${key} names an edge that does not exist`);
+            })
+          );
+          Object.keys(st.tags || {}).forEach((key) => {
+            const i = Number(key);
+            if (!Number.isInteger(i) || i < 0 || i >= NN)
+              throw new Error(`${where} step ${k + 1}: bad tag key ${key}`);
+          });
+        });
+        return;
+      }
+      if (v.type === "intervals") {
+        const okList = (list) =>
+          Array.isArray(list) && list.length >= 1 && list.length <= 7 &&
+          list.every((p) => Array.isArray(p) && p.length === 2 && typeof p[0] === "number" && typeof p[1] === "number" && p[0] <= p[1]);
+        if (!okList(v.intervals)) throw new Error(`${where}: intervals need 1 to 7 [start, end] pairs`);
+        if (v.range && (!Array.isArray(v.range) || v.range.length !== 2 || !(v.range[1] > v.range[0])))
+          throw new Error(`${where}: range must be [low, high] with high > low`);
+        const all = [v.intervals, ...v.steps.map((st) => st.intervals).filter(Boolean)];
+        if (v.range) {
+          all.forEach((list) => {
+            if (!okList(list)) throw new Error(`${where}: a step has bad intervals`);
+            list.forEach((p) => {
+              if (p[0] < v.range[0] || p[1] > v.range[1])
+                throw new Error(`${where}: an interval falls outside range`);
+            });
+          });
+        }
+        v.steps.forEach((st, k) => {
+          if (!st.caption) throw new Error(`${where} step ${k + 1}: missing caption`);
+          const cur = st.intervals || v.intervals;
+          if (!okList(cur)) throw new Error(`${where} step ${k + 1}: bad intervals`);
+          ["hl", "ok", "bad"].forEach((key) =>
+            (st[key] || []).forEach((idx) => {
+              if (!Number.isInteger(idx) || idx < 0 || idx >= cur.length)
+                throw new Error(`${where} step ${k + 1}: bad index in ${key}`);
+            })
+          );
+          Object.keys(st.tags || {}).forEach((key) => {
+            const i = Number(key);
+            if (!Number.isInteger(i) || i < 0 || i >= cur.length)
+              throw new Error(`${where} step ${k + 1}: bad tag key ${key}`);
+          });
+          if (st.marker !== undefined && typeof st.marker !== "number")
+            throw new Error(`${where} step ${k + 1}: marker must be a number`);
+        });
+        return;
+      }
+      if (v.type === "list") {
+        const sizes = { next: v.values.length, next2: (v.values2 || []).length };
+        const checkNext = (m, size, label) => {
+          Object.entries(m || {}).forEach(([k, t]) => {
+            const ki = Number(k);
+            if (!Number.isInteger(ki) || ki < 0 || ki >= size)
+              throw new Error(`${where}: bad node index in ${label}`);
+            if (t !== null && (!Number.isInteger(t) || t < 0 || t > size))
+              throw new Error(`${where}: bad target in ${label}`);
+          });
+        };
+        checkNext(v.next, sizes.next, "next");
+        checkNext(v.next2, sizes.next2, "next2");
+        v.steps.forEach((st, k) => {
+          checkNext(st.next, sizes.next, `step ${k + 1} next`);
+          checkNext(st.next2, sizes.next2, `step ${k + 1} next2`);
+          Object.values(st.ptrs || {}).forEach((idx) => {
+            if (!Number.isInteger(idx) || idx < 0 || idx > sizes.next)
+              throw new Error(`${where} step ${k + 1}: bad pointer in ptrs`);
+          });
+          Object.values(st.ptrs2 || {}).forEach((idx) => {
+            if (!Number.isInteger(idx) || idx < 0 || idx > sizes.next2)
+              throw new Error(`${where} step ${k + 1}: bad pointer in ptrs2`);
+          });
+        });
+      }
       v.steps.forEach((st, k) => {
         if (!st.caption) throw new Error(`${where} step ${k + 1}: missing caption`);
         if (st.values && st.values.length !== v.values.length)
