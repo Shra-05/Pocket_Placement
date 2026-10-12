@@ -11,6 +11,7 @@ import 'package:confetti/confetti.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'theme_selection_screen.dart';
+import 'startup_config.dart';
 
 import 'features/dsa_world/screens/problem_list_screen.dart';
 
@@ -51,7 +52,7 @@ class _StartupScreenState extends State<StartupScreen> {
     if (!mounted) return;
 
     if (token != null && token.isNotEmpty) {
-      if (skillTestCompleted) {
+      if (skillTestCompleted && !kSkipStartupSteps) {
         Navigator.pushReplacement(
           context,
 
@@ -312,7 +313,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
         if (!mounted) return;
 
-        if (skillTestCompleted) {
+        if (skillTestCompleted && !kSkipStartupSteps) {
           Navigator.pushReplacement(
             context,
 

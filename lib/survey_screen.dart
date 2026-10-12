@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'assessment_screen.dart';
+import 'startup_config.dart';
 
 class SurveyScreen extends StatefulWidget {
   const SurveyScreen({super.key});
@@ -37,9 +38,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
       MaterialPageRoute(
         builder: (_) => AssessmentScreen(
           goal: goal!,
-          subjects: goal == 'DSA'
-              ? ['DSA']
-              : [selectedCoreSubject!],
+          subjects: goal == 'DSA' ? ['DSA'] : [selectedCoreSubject!],
         ),
       ),
     );
@@ -50,6 +49,12 @@ class _SurveyScreenState extends State<SurveyScreen> {
       goal = 'DSA';
       selectedCoreSubject = null;
     });
+
+    if (kSkipStartupSteps) {
+      // Go straight to the game: no Skill Quest, theme picker or level map.
+      Navigator.of(context).pushNamed('/dsa-world-home');
+      return;
+    }
 
     continueSurvey();
   }
@@ -68,9 +73,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
         content: Text(message),
         behavior: SnackBarBehavior.floating,
         backgroundColor: const Color(0xFF17172B),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
@@ -81,21 +84,14 @@ class _SurveyScreenState extends State<SurveyScreen> {
       backgroundColor: const Color(0xFF10152A),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
             return SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  20,
-                  18,
-                  20,
-                  20,
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -132,73 +128,63 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
                     const SizedBox(height: 20),
 
-                    ...coreSubjects.map(
-                      (subject) {
-                        final selected =
-                            selectedCoreSubject == subject;
+                    ...coreSubjects.map((subject) {
+                      final selected = selectedCoreSubject == subject;
 
-                        return GestureDetector(
-                          onTap: () {
-                            setSheetState(() {
-                              selectedCoreSubject = subject;
-                            });
+                      return GestureDetector(
+                        onTap: () {
+                          setSheetState(() {
+                            selectedCoreSubject = subject;
+                          });
 
-                            setState(() {});
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            margin:
-                                const EdgeInsets.only(bottom: 10),
-                            padding: const EdgeInsets.all(15),
-                            decoration: BoxDecoration(
+                          setState(() {});
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? const Color(0xFFFFA62B).withValues(alpha: .13)
+                                : Colors.white.withValues(alpha: .035),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
                               color: selected
                                   ? const Color(0xFFFFA62B)
-                                      .withValues(alpha: .13)
-                                  : Colors.white
-                                      .withValues(alpha: .035),
-                              borderRadius:
-                                  BorderRadius.circular(16),
-                              border: Border.all(
-                                color: selected
-                                    ? const Color(0xFFFFA62B)
-                                    : Colors.white12,
-                                width: selected ? 2 : 1,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  _subjectEmoji(subject),
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                  ),
-                                ),
-                                const SizedBox(width: 13),
-                                Expanded(
-                                  child: Text(
-                                    subject,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight:
-                                          FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                                Icon(
-                                  selected
-                                      ? Icons.check_circle
-                                      : Icons.circle_outlined,
-                                  color: selected
-                                      ? const Color(0xFFFFA62B)
-                                      : Colors.white30,
-                                ),
-                              ],
+                                  : Colors.white12,
+                              width: selected ? 2 : 1,
                             ),
                           ),
-                        );
-                      },
-                    ),
+                          child: Row(
+                            children: [
+                              Text(
+                                _subjectEmoji(subject),
+                                style: const TextStyle(fontSize: 24),
+                              ),
+                              const SizedBox(width: 13),
+                              Expanded(
+                                child: Text(
+                                  subject,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                selected
+                                    ? Icons.check_circle
+                                    : Icons.circle_outlined,
+                                color: selected
+                                    ? const Color(0xFFFFA62B)
+                                    : Colors.white30,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
 
                     const SizedBox(height: 8),
 
@@ -206,45 +192,33 @@ class _SurveyScreenState extends State<SurveyScreen> {
                       width: double.infinity,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed:
-                            selectedCoreSubject == null
-                                ? null
-                                : () {
-                                    Navigator.pop(
-                                      sheetContext,
-                                    );
+                        onPressed: selectedCoreSubject == null
+                            ? null
+                            : () {
+                                Navigator.pop(sheetContext);
 
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            AssessmentScreen(
-                                          goal: 'CORE_CS',
-                                          subjects: [
-                                            selectedCoreSubject!
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => AssessmentScreen(
+                                      goal: 'CORE_CS',
+                                      subjects: [selectedCoreSubject!],
+                                    ),
+                                  ),
+                                );
+                              },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color(0xFFFFA62B),
+                          backgroundColor: const Color(0xFFFFA62B),
                           foregroundColor: Colors.black,
-                          disabledBackgroundColor:
-                              Colors.white10,
-                          disabledForegroundColor:
-                              Colors.white30,
+                          disabledBackgroundColor: Colors.white10,
+                          disabledForegroundColor: Colors.white30,
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                         child: const Text(
                           'ENTER CORE CS WORLD →',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w900),
                         ),
                       ),
                     ),
@@ -285,9 +259,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
           return Stack(
             children: [
               Positioned.fill(
-                child: CustomPaint(
-                  painter: _AdventureBackgroundPainter(),
-                ),
+                child: CustomPaint(painter: _AdventureBackgroundPainter()),
               ),
 
               SafeArea(
@@ -330,45 +302,27 @@ class _SurveyScreenState extends State<SurveyScreen> {
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: .22),
               shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFFB85CFF),
-                width: 1.5,
-              ),
+              border: Border.all(color: const Color(0xFFB85CFF), width: 1.5),
               boxShadow: const [
-                BoxShadow(
-                  color: Color(0x553F00FF),
-                  blurRadius: 15,
-                ),
+                BoxShadow(color: Color(0x553F00FF), blurRadius: 15),
               ],
             ),
-            child: const Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.arrow_back, color: Colors.white),
           ),
         ),
 
         const Spacer(),
 
         Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 15,
-            vertical: 9,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
           decoration: BoxDecoration(
-            color: const Color(0xFF11152A)
-                .withValues(alpha: .85),
+            color: const Color(0xFF11152A).withValues(alpha: .85),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: const Color(0xFFB85CFF),
-            ),
+            border: Border.all(color: const Color(0xFFB85CFF)),
           ),
           child: const Row(
             children: [
-              Text(
-                '🎮',
-                style: TextStyle(fontSize: 14),
-              ),
+              Text('🎮', style: TextStyle(fontSize: 14)),
               SizedBox(width: 7),
               Text(
                 'CODING ADVENTURE',
@@ -393,11 +347,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            _floatingCharacter(
-              '🤖',
-              const Color(0xFF00D9FF),
-              48,
-            ),
+            _floatingCharacter('🤖', const Color(0xFF00D9FF), 48),
 
             const SizedBox(width: 10),
 
@@ -405,11 +355,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
             const SizedBox(width: 10),
 
-            _floatingCharacter(
-              '🐉',
-              const Color(0xFF43E47A),
-              48,
-            ),
+            _floatingCharacter('🐉', const Color(0xFF43E47A), 48),
           ],
         ),
 
@@ -430,11 +376,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
         ShaderMask(
           shaderCallback: (bounds) {
             return const LinearGradient(
-              colors: [
-                Color(0xFFB65CFF),
-                Color(0xFF00D9FF),
-                Color(0xFFFFB52E),
-              ],
+              colors: [Color(0xFFB65CFF), Color(0xFF00D9FF), Color(0xFFFFB52E)],
             ).createShader(bounds);
           },
           child: const Text(
@@ -468,32 +410,17 @@ class _SurveyScreenState extends State<SurveyScreen> {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFF7D4CFF)
-            .withValues(alpha: .18),
-        border: Border.all(
-          color: const Color(0xFFB55CFF),
-          width: 2,
-        ),
+        color: const Color(0xFF7D4CFF).withValues(alpha: .18),
+        border: Border.all(color: const Color(0xFFB55CFF), width: 2),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0x664F00FF),
-            blurRadius: 28,
-            spreadRadius: 3,
-          ),
+          BoxShadow(color: Color(0x664F00FF), blurRadius: 28, spreadRadius: 3),
         ],
       ),
-      child: const Text(
-        '🧑‍💻',
-        style: TextStyle(fontSize: 45),
-      ),
+      child: const Text('🧑‍💻', style: TextStyle(fontSize: 45)),
     );
   }
 
-  Widget _floatingCharacter(
-    String emoji,
-    Color color,
-    double size,
-  ) {
+  Widget _floatingCharacter(String emoji, Color color, double size) {
     return Container(
       width: size,
       height: size,
@@ -501,22 +428,12 @@ class _SurveyScreenState extends State<SurveyScreen> {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: color.withValues(alpha: .13),
-        border: Border.all(
-          color: color.withValues(alpha: .55),
-        ),
+        border: Border.all(color: color.withValues(alpha: .55)),
         boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: .25),
-            blurRadius: 20,
-          ),
+          BoxShadow(color: color.withValues(alpha: .25), blurRadius: 20),
         ],
       ),
-      child: Text(
-        emoji,
-        style: TextStyle(
-          fontSize: size * .52,
-        ),
-      ),
+      child: Text(emoji, style: TextStyle(fontSize: size * .52)),
     );
   }
 
@@ -525,13 +442,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: _buildDSAWorld(),
-          ),
+          Expanded(child: _buildDSAWorld()),
           const SizedBox(width: 28),
-          Expanded(
-            child: _buildCoreWorld(),
-          ),
+          Expanded(child: _buildCoreWorld()),
         ],
       );
     }
@@ -595,12 +508,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        constraints: const BoxConstraints(
-          minHeight: 455,
-        ),
+        constraints: const BoxConstraints(minHeight: 455),
         decoration: BoxDecoration(
-          color: const Color(0xFF091126)
-              .withValues(alpha: .90),
+          color: const Color(0xFF091126).withValues(alpha: .90),
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
             color: selected ? color : color.withValues(alpha: .55),
@@ -608,9 +518,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: glow.withValues(
-                alpha: selected ? .42 : .20,
-              ),
+              color: glow.withValues(alpha: selected ? .42 : .20),
               blurRadius: selected ? 35 : 24,
               spreadRadius: selected ? 3 : 0,
             ),
@@ -624,9 +532,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               width: double.infinity,
               child: Stack(
                 children: [
-                  Positioned.fill(
-                    child: worldArt,
-                  ),
+                  Positioned.fill(child: worldArt),
 
                   Positioned.fill(
                     child: Container(
@@ -634,10 +540,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Color(0xCC091126),
-                          ],
+                          colors: [Colors.transparent, Color(0xCC091126)],
                         ),
                       ),
                     ),
@@ -654,11 +557,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF211337),
-                          borderRadius:
-                              BorderRadius.circular(20),
-                          border: Border.all(
-                            color: color,
-                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: color),
                         ),
                         child: Text(
                           badge,
@@ -682,10 +582,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: const Color(0xFF081022),
-                          border: Border.all(
-                            color: color,
-                            width: 2,
-                          ),
+                          border: Border.all(color: color, width: 2),
                           boxShadow: [
                             BoxShadow(
                               color: glow.withValues(alpha: .5),
@@ -693,11 +590,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                             ),
                           ],
                         ),
-                        child: Icon(
-                          icon,
-                          color: color,
-                          size: 40,
-                        ),
+                        child: Icon(icon, color: color, size: 40),
                       ),
                     ),
                   ),
@@ -706,12 +599,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
             ),
 
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                22,
-                10,
-                22,
-                22,
-              ),
+              padding: const EdgeInsets.fromLTRB(22, 10, 22, 22),
               child: Column(
                 children: [
                   Text(
@@ -739,10 +627,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
                   const SizedBox(height: 20),
 
-                  _worldFeatures(
-                    color: color,
-                    dsa: title == 'DSA WORLD',
-                  ),
+                  _worldFeatures(color: color, dsa: title == 'DSA WORLD'),
 
                   const SizedBox(height: 20),
 
@@ -755,16 +640,13 @@ class _SurveyScreenState extends State<SurveyScreen> {
                         backgroundColor: color,
                         foregroundColor: Colors.white,
                         elevation: 10,
-                        shadowColor:
-                            color.withValues(alpha: .5),
+                        shadowColor: color.withValues(alpha: .5),
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(15),
                         ),
                       ),
                       child: Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             buttonText,
@@ -774,10 +656,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          const Icon(
-                            Icons.arrow_forward,
-                            size: 20,
-                          ),
+                          const Icon(Icons.arrow_forward, size: 20),
                         ],
                       ),
                     ),
@@ -791,10 +670,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
     );
   }
 
-  Widget _worldFeatures({
-    required Color color,
-    required bool dsa,
-  }) {
+  Widget _worldFeatures({required Color color, required bool dsa}) {
     final icons = dsa
         ? [
             Icons.lightbulb_outline,
@@ -802,36 +678,23 @@ class _SurveyScreenState extends State<SurveyScreen> {
             Icons.bar_chart,
             Icons.emoji_events,
           ]
-        : [
-            Icons.storage,
-            Icons.settings,
-            Icons.account_tree,
-            Icons.smart_toy,
-          ];
+        : [Icons.storage, Icons.settings, Icons.account_tree, Icons.smart_toy];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: icons.map(
-        (icon) {
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: .10),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: color.withValues(alpha: .4),
-              ),
-            ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 19,
-            ),
-          );
-        },
-      ).toList(),
+      children: icons.map((icon) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: .10),
+            shape: BoxShape.circle,
+            border: Border.all(color: color.withValues(alpha: .4)),
+          ),
+          child: Icon(icon, color: color, size: 19),
+        );
+      }).toList(),
     );
   }
 
@@ -865,30 +728,15 @@ class _AdventureBackgroundPainter extends CustomPainter {
 
     canvas.drawRect(
       Offset.zero & size,
-      Paint()
-        ..shader = sky.createShader(
-          Offset.zero & size,
-        ),
+      Paint()..shader = sky.createShader(Offset.zero & size),
     );
 
     // Soft clouds
-    _cloud(
-      canvas,
-      Offset(size.width * .08, size.height * .18),
-      95,
-    );
+    _cloud(canvas, Offset(size.width * .08, size.height * .18), 95);
 
-    _cloud(
-      canvas,
-      Offset(size.width * .50, size.height * .28),
-      80,
-    );
+    _cloud(canvas, Offset(size.width * .50, size.height * .28), 80);
 
-    _cloud(
-      canvas,
-      Offset(size.width * .88, size.height * .18),
-      105,
-    );
+    _cloud(canvas, Offset(size.width * .88, size.height * .18), 105);
 
     // Stars / particles
     final random = math.Random(8);
@@ -899,11 +747,7 @@ class _AdventureBackgroundPainter extends CustomPainter {
       final x = random.nextDouble() * size.width;
       final y = random.nextDouble() * size.height * .72;
 
-      canvas.drawCircle(
-        Offset(x, y),
-        random.nextDouble() * 1.8 + .4,
-        paint,
-      );
+      canvas.drawCircle(Offset(x, y), random.nextDouble() * 1.8 + .4, paint);
     }
 
     // Floating islands
@@ -929,31 +773,16 @@ class _AdventureBackgroundPainter extends CustomPainter {
     );
 
     // Cyber city
-    _drawCyberCity(
-      canvas,
-      Offset(size.width * .13, size.height * .39),
-    );
+    _drawCyberCity(canvas, Offset(size.width * .13, size.height * .39));
 
     // Castle
-    _drawCastle(
-      canvas,
-      Offset(size.width * .79, size.height * .36),
-    );
+    _drawCastle(canvas, Offset(size.width * .79, size.height * .36));
   }
 
-  void _cloud(
-    Canvas canvas,
-    Offset center,
-    double radius,
-  ) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: .45);
+  void _cloud(Canvas canvas, Offset center, double radius) {
+    final paint = Paint()..color = Colors.white.withValues(alpha: .45);
 
-    canvas.drawCircle(
-      center,
-      radius,
-      paint,
-    );
+    canvas.drawCircle(center, radius, paint);
 
     canvas.drawCircle(
       center.translate(radius * .8, radius * .15),
@@ -987,44 +816,25 @@ class _AdventureBackgroundPainter extends CustomPainter {
 
     final path = Path();
 
-    path.moveTo(
-      center.dx - width / 2,
-      center.dy,
-    );
+    path.moveTo(center.dx - width / 2, center.dy);
 
-    path.lineTo(
-      center.dx + width / 2,
-      center.dy,
-    );
+    path.lineTo(center.dx + width / 2, center.dy);
 
-    path.lineTo(
-      center.dx + width * .22,
-      center.dy + width * .45,
-    );
+    path.lineTo(center.dx + width * .22, center.dy + width * .45);
 
-    path.lineTo(
-      center.dx,
-      center.dy + width * .62,
-    );
+    path.lineTo(center.dx, center.dy + width * .62);
 
-    path.lineTo(
-      center.dx - width * .25,
-      center.dy + width * .43,
-    );
+    path.lineTo(center.dx - width * .25, center.dy + width * .43);
 
     path.close();
 
     canvas.drawPath(path, paint);
 
-    final top = Paint()
-      ..color = Colors.white.withValues(alpha: .13);
+    final top = Paint()..color = Colors.white.withValues(alpha: .13);
 
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(
-          center.dx,
-          center.dy - 3,
-        ),
+        center: Offset(center.dx, center.dy - 3),
         width: width,
         height: width * .25,
       ),
@@ -1032,12 +842,8 @@ class _AdventureBackgroundPainter extends CustomPainter {
     );
   }
 
-  void _drawCyberCity(
-    Canvas canvas,
-    Offset base,
-  ) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill;
+  void _drawCyberCity(Canvas canvas, Offset base) {
+    final paint = Paint()..style = PaintingStyle.fill;
 
     final buildings = [
       [0.0, 85.0],
@@ -1053,37 +859,16 @@ class _AdventureBackgroundPainter extends CustomPainter {
 
       paint.color = const Color(0xFF16113B);
 
-      canvas.drawRect(
-        Rect.fromLTWH(
-          x,
-          base.dy - height,
-          30,
-          height,
-        ),
-        paint,
-      );
+      canvas.drawRect(Rect.fromLTWH(x, base.dy - height, 30, height), paint);
 
       paint.color = const Color(0xFF4E35D8);
 
-      canvas.drawRect(
-        Rect.fromLTWH(
-          x + 7,
-          base.dy - height + 15,
-          5,
-          8,
-        ),
-        paint,
-      );
+      canvas.drawRect(Rect.fromLTWH(x + 7, base.dy - height + 15, 5, 8), paint);
 
       paint.color = const Color(0xFF00D9FF);
 
       canvas.drawRect(
-        Rect.fromLTWH(
-          x + 18,
-          base.dy - height + 15,
-          5,
-          8,
-        ),
+        Rect.fromLTWH(x + 18, base.dy - height + 15, 5, 8),
         paint,
       );
     }
@@ -1107,23 +892,14 @@ class _AdventureBackgroundPainter extends CustomPainter {
     );
   }
 
-  void _drawCastle(
-    Canvas canvas,
-    Offset base,
-  ) {
-    final stone = Paint()
-      ..color = const Color(0xFFFFE4A8);
+  void _drawCastle(Canvas canvas, Offset base) {
+    final stone = Paint()..color = const Color(0xFFFFE4A8);
 
-    final roof = Paint()
-      ..color = const Color(0xFF38528B);
+    final roof = Paint()..color = const Color(0xFF38528B);
 
     // Main castle
     canvas.drawRect(
-      Rect.fromCenter(
-        center: base.translate(0, -90),
-        width: 100,
-        height: 130,
-      ),
+      Rect.fromCenter(center: base.translate(0, -90), width: 100, height: 130),
       stone,
     );
 
@@ -1140,20 +916,11 @@ class _AdventureBackgroundPainter extends CustomPainter {
 
       final path = Path();
 
-      path.moveTo(
-        base.dx + dx - 23,
-        base.dy - 175,
-      );
+      path.moveTo(base.dx + dx - 23, base.dy - 175);
 
-      path.lineTo(
-        base.dx + dx,
-        base.dy - 215,
-      );
+      path.lineTo(base.dx + dx, base.dy - 215);
 
-      path.lineTo(
-        base.dx + dx + 23,
-        base.dy - 175,
-      );
+      path.lineTo(base.dx + dx + 23, base.dy - 175);
 
       path.close();
 
@@ -1163,46 +930,27 @@ class _AdventureBackgroundPainter extends CustomPainter {
     // Central roof
     final centerRoof = Path();
 
-    centerRoof.moveTo(
-      base.dx - 50,
-      base.dy - 150,
-    );
+    centerRoof.moveTo(base.dx - 50, base.dy - 150);
 
-    centerRoof.lineTo(
-      base.dx,
-      base.dy - 205,
-    );
+    centerRoof.lineTo(base.dx, base.dy - 205);
 
-    centerRoof.lineTo(
-      base.dx + 50,
-      base.dy - 150,
-    );
+    centerRoof.lineTo(base.dx + 50, base.dy - 150);
 
     centerRoof.close();
 
-    canvas.drawPath(
-      centerRoof,
-      roof,
-    );
+    canvas.drawPath(centerRoof, roof);
 
     // Book
-    final bookPaint = Paint()
-      ..color = const Color(0xFFFFF1C7);
+    final bookPaint = Paint()..color = const Color(0xFFFFF1C7);
 
     canvas.drawRect(
-      Rect.fromCenter(
-        center: base.translate(0, -20),
-        width: 70,
-        height: 48,
-      ),
+      Rect.fromCenter(center: base.translate(0, -20), width: 70, height: 48),
       bookPaint,
     );
   }
 
   @override
-  bool shouldRepaint(
-    covariant CustomPainter oldDelegate,
-  ) {
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return false;
   }
 }
@@ -1212,9 +960,7 @@ class _CyberCityArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _MiniCyberPainter(),
-    );
+    return CustomPaint(painter: _MiniCyberPainter());
   }
 }
 
@@ -1223,9 +969,7 @@ class _KingdomArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _MiniKingdomPainter(),
-    );
+    return CustomPaint(painter: _MiniKingdomPainter());
   }
 }
 
@@ -1239,39 +983,23 @@ class _MiniCyberPainter extends CustomPainter {
     for (int i = 0; i < 7; i++) {
       final x = 20.0 + i * 55;
 
-      final height =
-          70.0 + (i % 3) * 35;
+      final height = 70.0 + (i % 3) * 35;
 
       canvas.drawRect(
-        Rect.fromLTWH(
-          x,
-          size.height - height - 20,
-          40,
-          height,
-        ),
+        Rect.fromLTWH(x, size.height - height - 20, 40, height),
         paint,
       );
 
       paint.color = const Color(0xFF5B3FFF);
 
-      canvas.drawRect(
-        Rect.fromLTWH(
-          x + 8,
-          size.height - height,
-          7,
-          10,
-        ),
-        paint,
-      );
+      canvas.drawRect(Rect.fromLTWH(x + 8, size.height - height, 7, 10), paint);
 
       paint.color = const Color(0xFF00D9FF);
     }
   }
 
   @override
-  bool shouldRepaint(
-    covariant CustomPainter oldDelegate,
-  ) {
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return false;
   }
 }
@@ -1279,11 +1007,9 @@ class _MiniCyberPainter extends CustomPainter {
 class _MiniKingdomPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final stone = Paint()
-      ..color = const Color(0xFFB9A36D);
+    final stone = Paint()..color = const Color(0xFFB9A36D);
 
-    final roof = Paint()
-      ..color = const Color(0xFF304B82);
+    final roof = Paint()..color = const Color(0xFF304B82);
 
     canvas.drawRect(
       Rect.fromLTWH(
@@ -1295,10 +1021,7 @@ class _MiniKingdomPainter extends CustomPainter {
       stone,
     );
 
-    for (final dx in [
-      size.width * .18,
-      size.width * .72,
-    ]) {
+    for (final dx in [size.width * .18, size.width * .72]) {
       canvas.drawRect(
         Rect.fromLTWH(
           dx,
@@ -1311,58 +1034,32 @@ class _MiniKingdomPainter extends CustomPainter {
 
       final roofPath = Path();
 
-      roofPath.moveTo(
-        dx - 5,
-        size.height * .25,
-      );
+      roofPath.moveTo(dx - 5, size.height * .25);
 
-      roofPath.lineTo(
-        dx + size.width * .08,
-        size.height * .02,
-      );
+      roofPath.lineTo(dx + size.width * .08, size.height * .02);
 
-      roofPath.lineTo(
-        dx + size.width * .21,
-        size.height * .25,
-      );
+      roofPath.lineTo(dx + size.width * .21, size.height * .25);
 
       roofPath.close();
 
-      canvas.drawPath(
-        roofPath,
-        roof,
-      );
+      canvas.drawPath(roofPath, roof);
     }
 
     final centerRoof = Path();
 
-    centerRoof.moveTo(
-      size.width * .24,
-      size.height * .38,
-    );
+    centerRoof.moveTo(size.width * .24, size.height * .38);
 
-    centerRoof.lineTo(
-      size.width * .50,
-      size.height * .05,
-    );
+    centerRoof.lineTo(size.width * .50, size.height * .05);
 
-    centerRoof.lineTo(
-      size.width * .76,
-      size.height * .38,
-    );
+    centerRoof.lineTo(size.width * .76, size.height * .38);
 
     centerRoof.close();
 
-    canvas.drawPath(
-      centerRoof,
-      roof,
-    );
+    canvas.drawPath(centerRoof, roof);
   }
 
   @override
-  bool shouldRepaint(
-    covariant CustomPainter oldDelegate,
-  ) {
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return false;
   }
 }
