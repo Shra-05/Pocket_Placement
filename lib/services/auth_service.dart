@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -64,7 +65,11 @@ class AuthService {
           'Skill test completion response: $data',
         );
 
-        return data['success'] == true;
+        final success = data['success'] == true;
+        if (success) {
+          await prefs.setBool('skill_test_completed', true);
+        }
+        return success;
       }
 
       // Server returned an error

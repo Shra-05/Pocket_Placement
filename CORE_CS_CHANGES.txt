@@ -1,0 +1,16 @@
+Pocket Placement - Core CS-only update
+
+Changes included:
+- Core CS levels open directly to the learning/MCQ interface; the separate Topics Covered / Rewards / Instructions overview is no longer rendered.
+- Added Previous Level navigation to OOPS, OS, DBMS, CN, and ML screens.
+- Next Level is enabled after the current MCQ is submitted/completed, preserving checkpoint tests at levels 20, 40, 60, 80, and 100.
+- Core CS level map uses a winding path, larger nodes, more readable labels, and a tall scrollable canvas for 100 levels.
+- Existing DSA route, node positions, map height, and coding challenge flow are preserved.
+- Existing notes, progress saving, knowledge tests, and PDF service files are retained.
+
+Install:
+1. Back up your project's lib folder.
+2. Extract this ZIP into the project root, allowing files in lib/ to be replaced.
+3. Run `flutter analyze` and `flutter run -d chrome`.
+
+Note: The ZIP contains the updated lib source only, not pubspec.yaml or platform build files. Flutter analysis/runtime verification was not possible in this environment; run the commands above in your project and share any errors.

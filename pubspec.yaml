@@ -38,6 +38,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   confetti: ^0.8.0
   shared_preferences: ^2.5.5
+  pdf: ^3.13.1
+  printing: ^5.15.1
 
 dev_dependencies:
   flutter_test:

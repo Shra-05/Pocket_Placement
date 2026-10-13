@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'level_selection_screen.dart';
+import 'survey_screen.dart';
 
 enum AppTheme { forest, cyberpunk, kingdom }
 
@@ -20,22 +22,15 @@ class _ThemeSelectionScreenState extends State<ThemeSelectionScreen> {
 
   AppTheme selectedTheme = AppTheme.forest;
 
-  void continueToGame() {
-
-    Navigator.push(
-
+  Future<void> continueToGame() async {
+    // Remember the selected theme so the world-selection screen can reuse it.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selected_theme', selectedTheme.name);
+    if (!mounted) return;
+    Navigator.pushReplacement(
       context,
-
-      MaterialPageRoute(
-
-        builder: (_) =>
-
-            LevelSelectionScreen(theme: selectedTheme, topic: widget.topic),
-
-      ),
-
+      MaterialPageRoute(builder: (_) => const SurveyScreen()),
     );
-
   }
 
   @override

@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -58,8 +59,31 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-  },
 
+    // DSA problems attempted by the user
+    dsaProblemsAttempted: {
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "DSAProblem",
+        },
+      ],
+      default: [],
+    },
+
+    // Current DSA problem
+    dsaCurrentProblem: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DSAProblem",
+      default: null,
+    },
+
+    // Total XP earned through DSA
+    dsaTotalXP: {
+      type: Number,
+      default: 0,
+    },
+  },
   {
     timestamps: true,
   }
