@@ -4,4 +4,4 @@
 ///          the DSA World home screen directly (no Skill Quest, theme picker
 ///          or level map).
 /// false -> the original flow (Skill Quest -> Theme -> Level map).
-const bool kSkipStartupSteps = true;
+const bool kSkipStartupSteps = false;

@@ -5,7 +5,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
-import 'theme_selection_screen.dart';
+import 'analytics_screen.dart';
 
 class AssessmentScreen extends StatefulWidget {
   final String goal;
@@ -189,7 +189,9 @@ class _AssessmentScreenState extends State<AssessmentScreen>
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => ThemeSelectionScreen(
+        builder: (_) => AnalyticsScreen(
+          score: score,
+          totalQuestions: questions.length,
           topic: _topicName,
         ),
       ),

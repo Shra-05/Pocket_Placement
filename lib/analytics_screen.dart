@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'theme_selection_screen.dart';
+import 'survey_screen.dart';
 
 class AnalyticsScreen extends StatelessWidget {
   final int score;
@@ -706,12 +706,12 @@ class AnalyticsScreen extends StatelessWidget {
       height: 58,
       child: ElevatedButton(
         onPressed: () {
+          // After the first skill test, let the user choose DSA or Core CS
+          // before proceeding to theme selection.
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => ThemeSelectionScreen(
-                topic: topic,
-              ),
+              builder: (_) => const SurveyScreen(),
             ),
           );
         },
@@ -730,7 +730,7 @@ class AnalyticsScreen extends StatelessWidget {
               MainAxisAlignment.center,
           children: [
             Text(
-              'CHOOSE YOUR THEME',
+              'CHOOSE YOUR PATH',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,

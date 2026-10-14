@@ -1,11 +1,18 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
+
+import 'services/auth_service.dart';
+
 import 'theme_selection_screen.dart';
 
 class StreakScreen extends StatefulWidget {
   final AppTheme theme;
 
-  const StreakScreen({super.key, required this.theme});
+  const StreakScreen({
+    super.key,
+    required this.theme,
+  });
 
   @override
   State<StreakScreen> createState() => _StreakScreenState();
@@ -13,11 +20,25 @@ class StreakScreen extends StatefulWidget {
 
 class _StreakScreenState extends State<StreakScreen>
     with TickerProviderStateMixin {
-  // Demo data for now.
-  // Later these will come from the backend/database.
-  int currentStreak = 7;
-  int bestStreak = 12;
+  // ============================================================
+  // STREAK DATA
+  // ============================================================
+
+  int currentStreak = 0;
+  int bestStreak = 0;
+
   int xp = 2450;
+
+  String? lastActivityDate;
+
+  // Used only for weekly activity UI
+  List<String> activityDates = [];
+
+  bool _isLoadingStreak = true;
+
+  // ============================================================
+  // ANIMATIONS
+  // ============================================================
 
   late AnimationController _mainController;
   late AnimationController _pulseController;
@@ -25,6 +46,10 @@ class _StreakScreenState extends State<StreakScreen>
 
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+
+  // ============================================================
+  // INIT STATE
+  // ============================================================
 
   @override
   void initState() {
@@ -56,15 +81,27 @@ class _StreakScreenState extends State<StreakScreen>
     );
 
     _mainController.forward();
+
+    // Load streak from MongoDB
+    _loadStreak();
   }
+
+  // ============================================================
+  // DISPOSE
+  // ============================================================
 
   @override
   void dispose() {
     _mainController.dispose();
     _pulseController.dispose();
     _particleController.dispose();
+
     super.dispose();
   }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +126,12 @@ class _StreakScreenState extends State<StreakScreen>
                     opacity: _fadeAnimation,
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(18, 8, 18, 30),
+                      padding: const EdgeInsets.fromLTRB(
+                        18,
+                        8,
+                        18,
+                        30,
+                      ),
                       child: Column(
                         children: [
                           _buildHeader(),
@@ -142,52 +184,90 @@ class _StreakScreenState extends State<StreakScreen>
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 5),
       child: Row(
         children: [
-          _roundButton(Icons.arrow_back_rounded, () => Navigator.pop(context)),
+          _roundButton(
+            Icons.arrow_back_rounded,
+            () => Navigator.pop(context),
+          ),
 
           const Spacer(),
 
-          _topStat(Icons.star_rounded, '$xp', _accentColor()),
+          _topStat(
+            Icons.star_rounded,
+            '$xp',
+            _accentColor(),
+          ),
 
           const SizedBox(width: 8),
 
-          _topStat(Icons.favorite_rounded, '5', const Color(0xFFFF5D6C)),
+          _topStat(
+            Icons.favorite_rounded,
+            '5',
+            const Color(0xFFFF5D6C),
+          ),
 
           const SizedBox(width: 8),
 
-          _roundButton(Icons.more_horiz_rounded, () {}),
+          _roundButton(
+            Icons.more_horiz_rounded,
+            () {},
+          ),
         ],
       ),
     );
   }
 
-  Widget _roundButton(IconData icon, VoidCallback onTap) {
+  Widget _roundButton(
+    IconData icon,
+    VoidCallback onTap,
+  ) {
     return Container(
       width: 42,
       height: 42,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.black.withValues(alpha: 0.35),
-        border: Border.all(color: _accentColor().withValues(alpha: 0.25)),
+        border: Border.all(
+          color: _accentColor().withValues(alpha: 0.25),
+        ),
       ),
       child: IconButton(
         onPressed: onTap,
-        icon: Icon(icon, color: Colors.white, size: 20),
+        icon: Icon(
+          icon,
+          color: Colors.white,
+          size: 20,
+        ),
       ),
     );
   }
 
-  Widget _topStat(IconData icon, String text, Color color) {
+  Widget _topStat(
+    IconData icon,
+    String text,
+    Color color,
+  ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 8,
+      ),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+        border: Border.all(
+          color: color.withValues(alpha: 0.25),
+        ),
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 17),
+          Icon(
+            icon,
+            color: color,
+            size: 17,
+          ),
+
           const SizedBox(width: 4),
+
           Text(
             text,
             style: const TextStyle(
@@ -218,7 +298,9 @@ class _StreakScreenState extends State<StreakScreen>
             letterSpacing: 2.5,
           ),
         ),
+
         const SizedBox(height: 7),
+
         Text(
           _subtitle(),
           textAlign: TextAlign.center,
@@ -239,7 +321,8 @@ class _StreakScreenState extends State<StreakScreen>
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
-        final pulse = 1 + (sin(_pulseController.value * 2 * pi) * 0.035);
+        final pulse =
+            1 + (sin(_pulseController.value * 2 * pi) * 0.035);
 
         return Transform.scale(
           scale: pulse,
@@ -253,26 +336,44 @@ class _StreakScreenState extends State<StreakScreen>
                 _buildOuterRing(210),
                 _buildOuterRing(180),
 
-                if (widget.theme == AppTheme.forest) const MagicalFlame(),
+                if (widget.theme == AppTheme.forest)
+                  const MagicalFlame(),
 
-                if (widget.theme == AppTheme.cyberpunk) const EnergyReactor(),
+                if (widget.theme == AppTheme.cyberpunk)
+                  const EnergyReactor(),
 
-                if (widget.theme == AppTheme.kingdom) const RoyalShield(),
+                if (widget.theme == AppTheme.kingdom)
+                  const RoyalShield(),
 
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      '$currentStreak',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 62,
-                        fontWeight: FontWeight.w900,
-                        shadows: [
-                          Shadow(color: _accentColor(), blurRadius: 22),
-                        ],
-                      ),
-                    ),
+                    _isLoadingStreak
+                        ? const SizedBox(
+                            width: 45,
+                            height: 45,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            '$currentStreak',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 62,
+                              fontWeight: FontWeight.w900,
+                              shadows: [
+                                Shadow(
+                                  color: _accentColor(),
+                                  blurRadius: 22,
+                                ),
+                              ],
+                            ),
+                          ),
+
+                    const SizedBox(height: 4),
+
                     Text(
                       'DAY STREAK',
                       style: TextStyle(
@@ -293,7 +394,8 @@ class _StreakScreenState extends State<StreakScreen>
   }
 
   Widget _buildOuterRing(double size) {
-    final progress = 0.25 + (_pulseController.value * 0.5);
+    final progress =
+        0.25 + (_pulseController.value * 0.5);
 
     return Transform.rotate(
       angle: _pulseController.value * 2 * pi,
@@ -322,7 +424,9 @@ class _StreakScreenState extends State<StreakScreen>
             '$currentStreak DAYS',
           ),
         ),
+
         const SizedBox(width: 10),
+
         Expanded(
           child: _statCard(
             Icons.emoji_events_rounded,
@@ -330,20 +434,41 @@ class _StreakScreenState extends State<StreakScreen>
             '$bestStreak DAYS',
           ),
         ),
+
         const SizedBox(width: 10),
-        Expanded(child: _statCard(Icons.star_rounded, 'TOTAL XP', '$xp')),
+
+        Expanded(
+          child: _statCard(
+            Icons.star_rounded,
+            'TOTAL XP',
+            '$xp',
+          ),
+        ),
       ],
     );
   }
 
-  Widget _statCard(IconData icon, String title, String value) {
+  Widget _statCard(
+    IconData icon,
+    String title,
+    String value,
+  ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 14,
+      ),
       decoration: _cardDecoration(),
       child: Column(
         children: [
-          Icon(icon, color: _accentColor(), size: 23),
+          Icon(
+            icon,
+            color: _accentColor(),
+            size: 23,
+          ),
+
           const SizedBox(height: 7),
+
           Text(
             title,
             style: TextStyle(
@@ -352,7 +477,9 @@ class _StreakScreenState extends State<StreakScreen>
               fontWeight: FontWeight.bold,
             ),
           ),
+
           const SizedBox(height: 3),
+
           Text(
             value,
             textAlign: TextAlign.center,
@@ -371,65 +498,294 @@ class _StreakScreenState extends State<StreakScreen>
   // WEEKLY ACTIVITY
   // ============================================================
 
+  DateTime _dateOnly(DateTime date) {
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+    );
+  }
+
+  String _dateKey(DateTime date) {
+    final d = _dateOnly(date);
+
+    final month =
+        d.month.toString().padLeft(2, '0');
+
+    final day =
+        d.day.toString().padLeft(2, '0');
+
+    return '${d.year}-$month-$day';
+  }
+
+  // ============================================================
+  // LOAD STREAK FROM BACKEND / MONGODB
+  // ============================================================
+
+  Future<void> _loadStreak() async {
+    try {
+      final data = await AuthService.getStreak();
+
+      if (data == null || data['success'] != true) {
+        debugPrint(
+          'Failed to load streak from backend.',
+        );
+
+        if (!mounted) return;
+
+        setState(() {
+          _isLoadingStreak = false;
+        });
+
+        return;
+      }
+
+      final int serverStreak =
+          (data['streak'] ?? 0) as int;
+
+      final int serverBest =
+          (data['longestStreak'] ?? 0) as int;
+
+      final String? serverLastActivity =
+          data['lastActivityDate']?.toString();
+
+      if (!mounted) return;
+
+      setState(() {
+        currentStreak = serverStreak;
+        bestStreak = serverBest;
+        lastActivityDate = serverLastActivity;
+
+        _isLoadingStreak = false;
+      });
+
+      debugPrint(
+        'Streak loaded from MongoDB: $currentStreak',
+      );
+
+      debugPrint(
+        'Best streak loaded from MongoDB: $bestStreak',
+      );
+
+      debugPrint(
+        'Last activity date: $lastActivityDate',
+      );
+    } catch (error) {
+      debugPrint(
+        'Load streak error: $error',
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoadingStreak = false;
+      });
+    }
+  }
+
+  // ============================================================
+  // UPDATE STREAK THROUGH BACKEND
+  // ============================================================
+
+  Future<void> _recordDailyActivity() async {
+    try {
+      final data = await AuthService.updateStreak();
+
+      if (data == null || data['success'] != true) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Unable to update streak. Please try again.',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+
+        return;
+      }
+
+      final int newStreak =
+          (data['streak'] ?? 0) as int;
+
+      final int newBest =
+          (data['longestStreak'] ?? 0) as int;
+
+      final String? newLastActivity =
+          data['lastActivityDate']?.toString();
+
+      if (!mounted) return;
+
+      setState(() {
+        currentStreak = newStreak;
+        bestStreak = newBest;
+        lastActivityDate = newLastActivity;
+      });
+
+      _showStreakUpdate(newStreak);
+    } catch (error) {
+      debugPrint(
+        'Record daily activity error: $error',
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Something went wrong while updating your streak.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // STREAK UPDATE MESSAGE
+  // ============================================================
+
+  void _showStreakUpdate(int streak) {
+    String message;
+
+    switch (streak) {
+      case 1:
+        message =
+            '🔥 Streak started! Come back tomorrow.';
+        break;
+
+      case 3:
+        message =
+            '⚡ 3-day streak! Circuit unlocked!';
+        break;
+
+      case 7:
+        message =
+            '🚀 7-day streak! Power Core unlocked!';
+        break;
+
+      case 14:
+        message =
+            '🤖 14-day streak! AI Companion unlocked!';
+        break;
+
+      case 30:
+        message =
+            '🏆 30-day streak! Legendary reward unlocked!';
+        break;
+
+      default:
+        message =
+            '🔥 $streak-day streak! Keep going!';
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  // ============================================================
+  // WEEKLY ACTIVITY
+  // ============================================================
+
   Widget _buildWeeklyActivity() {
-    const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    final today = _dateOnly(DateTime.now());
+
+    final dates = List.generate(
+      7,
+      (index) => today.subtract(
+        Duration(days: 6 - index),
+      ),
+    );
 
     return _sectionCard(
       title: _weeklyTitle(),
       icon: Icons.calendar_month_rounded,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(7, (index) {
-          final completed = index < 6;
-          final today = index == 6;
+        mainAxisAlignment:
+            MainAxisAlignment.spaceBetween,
+        children: dates.map((date) {
+          final dateString = _dateKey(date);
+
+          final completed =
+              activityDates.contains(dateString);
+
+          final isToday =
+              _dateOnly(date) == today;
+
+          final dayName = const [
+            'MON',
+            'TUE',
+            'WED',
+            'THU',
+            'FRI',
+            'SAT',
+            'SUN',
+          ][date.weekday - 1];
 
           return Column(
             children: [
               Text(
-                days[index],
+                dayName,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.45),
+                  color: Colors.white.withValues(
+                    alpha: 0.45,
+                  ),
                   fontSize: 8,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               const SizedBox(height: 7),
 
               AnimatedContainer(
-                duration: Duration(milliseconds: 300 + index * 100),
+                duration: const Duration(
+                  milliseconds: 350,
+                ),
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: completed
                       ? _accentColor()
-                      : Colors.black.withValues(alpha: 0.25),
+                      : Colors.black.withValues(
+                          alpha: 0.25,
+                        ),
                   border: Border.all(
-                    color: today
+                    color: isToday
                         ? _rewardColor()
                         : completed
-                        ? _accentColor()
-                        : Colors.white12,
-                    width: today ? 2 : 1,
+                            ? _accentColor()
+                            : Colors.white12,
+                    width: isToday ? 2 : 1,
                   ),
                   boxShadow: completed
                       ? [
                           BoxShadow(
-                            color: _accentColor().withValues(alpha: 0.28),
+                            color: _accentColor()
+                                .withValues(alpha: 0.28),
                             blurRadius: 12,
                           ),
                         ]
                       : [],
                 ),
                 child: Icon(
-                  completed ? Icons.check_rounded : Icons.circle_outlined,
+                  completed
+                      ? Icons.check_rounded
+                      : Icons.circle_outlined,
                   size: 18,
-                  color: completed ? Colors.black : Colors.white24,
+                  color: completed
+                      ? Colors.black
+                      : Colors.white24,
                 ),
               ),
             ],
           );
-        }),
+        }).toList(),
       ),
     );
   }
@@ -439,21 +795,28 @@ class _StreakScreenState extends State<StreakScreen>
   // ============================================================
 
   Widget _buildProgress() {
-    final progress = min(currentStreak / 30, 1.0);
+    final progress =
+        min(currentStreak / 30, 1.0);
 
     return _sectionCard(
       title: _progressTitle(),
       icon: _progressIcon(),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 _progressMessage(),
-                style: const TextStyle(color: Colors.white70, fontSize: 11),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11,
+                ),
               ),
+
               Text(
                 '${(progress * 100).round()}%',
                 style: TextStyle(
@@ -468,12 +831,17 @@ class _StreakScreenState extends State<StreakScreen>
           const SizedBox(height: 9),
 
           ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius:
+                BorderRadius.circular(20),
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 10,
-              backgroundColor: Colors.white.withValues(alpha: 0.08),
-              valueColor: AlwaysStoppedAnimation<Color>(_accentColor()),
+              backgroundColor:
+                  Colors.white.withValues(alpha: 0.08),
+              valueColor:
+                  AlwaysStoppedAnimation<Color>(
+                _accentColor(),
+              ),
             ),
           ),
 
@@ -481,7 +849,10 @@ class _StreakScreenState extends State<StreakScreen>
 
           Text(
             _nextMilestone(),
-            style: const TextStyle(color: Colors.white38, fontSize: 9),
+            style: const TextStyle(
+              color: Colors.white38,
+              fontSize: 9,
+            ),
           ),
         ],
       ),
@@ -507,18 +878,21 @@ class _StreakScreenState extends State<StreakScreen>
               label: _rewardName(0),
               unlocked: currentStreak >= 3,
             ),
+
             _rewardCard(
               milestone: '7',
               icon: _rewardIcon(1),
               label: _rewardName(1),
               unlocked: currentStreak >= 7,
             ),
+
             _rewardCard(
               milestone: '14',
               icon: _rewardIcon(2),
               label: _rewardName(2),
               unlocked: currentStreak >= 14,
             ),
+
             _rewardCard(
               milestone: '30',
               icon: _rewardIcon(3),
@@ -553,30 +927,43 @@ class _StreakScreenState extends State<StreakScreen>
         ),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment:
+            MainAxisAlignment.center,
         children: [
           Icon(
-            unlocked ? icon : Icons.lock_rounded,
-            color: unlocked ? _rewardColor() : Colors.white30,
+            unlocked
+                ? icon
+                : Icons.lock_rounded,
+            color: unlocked
+                ? _rewardColor()
+                : Colors.white30,
             size: 25,
           ),
+
           const SizedBox(height: 5),
+
           Text(
             '$milestone DAYS',
             style: TextStyle(
-              color: unlocked ? Colors.white : Colors.white30,
+              color: unlocked
+                  ? Colors.white
+                  : Colors.white30,
               fontSize: 9,
               fontWeight: FontWeight.bold,
             ),
           ),
+
           const SizedBox(height: 2),
+
           Text(
             label,
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: unlocked ? _accentColor() : Colors.white24,
+              color: unlocked
+                  ? _accentColor()
+                  : Colors.white24,
               fontSize: 8,
             ),
           ),
@@ -595,7 +982,10 @@ class _StreakScreenState extends State<StreakScreen>
         Text(
           _challengeMessage(),
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white60, fontSize: 11),
+          style: const TextStyle(
+            color: Colors.white60,
+            fontSize: 11,
+          ),
         ),
 
         const SizedBox(height: 12),
@@ -604,17 +994,11 @@ class _StreakScreenState extends State<StreakScreen>
           width: double.infinity,
           height: 54,
           child: ElevatedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    '🚀 Today\'s challenge will be connected next!',
-                  ),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            icon: Icon(_challengeIcon(), color: Colors.black),
+            onPressed: _recordDailyActivity,
+            icon: Icon(
+              _challengeIcon(),
+              color: Colors.black,
+            ),
             label: Text(
               _challengeButtonText(),
               style: const TextStyle(
@@ -626,9 +1010,11 @@ class _StreakScreenState extends State<StreakScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: _accentColor(),
               elevation: 12,
-              shadowColor: _accentColor().withValues(alpha: 0.35),
+              shadowColor:
+                  _accentColor().withValues(alpha: 0.35),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(17),
+                borderRadius:
+                    BorderRadius.circular(17),
               ),
             ),
           ),
@@ -651,12 +1037,19 @@ class _StreakScreenState extends State<StreakScreen>
       padding: const EdgeInsets.all(15),
       decoration: _cardDecoration(),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: _accentColor(), size: 18),
+              Icon(
+                icon,
+                color: _accentColor(),
+                size: 18,
+              ),
+
               const SizedBox(width: 7),
+
               Text(
                 title,
                 style: const TextStyle(
@@ -668,7 +1061,9 @@ class _StreakScreenState extends State<StreakScreen>
               ),
             ],
           ),
+
           const SizedBox(height: 14),
+
           child,
         ],
       ),
@@ -679,9 +1074,14 @@ class _StreakScreenState extends State<StreakScreen>
     return BoxDecoration(
       color: Colors.black.withValues(alpha: 0.30),
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: _accentColor().withValues(alpha: 0.16)),
+      border: Border.all(
+        color: _accentColor().withValues(alpha: 0.16),
+      ),
       boxShadow: [
-        BoxShadow(color: Colors.black.withValues(alpha: 0.20), blurRadius: 20),
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.20),
+          blurRadius: 20,
+        ),
       ],
     );
   }
@@ -840,10 +1240,20 @@ class _StreakScreenState extends State<StreakScreen>
         ][index];
 
       case AppTheme.cyberpunk:
-        return ['Circuit', 'Power Core', 'Energy Grid', 'AI Companion'][index];
+        return [
+          'Circuit',
+          'Power Core',
+          'Energy Grid',
+          'AI Companion',
+        ][index];
 
       case AppTheme.kingdom:
-        return ['Knight Shield', 'Royal Torch', 'Crown', 'Castle'][index];
+        return [
+          'Knight Shield',
+          'Royal Torch',
+          'Crown',
+          'Castle',
+        ][index];
     }
   }
 
@@ -885,6 +1295,10 @@ class _StreakScreenState extends State<StreakScreen>
         return Icons.shield_rounded;
     }
   }
+
+  // ============================================================
+  // COLORS
+  // ============================================================
 
   Color _accentColor() {
     switch (widget.theme) {
@@ -967,13 +1381,25 @@ class ThemeStreakBackground extends StatelessWidget {
   List<Color> _backgroundColors() {
     switch (theme) {
       case AppTheme.forest:
-        return const [Color(0xFF09241F), Color(0xFF061612), Color(0xFF020A07)];
+        return const [
+          Color(0xFF09241F),
+          Color(0xFF061612),
+          Color(0xFF020A07),
+        ];
 
       case AppTheme.cyberpunk:
-        return const [Color(0xFF0B0524), Color(0xFF10052C), Color(0xFF03020A)];
+        return const [
+          Color(0xFF0B0524),
+          Color(0xFF10052C),
+          Color(0xFF03020A),
+        ];
 
       case AppTheme.kingdom:
-        return const [Color(0xFF30170A), Color(0xFF180B05), Color(0xFF050201)];
+        return const [
+          Color(0xFF30170A),
+          Color(0xFF180B05),
+          Color(0xFF050201),
+        ];
     }
   }
 }
@@ -986,7 +1412,10 @@ class ThemeParticlePainter extends CustomPainter {
   final AppTheme theme;
   final double progress;
 
-  ThemeParticlePainter({required this.theme, required this.progress});
+  ThemeParticlePainter({
+    required this.theme,
+    required this.progress,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1011,27 +1440,42 @@ class ThemeParticlePainter extends CustomPainter {
     final paint = Paint();
 
     for (int i = 0; i < 90; i++) {
-      final x = random.nextDouble() * size.width;
+      final x =
+          random.nextDouble() * size.width;
 
-      final startY = random.nextDouble() * size.height;
+      final startY =
+          random.nextDouble() * size.height;
 
-      final travel = progress * (80 + random.nextDouble() * 100);
+      final travel =
+          progress *
+          (80 + random.nextDouble() * 100);
 
-      final y = (startY - travel) % size.height;
+      final y =
+          (startY - travel) % size.height;
 
-      final opacity = 0.15 + random.nextDouble() * 0.55;
+      final opacity =
+          0.15 + random.nextDouble() * 0.55;
 
-      paint.color = color.withValues(alpha: opacity);
+      paint.color =
+          color.withValues(alpha: opacity);
 
-      final radius = 0.7 + random.nextDouble() * 1.8;
+      final radius =
+          0.7 + random.nextDouble() * 1.8;
 
-      canvas.drawCircle(Offset(x, y), radius, paint);
+      canvas.drawCircle(
+        Offset(x, y),
+        radius,
+        paint,
+      );
     }
   }
 
   @override
-  bool shouldRepaint(covariant ThemeParticlePainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.theme != theme;
+  bool shouldRepaint(
+    covariant ThemeParticlePainter oldDelegate,
+  ) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.theme != theme;
   }
 }
 
@@ -1052,17 +1496,23 @@ class StreakRingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
+    final center =
+        Offset(size.width / 2, size.height / 2);
 
-    final radius = min(size.width, size.height) / 2 - 8;
+    final radius =
+        min(size.width, size.height) / 2 - 8;
 
     final paint = Paint()
-      ..color = color.withValues(alpha: opacity)
+      ..color =
+          color.withValues(alpha: opacity)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
     canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
+      Rect.fromCircle(
+        center: center,
+        radius: radius,
+      ),
       -pi / 2,
       2 * pi * progress,
       false,
@@ -1071,7 +1521,9 @@ class StreakRingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant StreakRingPainter oldDelegate) {
+  bool shouldRepaint(
+    covariant StreakRingPainter oldDelegate,
+  ) {
     return true;
   }
 }
@@ -1081,14 +1533,18 @@ class StreakRingPainter extends CustomPainter {
 // ============================================================
 
 class MagicalFlame extends StatelessWidget {
-  const MagicalFlame({super.key});
+  const MagicalFlame({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return const SizedBox(
       width: 130,
       height: 130,
-      child: CustomPaint(painter: FlamePainter()),
+      child: CustomPaint(
+        painter: FlamePainter(),
+      ),
     );
   }
 }
@@ -1102,16 +1558,32 @@ class FlamePainter extends CustomPainter {
 
     final outer = Paint()
       ..color = const Color(0xFFFF9F43)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9);
+      ..maskFilter = const MaskFilter.blur(
+        BlurStyle.normal,
+        9,
+      );
 
     final inner = Paint()
       ..color = const Color(0xFFFFF0A8)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+      ..maskFilter = const MaskFilter.blur(
+        BlurStyle.normal,
+        3,
+      );
 
-    canvas.drawCircle(Offset(centerX, size.height * 0.62), 30, outer);
+    canvas.drawCircle(
+      Offset(
+        centerX,
+        size.height * 0.62,
+      ),
+      30,
+      outer,
+    );
 
     final flame = Path()
-      ..moveTo(centerX, size.height * .90)
+      ..moveTo(
+        centerX,
+        size.height * .90,
+      )
       ..cubicTo(
         size.width * .15,
         size.height * .70,
@@ -1130,10 +1602,16 @@ class FlamePainter extends CustomPainter {
       )
       ..close();
 
-    canvas.drawPath(flame, outer);
+    canvas.drawPath(
+      flame,
+      outer,
+    );
 
     final smallFlame = Path()
-      ..moveTo(centerX, size.height * .82)
+      ..moveTo(
+        centerX,
+        size.height * .82,
+      )
       ..cubicTo(
         size.width * .35,
         size.height * .68,
@@ -1152,11 +1630,16 @@ class FlamePainter extends CustomPainter {
       )
       ..close();
 
-    canvas.drawPath(smallFlame, inner);
+    canvas.drawPath(
+      smallFlame,
+      inner,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+  bool shouldRepaint(
+    covariant CustomPainter oldDelegate,
+  ) {
     return false;
   }
 }
@@ -1166,11 +1649,16 @@ class FlamePainter extends CustomPainter {
 // ============================================================
 
 class EnergyReactor extends StatelessWidget {
-  const EnergyReactor({super.key});
+  const EnergyReactor({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(size: const Size(140, 140), painter: ReactorPainter());
+    return CustomPaint(
+      size: const Size(140, 140),
+      painter: ReactorPainter(),
+    );
   }
 }
 
@@ -1179,41 +1667,86 @@ class ReactorPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
+    final center =
+        Offset(size.width / 2, size.height / 2);
 
     final glow = Paint()
-      ..color = const Color(0xFF00E5FF).withValues(alpha: 0.25)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
+      ..color = const Color(0xFF00E5FF)
+          .withValues(alpha: 0.25)
+      ..maskFilter = const MaskFilter.blur(
+        BlurStyle.normal,
+        18,
+      );
 
-    canvas.drawCircle(center, 35, glow);
+    canvas.drawCircle(
+      center,
+      35,
+      glow,
+    );
 
     final outer = Paint()
       ..color = const Color(0xFF00E5FF)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3;
 
-    canvas.drawCircle(center, 45, outer);
+    canvas.drawCircle(
+      center,
+      45,
+      outer,
+    );
 
-    canvas.drawCircle(center, 30, outer);
+    canvas.drawCircle(
+      center,
+      30,
+      outer,
+    );
 
-    final core = Paint()..color = const Color(0xFFD66BFF);
+    final core = Paint()
+      ..color = const Color(0xFFD66BFF);
 
-    canvas.drawCircle(center, 18, core);
+    canvas.drawCircle(
+      center,
+      18,
+      core,
+    );
 
     final bolt = Path()
-      ..moveTo(center.dx + 5, center.dy - 25)
-      ..lineTo(center.dx - 12, center.dy + 2)
-      ..lineTo(center.dx - 2, center.dy + 2)
-      ..lineTo(center.dx - 8, center.dy + 25)
-      ..lineTo(center.dx + 13, center.dy - 5)
-      ..lineTo(center.dx + 3, center.dy - 5)
+      ..moveTo(
+        center.dx + 5,
+        center.dy - 25,
+      )
+      ..lineTo(
+        center.dx - 12,
+        center.dy + 2,
+      )
+      ..lineTo(
+        center.dx - 2,
+        center.dy + 2,
+      )
+      ..lineTo(
+        center.dx - 8,
+        center.dy + 25,
+      )
+      ..lineTo(
+        center.dx + 13,
+        center.dy - 5,
+      )
+      ..lineTo(
+        center.dx + 3,
+        center.dy - 5,
+      )
       ..close();
 
-    canvas.drawPath(bolt, Paint()..color = Colors.white);
+    canvas.drawPath(
+      bolt,
+      Paint()..color = Colors.white,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+  bool shouldRepaint(
+    covariant CustomPainter oldDelegate,
+  ) {
     return false;
   }
 }
@@ -1223,11 +1756,16 @@ class ReactorPainter extends CustomPainter {
 // ============================================================
 
 class RoyalShield extends StatelessWidget {
-  const RoyalShield({super.key});
+  const RoyalShield({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(size: const Size(140, 150), painter: ShieldPainter());
+    return CustomPaint(
+      size: const Size(140, 150),
+      painter: ShieldPainter(),
+    );
   }
 }
 
@@ -1237,9 +1775,18 @@ class ShieldPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final path = Path()
-      ..moveTo(size.width * .20, size.height * .15)
-      ..lineTo(size.width * .80, size.height * .15)
-      ..lineTo(size.width * .75, size.height * .60)
+      ..moveTo(
+        size.width * .20,
+        size.height * .15,
+      )
+      ..lineTo(
+        size.width * .80,
+        size.height * .15,
+      )
+      ..lineTo(
+        size.width * .75,
+        size.height * .60,
+      )
       ..cubicTo(
         size.width * .70,
         size.height * .80,
@@ -1259,23 +1806,36 @@ class ShieldPainter extends CustomPainter {
       ..close();
 
     final glow = Paint()
-      ..color = const Color(0xFFFFD166).withValues(alpha: 0.35)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
+      ..color = const Color(0xFFFFD166)
+          .withValues(alpha: 0.35)
+      ..maskFilter = const MaskFilter.blur(
+        BlurStyle.normal,
+        14,
+      );
 
-    canvas.drawPath(path, glow);
+    canvas.drawPath(
+      path,
+      glow,
+    );
 
     final shield = Paint()
       ..color = const Color(0xFF7E421C)
       ..style = PaintingStyle.fill;
 
-    canvas.drawPath(path, shield);
+    canvas.drawPath(
+      path,
+      shield,
+    );
 
     final border = Paint()
       ..color = const Color(0xFFFFD166)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4;
 
-    canvas.drawPath(path, border);
+    canvas.drawPath(
+      path,
+      border,
+    );
 
     final crown = TextPainter(
       text: const TextSpan(
@@ -1293,12 +1853,17 @@ class ShieldPainter extends CustomPainter {
 
     crown.paint(
       canvas,
-      Offset(size.width / 2 - crown.width / 2, size.height * .33),
+      Offset(
+        size.width / 2 - crown.width / 2,
+        size.height * .33,
+      ),
     );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+  bool shouldRepaint(
+    covariant CustomPainter oldDelegate,
+  ) {
     return false;
   }
 }

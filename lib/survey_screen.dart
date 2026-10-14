@@ -2,6 +2,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'assessment_screen.dart';
 import 'startup_config.dart';
+import 'theme_selection_screen.dart';
+import 'level_selection_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SurveyScreen extends StatefulWidget {
   const SurveyScreen({super.key});
@@ -22,7 +25,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
     'Machine Learning',
   ];
 
-  void continueSurvey() {
+  Future<void> continueSurvey() async {
     if (goal == null) {
       _showMessage('Choose your coding world first! 🚀');
       return;
@@ -30,6 +33,27 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
     if (goal == 'CORE_CS' && selectedCoreSubject == null) {
       _showCoreSubjectDialog();
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final completed = prefs.getBool('skill_test_completed') ?? false;
+    final topic = goal == 'DSA' ? 'DSA' : selectedCoreSubject!;
+
+    if (!mounted) return;
+
+    if (completed) {
+      final savedTheme = prefs.getString('selected_theme') ?? 'forest';
+      final theme = AppTheme.values.firstWhere(
+        (value) => value.name == savedTheme,
+        orElse: () => AppTheme.forest,
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => LevelSelectionScreen(theme: theme, topic: topic),
+        ),
+      );
       return;
     }
 
@@ -197,15 +221,10 @@ class _SurveyScreenState extends State<SurveyScreen> {
                             : () {
                                 Navigator.pop(sheetContext);
 
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => AssessmentScreen(
-                                      goal: 'CORE_CS',
-                                      subjects: [selectedCoreSubject!],
-                                    ),
-                                  ),
-                                );
+                                setState(() {
+                                  goal = 'CORE_CS';
+                                });
+                                continueSurvey();
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFFA62B),

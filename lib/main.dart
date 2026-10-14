@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import 'survey_screen.dart';
+import 'assessment_screen.dart';
 
 import 'services/api_service.dart';
 
@@ -62,7 +63,9 @@ class _StartupScreenState extends State<StartupScreen> {
         Navigator.pushReplacement(
           context,
 
-          MaterialPageRoute(builder: (_) => const SurveyScreen()),
+          MaterialPageRoute(
+            builder: (_) => const AssessmentScreen(goal: 'DSA', subjects: ['DSA']),
+          ),
         );
       }
     } else {
@@ -257,8 +260,12 @@ class _AuthScreenState extends State<AuthScreen> {
 
         Navigator.pushReplacement(
           context,
-
-          MaterialPageRoute(builder: (_) => const SurveyScreen()),
+          MaterialPageRoute(
+            builder: (_) => const AssessmentScreen(
+              goal: 'DSA',
+              subjects: ['DSA'],
+            ),
+          ),
         );
       } else {
         showMessage(response['message'] ?? 'Signup failed.');
@@ -322,8 +329,12 @@ class _AuthScreenState extends State<AuthScreen> {
         } else {
           Navigator.pushReplacement(
             context,
-
-            MaterialPageRoute(builder: (_) => const SurveyScreen()),
+            MaterialPageRoute(
+              builder: (_) => const AssessmentScreen(
+                goal: 'DSA',
+                subjects: ['DSA'],
+              ),
+            ),
           );
         }
       } else {
