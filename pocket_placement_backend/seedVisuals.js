@@ -88,6 +88,81 @@ const WORD_NODES = ["hit", "hot", "dot", "lot", "dog", "log", "cog"];
 const WORD_EDGES = [[0, 1], [1, 2], [1, 3], [2, 3], [2, 4], [3, 5], [4, 5], [4, 6], [5, 6]];
 const WORD_POS = [[0.08, 0.5], [0.28, 0.5], [0.5, 0.2], [0.5, 0.8], [0.75, 0.2], [0.75, 0.8], [0.94, 0.5]];
 
+// Reused for the recursion and backtracking batch
+const FIB_TAGS = { 0: "F0", 1: "F1", 2: "F2", 3: "F3", 4: "F4", 5: "F5", 6: "F6" };
+const NQ_EMPTY = [["", "", "", ""], ["", "", "", ""], ["", "", "", ""], ["", "", "", ""]];
+const NQ_ONE = [["", "Q", "", ""], ["", "", "", ""], ["", "", "", ""], ["", "", "", ""]];
+const WS_BOARD = [["A", "B", "C", "E"], ["S", "F", "C", "S"], ["A", "D", "E", "E"]];
+
+// Reused for the sliding window / greedy / bit / matrix batch
+const GRID_9 = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+const ZERO_3 = [[1, 1, 1], [1, 0, 1], [1, 1, 1]];
+const BIT_TAGS = { 0: "0 ones", 1: "1 one", 2: "1 one", 3: "2 ones", 4: "1 one", 5: "2 ones", 6: "2 ones", 7: "3 ones" };
+
+// Reused for the sliding window / greedy / matrix / heap batch (second set)
+const M34 = [[1, 3, 5, 7], [10, 11, 16, 20], [23, 30, 34, 60]];
+const FLAT_TAGS = Object.fromEntries(
+  [...Array(12).keys()].map((i) => [`${Math.floor(i / 4)},${i % 4}`, `i ${i}`])
+);
+
+// Reused for the intervals / tries / union-find batch (tries are drawn with the graph renderer)
+const TRIE_CAT = {
+  nodes: ["•", "c", "a", "t", "r"],
+  edges: [[0, 1], [1, 2], [2, 3], [2, 4]],
+  pos: [[0.5, 0.08], [0.5, 0.34], [0.5, 0.6], [0.28, 0.9], [0.72, 0.9]],
+};
+const TRIE_APPLE = {
+  nodes: ["•", "a", "p", "p", "l", "e"],
+  edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]],
+  pos: [[0.08, 0.4], [0.25, 0.4], [0.42, 0.4], [0.58, 0.4], [0.75, 0.4], [0.92, 0.4]],
+};
+const TRIE_BDM = {
+  nodes: ["•", "b", "d", "m", "a", "a", "a", "d", "d", "d"],
+  edges: [[0, 1], [0, 2], [0, 3], [1, 4], [2, 5], [3, 6], [4, 7], [5, 8], [6, 9]],
+  pos: [[0.5, 0.06], [0.2, 0.34], [0.5, 0.34], [0.8, 0.34], [0.2, 0.62], [0.5, 0.62], [0.8, 0.62], [0.2, 0.9], [0.5, 0.9], [0.8, 0.9]],
+};
+const TRIE_ROOTS = {
+  nodes: ["•", "c", "a", "t"],
+  edges: [[0, 1], [1, 2], [2, 3]],
+  pos: [[0.1, 0.4], [0.37, 0.4], [0.63, 0.4], [0.9, 0.4]],
+};
+const UF_FIVE = {
+  nodes: ["0", "1", "2", "3", "4"],
+  edges: [[0, 1], [1, 2], [3, 4]],
+  pos: [[0.1, 0.3], [0.3, 0.7], [0.5, 0.3], [0.7, 0.7], [0.9, 0.3]],
+};
+const UF_TRIANGLE = {
+  nodes: ["0", "1", "2"],
+  edges: [[0, 1], [1, 2], [0, 2]],
+  pos: [[0.5, 0.12], [0.85, 0.8], [0.15, 0.8]],
+};
+const RC_TRIANGLE = {
+  nodes: ["1", "2", "3"],
+  edges: [[0, 1], [0, 2], [1, 2]],
+  pos: [[0.5, 0.12], [0.85, 0.8], [0.15, 0.8]],
+};
+const TREE_FOUR = {
+  nodes: ["1", "2", "3", "4"],
+  edges: [[0, 1], [1, 2], [2, 3]],
+  pos: [[0.1, 0.4], [0.37, 0.4], [0.63, 0.4], [0.9, 0.4]],
+};
+
+// Reused for the graphs / trees / backtracking batch
+const MAI_GRID = [[0, 0, 1, 0], [1, 1, 1, 0], [0, 1, 0, 0]];
+const SR_BOARD = [["X", "X", "X", "X"], ["X", "O", "O", "X"], ["X", "X", "O", "X"], ["X", "O", "X", "X"]];
+// Cells equal to "X" as [row, col] pairs, to fade them so the O cells stand out
+const xs = (g) => g.flatMap((row, r) => row.flatMap((v, c) => (v === "X" ? [[r, c]] : [])));
+const FLIGHTS = {
+  nodes: ["0", "1", "2", "3"],
+  edges: [[0, 1, 100], [1, 2, 100], [2, 0, 100], [1, 3, 600], [2, 3, 200]],
+  pos: [[0.1, 0.5], [0.42, 0.15], [0.42, 0.85], [0.9, 0.5]],
+};
+const MST_POINTS = {
+  nodes: ["A", "B", "C", "D", "E"],
+  edges: [[0, 1, 4], [1, 3, 3], [3, 4, 4], [1, 2, 9], [2, 3, 10], [0, 4, 7]],
+  pos: [[0.08, 0.85], [0.28, 0.55], [0.42, 0.08], [0.64, 0.55], [0.92, 0.85]],
+};
+
 const visuals = {
   // ===============================================================
   // BATCH 1: Arrays (problems 1 to 8)
@@ -3025,6 +3100,2767 @@ const visuals = {
         bad: [0, 1], hl: [2],
       }),
     ], { range: [0, 10] }),
+  ],
+
+  // ===============================================================
+  // BATCH 14: Recursion and Backtracking (written from the real challenges)
+  // ===============================================================
+
+  // ---------------------------------------------------------------
+  "Fibonacci Number": [
+    A([0, 1, 1, 2, 3, 5, 8], [
+      s("Here are the first Fibonacci numbers, F(0) to F(6).", {
+        tags: FIB_TAGS,
+      }),
+      s("Take F(5), which is 5. What earlier numbers could it be built from?", {
+        hl: [5], tags: FIB_TAGS,
+      }),
+      s("The number right before it is 3, but 3 alone does not make 5.", {
+        hl: [5], bad: [4], tags: FIB_TAGS,
+      }),
+      s("Something else must be added to 3 to make 5. Which earlier number is it?", {
+        hl: [5], ok: [4], tags: FIB_TAGS,
+      }),
+    ]),
+    T(["F4", "F3", "F2", "F2", "F1", "F1", "F0", "F1", "F0"], [
+      s("This is the call tree for F(4). Each circle is one call.", {
+        hl: [0],
+      }),
+      s("F(2) is worked out in two different places.", {
+        hl: [2, 3],
+      }),
+      s("F(1) is worked out three times.", {
+        hl: [4, 5, 7],
+      }),
+      s("Only the first time each value is computed is needed. The later calls repeat work.", {
+        ok: [3, 7, 8], bad: [2, 4, 5, 6],
+      }),
+      s("What could we keep so that a repeated call costs almost nothing?", {
+        ok: [3, 7, 8], bad: [2, 4, 5, 6],
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Climbing Stairs": [
+    A([0, 1, 2, 3, 4, 5], [
+      s("You can climb 1 or 2 steps at a time. The goal is the top, step 5.", {
+        hl: [5],
+      }),
+      s("Think about the last move that landed you on the top. First, see how moves work on a smaller step, step 3.", {
+        hl: [3],
+      }),
+      s("A 1-step move onto step 3 starts from step 2.", {
+        ok: [2], hl: [3], tags: { 2: "+1 step" },
+      }),
+      s("A 2-step move onto step 3 starts from step 1.", {
+        ok: [1], hl: [3], tags: { 1: "+2 steps" },
+      }),
+      s("Now go back to step 5. Which steps could the last move have started from?", {
+        hl: [5],
+      }),
+    ]),
+    A([1, 2, 3, "-", "-"], [
+      s("The ways to reach steps 1, 2 and 3 are already known: 1, 2 and 3.", {
+        tags: { 0: "step 1", 1: "step 2", 2: "step 3", 3: "step 4", 4: "step 5" },
+      }),
+      s("To reach step 4, the last move starts from step 3 or from step 2.", {
+        hl: [3], ok: [1, 2], tags: { 0: "step 1", 1: "step 2", 2: "step 3", 3: "step 4", 4: "step 5" },
+      }),
+      s("Every route to step 3 can end with a 1-step. Every route to step 2 can end with a 2-step.", {
+        hl: [3], ok: [1, 2], tags: { 0: "step 1", 1: "step 2", 2: "step 3", 3: "step 4", 4: "step 5" },
+      }),
+      s("How should the ways for step 3 and step 2 be combined to count the ways to step 4?", {
+        hl: [3], ok: [1, 2], tags: { 1: "2 ways", 2: "3 ways", 3: "? ways" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Pow(x, n)": [
+    A(["x", "x", "x", "x", "x", "x", "x", "x", "x", "x"], [
+      s("x^10 means x multiplied by itself 10 times. Here are the 10 factors.", {}),
+      s("Group the first 5 factors together. That group is x^5.", {
+        hl: [0, 1, 2, 3, 4],
+      }),
+      s("The other 5 factors form a second group, which is also x^5.", {
+        ok: [0, 1, 2, 3, 4], hl: [5, 6, 7, 8, 9],
+      }),
+      s("How can these two groups of 5 factors be combined to get all 10 factors?", {
+        ok: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      }),
+    ]),
+    A(["8", "4", "2", "1", "?", "?", "?"], [
+      s("Here are powers of 2. Each time n drops by 1, the value is cut in half.", {
+        tags: { 0: "n=3", 1: "n=2", 2: "n=1", 3: "n=0", 4: "n=-1", 5: "n=-2", 6: "n=-3" },
+      }),
+      s("8 became 4, then 2, then 1.", {
+        ok: [0, 1, 2, 3],
+        tags: { 0: "n=3", 1: "n=2", 2: "n=1", 3: "n=0", 4: "n=-1", 5: "n=-2", 6: "n=-3" },
+      }),
+      s("Keep going: n = -1 gives half of 1.", {
+        values: ["8", "4", "2", "1", "1/2", "?", "?"], ok: [0, 1, 2, 3], hl: [4],
+        tags: { 0: "n=3", 1: "n=2", 2: "n=1", 3: "n=0", 4: "n=-1", 5: "n=-2", 6: "n=-3" },
+      }),
+      s("And n = -3 gives 1/8. How does 2 to the power -3 relate to 2 to the power 3, which is 8?", {
+        values: ["8", "4", "2", "1", "1/2", "1/4", "1/8"], hl: [0, 6],
+        tags: { 0: "n=3", 1: "n=2", 2: "n=1", 3: "n=0", 4: "n=-1", 5: "n=-2", 6: "n=-3" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Subsets": [
+    A([1, 2, 3], [
+      s("We build one subset by looking at the numbers 1, 2, 3 one at a time.", {
+        aux: { label: "subset", items: [] },
+      }),
+      s("Look at the number 1. What can we do with it?", {
+        hl: [0], aux: { label: "subset", items: [] },
+      }),
+      s("One possible subset so far contains it.", {
+        hl: [0], ok: [0], aux: { label: "subset", items: ["1"] },
+      }),
+      s("Another possible subset so far leaves it out.", {
+        hl: [0], bad: [0], aux: { label: "subset", items: [] },
+      }),
+      s("The number 2 comes next. How many choices does each number give us?", {
+        hl: [1], aux: { label: "subset", items: [] },
+      }),
+    ]),
+    A([1, 2, 3], [
+      s("Start with no numbers looked at. There is just one subset: the empty one.", {
+        aux: { label: "subsets", items: ["{}"] }, out: "1 subset",
+      }),
+      s("Look at 1. Each subset so far can stay as it is, or get a 1 added.", {
+        hl: [0], aux: { label: "subsets", items: ["{}", "{1}"] }, out: "2 subsets",
+      }),
+      s("Look at 2. The same thing happens to every subset so far.", {
+        ok: [0], hl: [1], aux: { label: "subsets", items: ["{}", "{1}", "{2}", "{1,2}"] }, out: "4 subsets",
+      }),
+      s("Look at 3. The list changes again. What pattern does the count follow for n numbers?", {
+        ok: [0, 1], hl: [2],
+        aux: { label: "subsets", items: ["{}", "{1}", "{2}", "{1,2}", "{3}", "{1,3}", "{2,3}", "{1,2,3}"] },
+        out: "8 subsets",
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Permutations": [
+    A([1, 2, 3], [
+      s("We build a permutation of 1, 2, 3 by filling positions one at a time.", {
+        aux: { label: "built", items: [] },
+      }),
+      s("Position 1 is filled with 2.", {
+        ok: [1], aux: { label: "built", items: ["2"] },
+      }),
+      s("Position 2 is next. Which of 1, 2, 3 may go there, if every number must be used exactly once?", {
+        ok: [1], aux: { label: "built", items: ["2"] },
+      }),
+    ]),
+    A(["_", "_", "_"], [
+      s("Three positions to fill with 1, 2 and 3, using each number once.", {
+        tags: { 0: "pos 1", 1: "pos 2", 2: "pos 3" },
+      }),
+      s("Position 1 can take any of the 3 numbers.", {
+        hl: [0], tags: { 0: "3 choices", 1: "pos 2", 2: "pos 3" },
+      }),
+      s("Say 2 goes first. Position 2 can only take what is left: 1 or 3.", {
+        values: ["2", "_", "_"], ok: [0], hl: [1], tags: { 0: "used", 1: "2 choices", 2: "pos 3" },
+      }),
+      s("Say 1 goes second. Position 3 can only take the one number left.", {
+        values: ["2", "1", "_"], ok: [0, 1], hl: [2], tags: { 0: "used", 1: "used", 2: "1 choice" },
+      }),
+      s("The number of choices went down at each position. How many different full orderings can this give?", {
+        values: ["2", "1", "3"], ok: [0, 1, 2], tags: { 0: "3 choices", 1: "2 choices", 2: "1 choice" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Combination Sum": [
+    A([2, 3, 6, 7], [
+      s("Candidates are 2, 3, 6 and 7. The target is 7. We pick numbers one at a time.", {
+        aux: { label: "chosen", items: [] },
+      }),
+      s("Pick 2. We still need 5 more.", {
+        hl: [0], tags: { 0: "need 5" }, aux: { label: "chosen", items: ["2"] },
+      }),
+      s("The problem says a number may be used any number of times.", {
+        hl: [0], tags: { 0: "need 5" }, aux: { label: "chosen", items: ["2"] },
+      }),
+      s("For the next pick, which candidates should we look at?", {
+        tags: { 0: "need 5" }, aux: { label: "chosen", items: ["2"] },
+      }),
+    ]),
+    T([7, 5, 4, 3, 2, 2, 1, 1, 0, 0, -1, 0, -1, -1, -2], [
+      s("Candidates 2 and 3, target 7. Each circle shows how much is still needed.", {
+        hl: [0],
+      }),
+      s("Going down a level, we choose a 2 or a 3 and the remaining target shrinks.", {
+        hl: [1, 2],
+      }),
+      s("Some branches reach exactly 0.", {
+        ok: [8, 9, 11],
+      }),
+      s("Others fall below 0.", {
+        ok: [8, 9, 11], bad: [10, 12, 13, 14],
+      }),
+      s("What do these two kinds of node tell us about when to stop searching a branch?", {
+        ok: [8, 9, 11], bad: [10, 12, 13, 14],
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Generate Parentheses": [
+    A(["_", "_", "_", "_", "_", "_"], [
+      s("We build a string of 6 characters using 3 opening and 3 closing parentheses.", {
+        aux: { label: "used", items: ["open 0", "close 0"] },
+      }),
+      s("Place an opening parenthesis in slot 1.", {
+        values: ["(", "_", "_", "_", "_", "_"], hl: [0], aux: { label: "used", items: ["open 1", "close 0"] },
+      }),
+      s("Another opening one fits in slot 2.", {
+        values: ["(", "(", "_", "_", "_", "_"], hl: [1], ok: [0], aux: { label: "used", items: ["open 2", "close 0"] },
+      }),
+      s("And a third in slot 3.", {
+        values: ["(", "(", "(", "_", "_", "_"], hl: [2], ok: [0, 1], aux: { label: "used", items: ["open 3", "close 0"] },
+      }),
+      s("All 3 opening parentheses are used. Can slot 4 take a fourth opening one?", {
+        values: ["(", "(", "(", "_", "_", "_"], hl: [3], ok: [0, 1, 2], aux: { label: "used", items: ["open 3", "close 0"] },
+      }),
+    ]),
+    A(["_", "_", "_", "_", "_", "_"], [
+      s("The string so far is ((, with 2 opening and no closing parentheses.", {
+        values: ["(", "(", "_", "_", "_", "_"], ok: [0, 1], aux: { label: "used", items: ["open 2", "close 0"] },
+      }),
+      s("Add a closing parenthesis. It closes one of the open ones, so this works.", {
+        values: ["(", "(", ")", "_", "_", "_"], ok: [1, 2], aux: { label: "used", items: ["open 2", "close 1"] },
+      }),
+      s("Now try a closing parenthesis as the very first character.", {
+        values: [")", "_", "_", "_", "_", "_"], bad: [0], aux: { label: "used", items: ["open 0", "close 1"] },
+      }),
+      s("That ) has nothing to close. So when is a closing parenthesis allowed?", {
+        values: [")", "_", "_", "_", "_", "_"], bad: [0], aux: { label: "used", items: ["open 0", "close 1"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Letter Combinations of a Phone Number": [
+    A(["2", "3"], [
+      s("The digits are 2 and 3. Each digit sits on a phone key with letters on it.", {}),
+      s("The key 2 shows these letters.", {
+        hl: [0], aux: { label: "key 2", items: ["a", "b", "c"] },
+      }),
+      s("The key 3 shows these letters.", {
+        hl: [1], ok: [0], aux: { label: "key 3", items: ["d", "e", "f"] },
+      }),
+      s("For each digit we pick one letter from its key. How many options does a digit give us?", {
+        hl: [0, 1], aux: { label: "key 3", items: ["d", "e", "f"] },
+      }),
+    ]),
+    A(["2", "3"], [
+      s("The digit 2 offers a, b, c and the digit 3 offers d, e, f. We pick one letter per digit.", {
+        aux: { label: "letters", items: ["2: abc", "3: def"] },
+      }),
+      s("Pick a for the digit 2. Pair it with each letter of the digit 3.", {
+        hl: [0], aux: { label: "combos", items: ["ad", "ae", "af"] },
+      }),
+      s("Pick b the same way.", {
+        hl: [0], aux: { label: "combos", items: ["ad", "ae", "af", "bd", "be", "bf"] },
+      }),
+      s("Do the same for c. How many combinations will there be in total?", {
+        hl: [0, 1], aux: { label: "combos", items: ["ad", "ae", "af", "bd", "be", "bf"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "N-Queens": [
+    G(NQ_EMPTY, [
+      s("We must place 4 queens on a 4 × 4 board. A queen attacks along its row, column and diagonals.", {}),
+      s("Place a queen. Everything else in its row is attacked.", {
+        values: NQ_ONE, ok: [[0, 1]], bad: [[0, 0], [0, 2], [0, 3]],
+      }),
+      s("A second queen in the same row would be attacked at once.", {
+        values: [["", "Q", "", "Q"], ["", "", "", ""], ["", "", "", ""], ["", "", "", ""]],
+        bad: [[0, 1], [0, 3]],
+      }),
+      s("We have 4 queens and 4 rows. How many queens can each row hold?", {
+        values: NQ_ONE, ok: [[0, 1]],
+      }),
+    ]),
+    G(NQ_EMPTY, [
+      s("Say we place queens row by row. This queen sits in the first row.", {
+        values: NQ_ONE, hl: [[0, 1]],
+      }),
+      s("It attacks the squares straight down its column.", {
+        values: NQ_ONE, ok: [[0, 1]], bad: [[1, 1], [2, 1], [3, 1]],
+      }),
+      s("It also attacks along both diagonals.", {
+        values: NQ_ONE, ok: [[0, 1]], bad: [[1, 1], [2, 1], [3, 1], [1, 0], [1, 2], [2, 3]],
+      }),
+      s("In the next row three squares are blocked and one is free. What must we remember about earlier queens?", {
+        values: NQ_ONE, ok: [[0, 1]], bad: [[1, 0], [1, 1], [1, 2]], hl: [[1, 3]],
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Word Search": [
+    G(WS_BOARD, [
+      s("We search for ABCCED. The A in the top left matches the first letter.", {
+        hl: [[0, 0]],
+      }),
+      s("The next letter is B. Look at the cells around the A.", {
+        ok: [[0, 0]],
+      }),
+      s("A B sits right beside it.", {
+        ok: [[0, 0]], hl: [[0, 1]],
+      }),
+      s("The next letter is C. There is one right beside the B.", {
+        ok: [[0, 0], [0, 1]], hl: [[0, 2]],
+      }),
+      s("The second C is in the row below, directly under the first C.", {
+        ok: [[0, 0], [0, 1], [0, 2]], hl: [[1, 2]],
+      }),
+      s("We moved right, right, then down. Which cells can we step to from any cell?", {
+        ok: [[0, 0], [0, 1], [0, 2], [1, 2]],
+      }),
+    ]),
+    G([["A", "B"]], [
+      s("A tiny board with just A and B. We search for the word ABA. Start at the A.", {
+        hl: [[0, 0]],
+      }),
+      s("Step to the B.", {
+        ok: [[0, 0]], hl: [[0, 1]],
+      }),
+      s("The next letter is A. The only A next to the B is the one we started on.", {
+        ok: [[0, 1]], hl: [[0, 0]],
+      }),
+      s("Using that same A again would build ABA out of only one A on the board.", {
+        ok: [[0, 1]], bad: [[0, 0]],
+      }),
+      s("Is that a valid way to find the word? What should we have done when we first stepped onto that A?", {
+        ok: [[0, 1]], bad: [[0, 0]],
+      }),
+    ]),
+  ],
+
+  // ===============================================================
+  // BATCH 15: Two Pointers (written from the real challenges)
+  // ===============================================================
+
+  // ---------------------------------------------------------------
+  "Two Sum II - Input Array Is Sorted": [
+    A([2, 3, 5, 8, 11], [
+      s("The array is sorted and the target is 10. One pointer sits on the smallest number, one on the largest.", {
+        ptrs: { l: 0, r: 4 },
+      }),
+      s("Their sum is 2 + 11 = 13, which is bigger than the target.", {
+        hl: [0, 4], ptrs: { l: 0, r: 4 }, tags: { 4: "13 > 10" },
+      }),
+      s("Try moving the left pointer to 3. The sum becomes 3 + 11 = 14.", {
+        hl: [1, 4], bad: [1], ptrs: { l: 1, r: 4 }, tags: { 4: "14 > 10" },
+      }),
+      s("That made the sum even bigger. Which pointer should move to bring it down?", {
+        hl: [0, 4], ptrs: { l: 0, r: 4 }, tags: { 4: "13 > 10" },
+      }),
+    ]),
+    A([2, 3, 5, 8, 11], [
+      s("The right number, 11, makes 13 with the smallest number, 2. That is over the target of 10.", {
+        hl: [0, 4], ptrs: { l: 0, r: 4 }, tags: { 0: "+11=13" },
+      }),
+      s("What if 11 were paired with the next number, 3?", {
+        hl: [1, 4], ptrs: { l: 1, r: 4 }, tags: { 0: "+11=13", 1: "+11=14" },
+      }),
+      s("And with 5, then with 8?", {
+        hl: [2, 3, 4], ptrs: { r: 4 }, tags: { 0: "+11=13", 1: "+11=14", 2: "+11=16", 3: "+11=19" },
+      }),
+      s("Look at all these sums next to the target of 10. Is there any reason to keep 11?", {
+        bad: [4], tags: { 0: "+11=13", 1: "+11=14", 2: "+11=16", 3: "+11=19" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Remove Duplicates from Sorted Array": [
+    A([0, 0, 1, 1, 1, 2, 2, 3, 3, 4], [
+      s("Here is a sorted array.", {}),
+      s("Look at the value 1. Where are its copies?", {
+        hl: [2, 3, 4],
+      }),
+      s("Now the value 2.", {
+        ok: [2, 3, 4], hl: [5, 6],
+      }),
+      s("And the value 3.", {
+        ok: [2, 3, 4, 5, 6], hl: [7, 8],
+      }),
+      s("Where do copies of a value always sit in a sorted array?", {
+        hl: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      }),
+    ]),
+    A([0, 0, 1, 1, 2], [
+      s("Index 0 is always kept. Two pointers, i and j, start at index 1.", {
+        ok: [0], ptrs: { i: 1, j: 1 },
+      }),
+      s("i looks at index 1. It equals the last kept value, 0, so nothing is copied.", {
+        ok: [0], bad: [1], ptrs: { i: 1, j: 1 },
+      }),
+      s("i moves on and finds a new value, 1. It is copied to the spot where j points.", {
+        values: [0, 1, 1, 1, 2], ok: [0], hl: [1, 2], ptrs: { i: 2, j: 1 },
+      }),
+      s("Then j steps forward, but i moves on every time. What is each pointer for?", {
+        values: [0, 1, 1, 1, 2], ok: [0, 1], ptrs: { i: 3, j: 2 },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Remove Element": [
+    A([3, 2, 2, 3], [
+      s("We remove every 3 from this array. The numbers that stay must end up at the front.", {}),
+      s("These are the 3s.", {
+        bad: [0, 3],
+      }),
+      s("These are the other numbers.", {
+        bad: [0, 3], ok: [1, 2],
+      }),
+      s("After the removal, which elements should fill the first positions of the array?", {
+        bad: [0, 3], ok: [1, 2],
+      }),
+    ]),
+    A([1, 3, 2, 3, 4], [
+      s("Remove every 3. The numbers that stay must sit together at the front, with no gaps.", {}),
+      s("The 1 is kept. It is already at the front.", {
+        ok: [0],
+      }),
+      s("The 3 is removed, so we skip over it.", {
+        ok: [0], bad: [1],
+      }),
+      s("The 2 is kept. Where in the array should it be written?", {
+        ok: [0], bad: [1], hl: [2],
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Squares of a Sorted Array": [
+    A([-4, -1, 0, 3, 10], [
+      s("The array is sorted: -4, -1, 0, 3, 10. We want the squares in sorted order.", {}),
+      s("Square every number and look at the results.", {
+        hl: [0, 1, 2, 3, 4], tags: { 0: "16", 1: "1", 2: "0", 3: "9", 4: "100" },
+      }),
+      s("Negative numbers turn positive when squared. -4 gives 16, far bigger than the squares of -1 or 0.", {
+        hl: [0, 1, 2], tags: { 0: "16", 1: "1", 2: "0", 3: "9", 4: "100" },
+      }),
+      s("Where in the array could the biggest square come from?", {
+        tags: { 0: "16", 1: "1", 2: "0", 3: "9", 4: "100" },
+      }),
+    ]),
+    A(["_", "_", "_", "_", "_"], [
+      s("The result has 5 empty slots, to be filled from smallest to largest.", {
+        tags: { 0: "smallest", 4: "largest" },
+      }),
+      s("The squares at the two ends of the input are 16 and 100.", {
+        tags: { 0: "smallest", 4: "largest" }, aux: { label: "end squares", items: ["16", "100"] },
+      }),
+      s("Which slot of the result can we fill right now, and with which square?", {
+        tags: { 0: "smallest", 4: "largest" }, aux: { label: "end squares", items: ["16", "100"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Valid Palindrome II": [
+    A(["a", "b", "c", "a"], [
+      s("We compare from both ends. We may delete at most one character.", {
+        ptrs: { l: 0, r: 3 },
+      }),
+      s("a and a match. Both pointers move inward.", {
+        ok: [0, 3], ptrs: { l: 1, r: 2 },
+      }),
+      s("b and c do not match.", {
+        ok: [0, 3], bad: [1, 2], ptrs: { l: 1, r: 2 },
+      }),
+      s("The word is not a palindrome yet, but one deletion is allowed. What can we do here?", {
+        ok: [0, 3], bad: [1, 2], ptrs: { l: 1, r: 2 },
+      }),
+    ]),
+    A(["a", "b", "c", "a"], [
+      s("Suppose we delete the c.", {
+        bad: [2],
+      }),
+      s("The letters left are a, b, a.", {
+        ok: [0, 1, 3], bad: [2],
+      }),
+      s("We have used our one deletion. What must these remaining letters satisfy for the answer to be true?", {
+        ok: [0, 1, 3], bad: [2],
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "3Sum Closest": [
+    A([-4, -1, 1, 2], [
+      s("The array is sorted: -4, -1, 1, 2. The target is 1, and we want three numbers with a sum close to it.", {}),
+      s("Fix the first number, -4. Now we need the best two numbers from the rest.", {
+        ok: [0], hl: [1, 2, 3], tags: { 0: "fixed" },
+      }),
+      s("The rest is sorted too. How can that order help us find the best pair quickly?", {
+        ok: [0], hl: [1, 2, 3], tags: { 0: "fixed" },
+      }),
+    ]),
+    A([-4, -1, 1, 2], [
+      s("The fixed number is -4. The pointers sit on -1 and 2.", {
+        ok: [0], ptrs: { l: 1, r: 3 }, tags: { 0: "fixed" },
+      }),
+      s("The sum is -4 + -1 + 2 = -3. The target is 1, so the sum is too small.", {
+        ok: [0], hl: [1, 3], ptrs: { l: 1, r: 3 }, tags: { 0: "fixed", 3: "-3 < 1" },
+      }),
+      s("Try moving the right pointer left, to 1. The sum becomes -4 - 1 + 1 = -4.", {
+        ok: [0], bad: [2], ptrs: { l: 1, r: 2 }, tags: { 0: "fixed", 2: "-4 < 1" },
+      }),
+      s("That moved the sum further from the target. Which pointer should move to raise the sum?", {
+        ok: [0], hl: [1, 3], ptrs: { l: 1, r: 3 }, tags: { 0: "fixed", 3: "-3 < 1" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "4Sum": [
+    A([-2, -1, 0, 0, 1, 2], [
+      s("We need four numbers that add up to 0. The array is sorted.", {}),
+      s("Fix the first number, -2.", {
+        ok: [0], tags: { 0: "fixed" },
+      }),
+      s("Fix a second number, -1.", {
+        ok: [0, 1], tags: { 0: "fixed", 1: "fixed" },
+      }),
+      s("Now two more numbers are needed from the rest. Which problem from earlier does that look like?", {
+        ok: [0, 1], hl: [2, 3, 4, 5], tags: { 0: "fixed", 1: "fixed" },
+      }),
+    ]),
+    A([-2, -1, 1, 1, 2, 2], [
+      s("We fixed -2 and -1, so the last two numbers must add up to 3.", {
+        ok: [0, 1],
+      }),
+      s("The pair 1 and 2 works. But there are two 1s and two 2s.", {
+        ok: [0, 1], hl: [2, 3, 4, 5],
+      }),
+      s("The first 1 with the first 2 gives the group -2, -1, 1, 2.", {
+        ok: [0, 1, 2, 4],
+      }),
+      s("The second 1, or the second 2, gives that very same group again.", {
+        ok: [0, 1, 2, 4], bad: [3, 5],
+      }),
+      s("The answer must list each group only once. What should we do with equal values that sit side by side?", {
+        ok: [0, 1, 2, 4], bad: [3, 5],
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Trapping Rain Water": [
+    A([3, 0, 2, 0, 4], [
+      s("Each number is the height of a bar. Water collects in the dips between taller bars.", {}),
+      s("Look at the dip at index 1, which has height 0.", {
+        hl: [1],
+      }),
+      s("The tallest bar to its left is 3.", {
+        ok: [0], hl: [1], tags: { 0: "left: 3" },
+      }),
+      s("The tallest bar to its right is 4.", {
+        ok: [0, 4], hl: [1], tags: { 0: "left: 3", 4: "right: 4" },
+      }),
+      s("How high can the water rise above this dip?", {
+        ok: [0, 4], hl: [1], tags: { 0: "left: 3", 4: "right: 4" },
+      }),
+    ]),
+    A([3, 0, 2, 0, 4], [
+      s("Two pointers start at the ends. Each side remembers the tallest bar it has seen.", {
+        ptrs: { l: 0, r: 4 }, aux: { label: "tallest", items: ["left 3", "right 4"] },
+      }),
+      s("The left side's tallest bar is 3 and the right side's is 4. They are not equal.", {
+        hl: [0, 4], ptrs: { l: 0, r: 4 }, aux: { label: "tallest", items: ["left 3", "right 4"] },
+      }),
+      s("We can only move one pointer at a time. For which side do we already know the water level for sure?", {
+        ptrs: { l: 0, r: 4 }, aux: { label: "tallest", items: ["left 3", "right 4"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Boats to Save People": [
+    A([1, 2, 2, 3], [
+      s("The weights, sorted, are 1, 2, 2, 3. A boat holds at most 2 people and a weight of 3.", {}),
+      s("Two people can share a boat if together they weigh at most 3. A 1 and a 2 fit.", {
+        ok: [0, 1],
+      }),
+      s("A 2 and another 2 weigh 4, which is too much.", {
+        bad: [1, 2],
+      }),
+      s("Many pairings are possible. Which two people should we try to pair first?", {}),
+    ]),
+    A([2, 3, 3], [
+      s("Now the weights are 2, 3, 3 and the boat limit is 4. We try the lightest with the heaviest.", {
+        ptrs: { a: 0, b: 2 },
+      }),
+      s("Together they weigh 2 + 3 = 5, which is over the limit.", {
+        bad: [0, 2], ptrs: { a: 0, b: 2 }, tags: { 2: "5 > 4" },
+      }),
+      s("They do not fit together, but the heaviest person still needs a boat.", {
+        hl: [2], ptrs: { a: 0, b: 2 }, tags: { 2: "5 > 4" },
+      }),
+      s("Everyone else weighs at least as much as the lightest. What should happen to the heaviest person?", {
+        hl: [2], ptrs: { a: 0, b: 2 }, tags: { 2: "5 > 4" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Is Subsequence": [
+    A(["a", "h", "b", "g", "d", "c"], [
+      s("We scan t for the letters of abc, in order. First we need an a.", {
+        ptrs: { i: 0 }, aux: { label: "s is", items: ["a", "b", "c"] },
+      }),
+      s("The first letter of t is a. It matches the letter we need.", {
+        ok: [0], ptrs: { i: 0 }, aux: { label: "s is", items: ["a", "b", "c"] },
+      }),
+      s("The a is matched. What should we look for next as we move on to h?", {
+        ok: [0], hl: [1], ptrs: { i: 1 }, aux: { label: "s is", items: ["a", "b", "c"] },
+      }),
+    ]),
+    A(["a", "h", "b", "g", "d", "c"], [
+      s("In t, the letters a, b and c appear in that order, with other letters between them.", {
+        ok: [0, 2, 5],
+      }),
+      s("The letters h, g and d were skipped over along the way.", {
+        ok: [0, 2, 5], bad: [1, 3, 4],
+      }),
+      s("We have reached the end of t. What tells us that s is a subsequence of t?", {
+        ok: [0, 2, 5], bad: [1, 3, 4], ptrs: { i: 5 },
+      }),
+    ]),
+  ],
+
+  // ===============================================================
+  // BATCH 16: Sliding Window, Greedy, Bit Manipulation, Prefix Sum & Hashing,
+  // Matrix, Heap (written from the real challenges)
+  // ===============================================================
+
+  // ---------------------------------------------------------------
+  "Maximum Average Subarray I": [
+    A([1, 12, -5, -6, 50, 3], [
+      s("The window length is k = 4. Every window we look at has exactly 4 numbers.", {
+        hl: [0, 1, 2, 3],
+      }),
+      s("First window: 1, 12, -5, -6. Its sum is 2 and its average is 0.5.", {
+        hl: [0, 1, 2, 3], tags: { 0: "sum 2", 3: "avg 0.5" },
+      }),
+      s("Second window: 12, -5, -6, 50. Its sum is 51 and its average is 12.75.", {
+        hl: [1, 2, 3, 4], tags: { 1: "sum 51", 4: "avg 12.75" },
+      }),
+      s("Third window: -5, -6, 50, 3. Its sum is 42 and its average is 10.5.", {
+        hl: [2, 3, 4, 5], tags: { 2: "sum 42", 5: "avg 10.5" },
+      }),
+      s("All three windows have the same length. What could we compare instead of comparing averages?", {}),
+    ]),
+    A([1, 12, -5, -6, 50, 3], [
+      s("The window covers 1, 12, -5, -6. Its sum is 2.", {
+        hl: [0, 1, 2, 3], tags: { 0: "sum 2" },
+      }),
+      s("Slide it one step right. The 1 leaves the window and the 50 enters it.", {
+        ok: [1, 2, 3], bad: [0], hl: [4], tags: { 0: "leaves", 4: "enters" },
+      }),
+      s("The new window is 12, -5, -6, 50. Its sum is 51.", {
+        hl: [1, 2, 3, 4], tags: { 1: "sum 51" },
+      }),
+      s("The sum went from 2 to 51. How can we update it, instead of adding up all four numbers again?", {
+        hl: [1, 2, 3, 4], tags: { 0: "leaves", 4: "enters" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Minimum Size Subarray Sum": [
+    A([2, 3, 1, 2, 4, 3], [
+      s("All the numbers are positive. We grow a window from the left end.", {
+        hl: [0], ptrs: { l: 0, r: 0 }, tags: { 0: "sum 2" },
+      }),
+      s("Add the 3 to the window.", {
+        hl: [0, 1], ptrs: { l: 0, r: 1 }, tags: { 1: "sum 5" },
+      }),
+      s("Add the 1.", {
+        hl: [0, 1, 2], ptrs: { l: 0, r: 2 }, tags: { 2: "sum 6" },
+      }),
+      s("Add the 2.", {
+        hl: [0, 1, 2, 3], ptrs: { l: 0, r: 3 }, tags: { 3: "sum 8" },
+      }),
+      s("Look at what the sum did each time we added a number. What does adding a positive number do?", {
+        hl: [0, 1, 2, 3], ptrs: { l: 0, r: 3 }, tags: { 3: "sum 8" },
+      }),
+    ]),
+    A([2, 3, 1, 2, 4, 3], [
+      s("The window 2, 3, 1, 2 has sum 8. The target is 7, so this window is valid.", {
+        hl: [0, 1, 2, 3], ptrs: { l: 0, r: 3 }, tags: { 3: "sum 8" },
+      }),
+      s("Its length is 4. We are looking for the shortest valid window.", {
+        hl: [0, 1, 2, 3], ptrs: { l: 0, r: 3 }, tags: { 0: "length 4" },
+      }),
+      s("We have not found a shorter valid window yet. What should we try next?", {
+        hl: [0, 1, 2, 3], ptrs: { l: 0, r: 3 }, tags: { 0: "length 4" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Longest Repeating Character Replacement": [
+    A(["A", "A", "B", "A", "B", "B", "A"], [
+      s("We look at a window of letters: A, A, B, A. We want all of them to be the same letter.", {
+        hl: [0, 1, 2, 3],
+      }),
+      s("Count the letters in the window. A appears 3 times and B appears once.", {
+        hl: [0, 1, 2, 3], aux: { label: "counts", items: ["A:3", "B:1"] },
+      }),
+      s("We keep the most frequent letter and change the others. The window length is 4.", {
+        ok: [0, 1, 3], bad: [2], aux: { label: "counts", items: ["A:3", "B:1"] },
+      }),
+      s("How many changes does this window need?", {
+        ok: [0, 1, 3], bad: [2], aux: { label: "counts", items: ["A:3", "B:1"] },
+      }),
+    ]),
+    A(["A", "A", "B", "A", "B", "B", "A"], [
+      s("Now k = 1, so at most 1 change is allowed. Here is the window A, B, A, B.", {
+        hl: [1, 2, 3, 4], ptrs: { l: 1, r: 4 }, aux: { label: "counts", items: ["A:2", "B:2"] },
+      }),
+      s("The most frequent letter appears 2 times in a window of 4. So the window needs 2 changes.", {
+        hl: [1, 2, 3, 4], ptrs: { l: 1, r: 4 }, tags: { 4: "needs 2" },
+        aux: { label: "counts", items: ["A:2", "B:2"] },
+      }),
+      s("That is more than k = 1, so this window is not allowed.", {
+        bad: [1, 2, 3, 4], ptrs: { l: 1, r: 4 }, tags: { 4: "needs 2" },
+        aux: { label: "counts", items: ["A:2", "B:2"] },
+      }),
+      s("The right edge cannot go back. What should we do to make the window allowed again?", {
+        bad: [1, 2, 3, 4], ptrs: { l: 1, r: 4 }, tags: { 4: "needs 2" },
+        aux: { label: "counts", items: ["A:2", "B:2"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Permutation in String": [
+    A(["a", "b"], [
+      s("Here is the string ab and the letters in it.", {
+        aux: { label: "letters", items: ["a:1", "b:1"] },
+      }),
+      s("Here is ba. It is a permutation of ab.", {
+        values: ["b", "a"], ok: [0, 1], aux: { label: "letters", items: ["a:1", "b:1"] },
+      }),
+      s("But aa is not a permutation of ab.", {
+        values: ["a", "a"], bad: [0, 1], aux: { label: "letters", items: ["a:2"] },
+      }),
+      s("What do ab and ba have in common that ab and aa do not?", {
+        values: ["b", "a"], ok: [0, 1], aux: { label: "letters", items: ["a:1", "b:1"] },
+      }),
+    ]),
+    A(["e", "i", "d", "b", "a", "o", "o", "o"], [
+      s("A window of 2 letters sits over s2. It holds e and i.", {
+        hl: [0, 1], aux: { label: "counts", items: ["e:1", "i:1"] },
+      }),
+      s("Slide it one step right: e leaves and d enters. The counts below are still the old ones.", {
+        bad: [0], hl: [1, 2], tags: { 0: "leaves", 2: "enters" },
+        aux: { label: "counts", items: ["e:1", "i:1"] },
+      }),
+      s("Here are the counts for the new window, i and d.", {
+        hl: [1, 2], aux: { label: "counts", items: ["i:1", "d:1"] },
+      }),
+      s("Compare the old counts with the new ones. How do the counts change when the window slides?", {
+        hl: [1, 2], aux: { label: "counts", items: ["i:1", "d:1"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Jump Game": [
+    A([2, 3, 1, 1, 4], [
+      s("Each number says the farthest we can jump forward from that spot.", {}),
+      s("We stand on index 1, which holds 3.", {
+        hl: [1], ptrs: { i: 1 }, tags: { 1: "max 3" },
+      }),
+      s("A jump of 3 steps lands on index 4, the last index.", {
+        hl: [1], ok: [4], ptrs: { i: 1 }, tags: { 1: "max 3", 4: "+3 steps" },
+      }),
+      s("Which indexes can we reach in one jump from index 1?", {
+        hl: [1], ptrs: { i: 1 }, tags: { 1: "max 3" },
+      }),
+    ]),
+    A([2, 3, 1, 1, 4], [
+      s("We scan from left to right and keep asking how far we could possibly get.", {
+        ptrs: { i: 0 }, aux: { label: "we keep", items: ["0"] },
+      }),
+      s("At index 0 the value is 2, so index 2 is as far as we can get.", {
+        hl: [0], ptrs: { i: 0 }, aux: { label: "we keep", items: ["2"] },
+      }),
+      s("At index 1 the value is 3, so we can get as far as index 4.", {
+        ok: [0], hl: [1], ptrs: { i: 1 }, aux: { label: "we keep", items: ["4"] },
+      }),
+      s("At index 2 the value is 1. That only reaches index 3, less than we already know.", {
+        ok: [0, 1], hl: [2], ptrs: { i: 2 }, aux: { label: "we keep", items: ["4"] },
+      }),
+      s("We only ever needed one number. Which single number did we keep track of?", {
+        ok: [0, 1, 2], aux: { label: "we keep", items: ["4"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Gas Station": [
+    A([-1, -1, 1], [
+      s("Three stations. Each number is the fuel gained at a station minus the cost of the next road.", {
+        tags: { 0: "2 - 3", 1: "3 - 4", 2: "4 - 3" },
+      }),
+      s("Add up all three numbers: all the fuel we can collect minus all the fuel we must burn.", {
+        hl: [0, 1, 2], tags: { 0: "2 - 3", 1: "3 - 4", 2: "4 - 3" }, out: "total -1",
+      }),
+      s("The total gas is less than the total cost. What is the answer?", {
+        hl: [0, 1, 2], tags: { 0: "2 - 3", 1: "3 - 4", 2: "4 - 3" }, out: "total -1",
+      }),
+    ]),
+    A([1, -1, -2, 3], [
+      s("Each number is fuel gained minus the next road's cost. We start at station 0 with an empty tank.", {
+        ptrs: { start: 0 }, aux: { label: "tank", items: ["0"] },
+      }),
+      s("After station 0 the tank holds 1.", {
+        hl: [0], ptrs: { start: 0 }, aux: { label: "tank", items: ["1"] },
+      }),
+      s("After station 1 it holds 0.", {
+        ok: [0], hl: [1], ptrs: { start: 0, at: 1 }, aux: { label: "tank", items: ["0"] },
+      }),
+      s("After station 2 it would be -2. We run out of fuel on the road leaving station 2.", {
+        ok: [0, 1], bad: [2], ptrs: { start: 0, at: 2 }, aux: { label: "tank", items: ["-2"] },
+      }),
+      s("We started at station 0. What can we conclude about starting at stations 0, 1 and 2?", {
+        ok: [0, 1], bad: [2], ptrs: { start: 0, at: 2 }, aux: { label: "tank", items: ["-2"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Best Time to Buy and Sell Stock II": [
+    A([1, 3, 6], [
+      s("Prices over three days are 1, 3 and 6.", {}),
+      s("Plan 1: buy on day 1 and sell on day 3. That earns 6 - 1.", {
+        hl: [0, 2], tags: { 0: "buy", 2: "sell" }, out: "plan 1: 6 - 1",
+      }),
+      s("Plan 2: buy on day 1 and sell on day 2. That earns 3 - 1.", {
+        hl: [0, 1], tags: { 0: "buy", 1: "sell" }, out: "plan 2: 3 - 1",
+      }),
+      s("Then buy again on day 2 and sell on day 3. That earns 6 - 3 more.", {
+        hl: [1, 2], tags: { 1: "buy", 2: "sell" }, out: "plan 2: (3 - 1) + (6 - 3)",
+      }),
+      s("Compare the two plans. How does holding through the whole climb compare with adding up the small rises?", {
+        out: "plan 1: 6 - 1 | plan 2: (3 - 1) + (6 - 3)",
+      }),
+    ]),
+    A([1, 3, 2, 5], [
+      s("Prices are 1, 3, 2 and 5. Look at each day-to-day change.", {}),
+      s("From 1 to 3 the price rises by 2.", {
+        ok: [0, 1], tags: { 1: "+2" }, out: "profit so far: 2",
+      }),
+      s("From 3 to 2 the price falls.", {
+        ok: [0, 1], bad: [1, 2], tags: { 1: "+2", 2: "-1" }, out: "profit so far: 2",
+      }),
+      s("How much should the fall from 3 to 2 add to our profit?", {
+        ok: [0, 1], bad: [1, 2], tags: { 1: "+2", 2: "-1" }, out: "profit so far: 2",
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Partition Labels": [
+    A(["a", "b", "a", "b", "c", "d", "c"], [
+      s("We cut the string into parts so that no letter appears in two parts.", {}),
+      s("The first part starts at index 0, which holds the letter a.", {
+        ok: [0],
+      }),
+      s("There is another a later in the string.", {
+        ok: [0], hl: [2],
+      }),
+      s("How far must the first part extend, given that it holds the letter a?", {
+        ok: [0], hl: [2],
+      }),
+    ]),
+    A(["a", "b", "a", "b", "c", "d", "c"], [
+      s("The last position of each letter is a:2, b:3, c:6, d:5. We scan from the left.", {
+        ptrs: { i: 0 }, aux: { label: "last at", items: ["a:2", "b:3", "c:6", "d:5"] },
+      }),
+      s("At index 1 we have met the letters a and b.", {
+        ok: [0], hl: [1], ptrs: { i: 1 }, aux: { label: "last at", items: ["a:2", "b:3", "c:6", "d:5"] },
+      }),
+      s("At index 2 we are on a again. Could the part end here?", {
+        ok: [0, 1], hl: [2], ptrs: { i: 2 }, aux: { label: "last at", items: ["a:2", "b:3", "c:6", "d:5"] },
+      }),
+      s("No: there is still a b at index 3. So when is it safe to end a part at an index i?", {
+        ok: [0, 1, 2], bad: [3], ptrs: { i: 2 }, aux: { label: "last at", items: ["a:2", "b:3", "c:6", "d:5"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Single Number": [
+    A(["_", "_", "_"], [
+      s("We XOR 5 (101) with another 5 (101), one bit column at a time. The result row is empty so far.", {
+        tags: { 0: "1 ^ 1", 1: "0 ^ 0", 2: "1 ^ 1" },
+      }),
+      s("First column: 1 XOR 1 gives 0.", {
+        values: [0, "_", "_"], hl: [0], tags: { 0: "1 ^ 1", 1: "0 ^ 0", 2: "1 ^ 1" },
+      }),
+      s("Second and third columns: 0 XOR 0 gives 0, and 1 XOR 1 gives 0.", {
+        values: [0, 0, 0], ok: [0, 1, 2], tags: { 0: "1 ^ 1", 1: "0 ^ 0", 2: "1 ^ 1" },
+      }),
+      s("The whole result is 000. What does any number give when it is XORed with itself?", {
+        values: [0, 0, 0], ok: [0, 1, 2],
+      }),
+    ]),
+    A([4, 1, 2, 1, 2], [
+      s("Start with 0 and XOR in the numbers one at a time.", {
+        ptrs: { i: 0 }, aux: { label: "running", items: ["0"] },
+      }),
+      s("XOR in 4. The running value is 4.", {
+        hl: [0], aux: { label: "running", items: ["4"] },
+      }),
+      s("XOR in 1 and then 2. The running value is 7.", {
+        ok: [0], hl: [1, 2], aux: { label: "running", items: ["7"] },
+      }),
+      s("XOR in the second 1. The running value is 6.", {
+        ok: [0, 1, 2], hl: [3], aux: { label: "running", items: ["6"] },
+      }),
+      s("XOR in the second 2. The running value is 4. What happened to the numbers that appear twice?", {
+        ok: [0, 1, 2, 3], hl: [4], aux: { label: "running", items: ["4"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Number of 1 Bits": [
+    A([1, 1, 0, 0], [
+      s("n = 12 is 1100 in binary.", {
+        aux: { label: "n", items: ["1100"] },
+      }),
+      s("n - 1 = 11 is 1011.", {
+        values: [1, 0, 1, 1], aux: { label: "n", items: ["1100"] },
+      }),
+      s("AND the two bit by bit. 1100 and 1011 give 1000. The second bit disappeared.", {
+        values: [1, 0, 0, 0], ok: [0], bad: [1], aux: { label: "n", items: ["1100"] },
+      }),
+      s("Compare 1000 with the original 1100. What did n & (n - 1) do to n?", {
+        values: [1, 0, 0, 0], ok: [0], bad: [1], aux: { label: "n", items: ["1100"] },
+      }),
+    ]),
+    A([1, 1, 0, 1], [
+      s("Now n = 13, which is 1101 in binary.", {
+        aux: { label: "steps", items: ["0"] },
+      }),
+      s("Apply n & (n - 1) once. The result is 1100.", {
+        values: [1, 1, 0, 0], bad: [3], aux: { label: "steps", items: ["1"] },
+      }),
+      s("Apply it again. The result is 1000.", {
+        values: [1, 0, 0, 0], bad: [1], aux: { label: "steps", items: ["2"] },
+      }),
+      s("And again. The result is 0000.", {
+        values: [0, 0, 0, 0], bad: [0], aux: { label: "steps", items: ["3"] },
+      }),
+      s("After 3 steps n is 0. How does that number of steps relate to the bits of 1101?", {
+        values: [0, 0, 0, 0], aux: { label: "steps", items: ["3"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Counting Bits": [
+    A([0, 1, 2, 3, 4, 5, 6, 7], [
+      s("The numbers 0 to 7, each with the count of its 1 bits.", {
+        tags: BIT_TAGS,
+      }),
+      s("Look at 6, which is 110. Dropping its last bit gives 3, which is 11.", {
+        hl: [6, 3], tags: BIT_TAGS,
+      }),
+      s("6 and 3 both have two 1 bits.", {
+        ok: [6, 3], tags: BIT_TAGS,
+      }),
+      s("Now 7, which is 111. Dropping its last bit gives 3 again.", {
+        ok: [6], hl: [7, 3], tags: BIT_TAGS,
+      }),
+      s("7 has three 1 bits and 3 has two. How do the counts of i and i >> 1 compare?", {
+        hl: [7, 3], tags: BIT_TAGS,
+      }),
+    ]),
+    A(["-", "-", "-", "-", "-", "-", "-", "-"], [
+      s("We fill in the answers from 0 upward. Nothing is filled in yet.", {
+        tags: { 0: "ans[0]", 7: "ans[7]" },
+      }),
+      s("The first few answers are known.", {
+        values: [0, 1, 1, "-", "-", "-", "-", "-"], ok: [0, 1, 2],
+      }),
+      s("To fill ans[3] we use 3 >> 1, which is 1. The answer for 1 is already there.", {
+        values: [0, 1, 1, "-", "-", "-", "-", "-"], hl: [3], ok: [1],
+      }),
+      s("Now ans[3] is filled in.", {
+        values: [0, 1, 1, 2, "-", "-", "-", "-"], ok: [0, 1, 2, 3],
+      }),
+      s("To fill ans[7] we look at 7 >> 1 = 3. Is that answer already filled in?", {
+        values: [0, 1, 1, 2, "-", "-", "-", "-"], hl: [7], ok: [3],
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Missing Number": [
+    A([3, 0, 1], [
+      s("The array holds 3 numbers from the range 0 to 3. One number of the range is missing.", {
+        aux: { label: "range", items: ["0", "1", "2", "3"] },
+      }),
+      s("The full range 0, 1, 2, 3 adds up to 6.", {
+        aux: { label: "range", items: ["0", "1", "2", "3"] }, out: "full range: 6",
+      }),
+      s("The array 3, 0, 1 adds up to 4.", {
+        hl: [0, 1, 2], aux: { label: "range", items: ["0", "1", "2", "3"] }, out: "full range: 6 | array: 4",
+      }),
+      s("The array's sum is short of the full sum. What does the gap tell us?", {
+        aux: { label: "range", items: ["0", "1", "2", "3"] }, out: "full range: 6 | array: 4",
+      }),
+    ]),
+    A([3, 0, 1], [
+      s("Put the indexes 0, 1, 2, 3 and the array's values 3, 0, 1 together in one list, to XOR them.", {
+        aux: { label: "list", items: ["0", "1", "2", "3", "3", "0", "1"] },
+      }),
+      s("The numbers 0, 1 and 3 each appear twice in this list.", {
+        hl: [0, 1, 2], aux: { label: "list", items: ["0", "1", "2", "3", "3", "0", "1"] },
+      }),
+      s("Now XOR all seven numbers together. What is left at the end?", {
+        aux: { label: "list", items: ["0", "1", "2", "3", "3", "0", "1"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Subarray Sum Equals K": [
+    A([1, 2, 3], [
+      s("The prefix sums of 1, 2, 3 are 0, 1, 3, 6. Each one is the total of the numbers so far.", {
+        aux: { label: "prefix", items: ["0", "1", "3", "6"] },
+      }),
+      s("Take the stretch 2, 3. Its sum is 5.", {
+        hl: [1, 2], aux: { label: "prefix", items: ["0", "1", "3", "6"] },
+      }),
+      s("The prefix before the stretch is 1, and the prefix after it is 6.", {
+        hl: [1, 2], tags: { 1: "before 1", 2: "after 6" },
+        aux: { label: "prefix", items: ["0", "1", "3", "6"] },
+      }),
+      s("How can the stretch's sum, 5, be made from the prefix sums 1 and 6?", {
+        hl: [1, 2], tags: { 1: "before 1", 2: "after 6" },
+        aux: { label: "prefix", items: ["0", "1", "3", "6"] },
+      }),
+    ]),
+    A([1, 2, 3], [
+      s("k = 3. We walk along, keeping the prefix sums we have seen. At the start we have seen 0.", {
+        ptrs: { i: 0 }, aux: { label: "seen", items: ["0"] },
+      }),
+      s("After the 1, the prefix is 1.", {
+        hl: [0], tags: { 0: "P = 1" }, aux: { label: "seen", items: ["0"] },
+      }),
+      s("After the 2, the prefix is 3. Which earlier prefix would make a stretch ending here sum to k = 3?", {
+        ok: [0], hl: [1], tags: { 1: "P = 3" }, aux: { label: "seen", items: ["0", "1"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Longest Consecutive Sequence": [
+    A([100, 4, 200, 1, 3, 2], [
+      s("All the numbers go into a set, so we can check quickly whether a number is present.", {
+        aux: { label: "set", items: ["100", "4", "200", "1", "3", "2"] },
+      }),
+      s("Look at 4. The number just before it, 3, is in the set.", {
+        hl: [1], ok: [4], aux: { label: "set", items: ["100", "4", "200", "1", "3", "2"] },
+      }),
+      s("Look at 1. The number just before it, 0, is not in the set.", {
+        hl: [3], tags: { 3: "0 missing" }, aux: { label: "set", items: ["100", "4", "200", "1", "3", "2"] },
+      }),
+      s("Look at 100. The number just before it, 99, is not in the set either.", {
+        hl: [0], tags: { 0: "99 missing" }, aux: { label: "set", items: ["100", "4", "200", "1", "3", "2"] },
+      }),
+      s("Some numbers have their predecessor in the set and some do not. Which should start counting a sequence?", {
+        aux: { label: "set", items: ["100", "4", "200", "1", "3", "2"] },
+      }),
+    ]),
+    A([100, 4, 200, 1, 3, 2], [
+      s("Counting from the start 1, we check 2, then 3, then 4.", {
+        ok: [3, 5, 4, 1], tags: { 3: "start" }, aux: { label: "set", items: ["100", "4", "200", "1", "3", "2"] },
+      }),
+      s("The numbers 2, 3 and 4 are not starts, so nobody counts from them.", {
+        ok: [3, 5, 4, 1], tags: { 3: "start", 5: "skipped", 4: "skipped", 1: "skipped" },
+        aux: { label: "set", items: ["100", "4", "200", "1", "3", "2"] },
+      }),
+      s("The starts 100 and 200 each count just themselves.", {
+        ok: [3, 5, 4, 1], hl: [0, 2], tags: { 0: "start", 2: "start" },
+        aux: { label: "set", items: ["100", "4", "200", "1", "3", "2"] },
+      }),
+      s("Count how many times each number was walked over. Why does that keep the total work small?", {
+        ok: [3, 5, 4, 1, 0, 2], aux: { label: "set", items: ["100", "4", "200", "1", "3", "2"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Contiguous Array": [
+    A([0, 1, 0], [
+      s("We look for a stretch with equal numbers of 0s and 1s. The array is 0, 1, 0.", {}),
+      s("Now treat each 0 as -1.", {
+        values: [-1, 1, -1],
+      }),
+      s("The stretch -1, 1 has one of each.", {
+        values: [-1, 1, -1], hl: [0, 1],
+      }),
+      s("What is the sum of a stretch that has equal numbers of 0s and 1s?", {
+        values: [-1, 1, -1], hl: [0, 1],
+      }),
+    ]),
+    A([-1, 1, 1, -1], [
+      s("With 0 as -1, the array is -1, 1, 1, -1. The running sum is 0 before the first number.", {
+        aux: { label: "running", items: ["0"] },
+      }),
+      s("After each number, the running sum is -1, 0, 1, 0.", {
+        tags: { 0: "run -1", 1: "run 0", 2: "run 1", 3: "run 0" },
+        aux: { label: "running", items: ["0", "-1", "0", "1", "0"] },
+      }),
+      s("The running sum is 0 at the start and also after the second number. Look at the stretch between them.", {
+        hl: [0, 1], tags: { 0: "run -1", 1: "run 0" },
+        aux: { label: "running", items: ["0", "-1", "0", "1", "0"] },
+      }),
+      s("A running sum repeated at two places: what does that say about the stretch between them?", {
+        hl: [0, 1], tags: { 0: "run -1", 1: "run 0" },
+        aux: { label: "running", items: ["0", "-1", "0", "1", "0"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Spiral Matrix": [
+    G(GRID_9, [
+      s("We walk the grid in a spiral, clockwise, starting at the top-left corner.", {
+        hl: [[0, 0]],
+      }),
+      s("First we walk the top row from left to right.", {
+        ok: [[0, 0], [0, 1], [0, 2]], out: "1, 2, 3",
+      }),
+      s("The top row is finished. Which edge of the unvisited area has to move now?", {
+        ok: [[0, 0], [0, 1], [0, 2]], out: "1, 2, 3",
+      }),
+    ]),
+    G(GRID_9, [
+      s("The outer layer is done: 1, 2, 3, 6, 9, 8, 7, 4.", {
+        ok: [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2], [2, 1], [2, 0], [1, 0]], out: "1, 2, 3, 6, 9, 8, 7, 4",
+      }),
+      s("Only the center cell, 5, is still unvisited.", {
+        ok: [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2], [2, 1], [2, 0], [1, 0]], hl: [[1, 1]],
+        out: "1, 2, 3, 6, 9, 8, 7, 4",
+      }),
+      s("Visit it.", {
+        ok: [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2], [2, 1], [2, 0], [1, 0], [1, 1]],
+        out: "1, 2, 3, 6, 9, 8, 7, 4, 5",
+      }),
+      s("Nothing is left to visit. How can the four boundaries tell us it is time to stop?", {
+        ok: [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2], [2, 1], [2, 0], [1, 0], [1, 1]],
+        out: "1, 2, 3, 6, 9, 8, 7, 4, 5",
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Rotate Image": [
+    G(GRID_9, [
+      s("We rotate the grid 90 degrees clockwise. Follow the 1 in the top-left corner.", {
+        hl: [[0, 0]],
+      }),
+      s("After the turn, the 1 sits in the top-right corner.", {
+        values: [[7, 4, 1], [8, 5, 2], [9, 6, 3]], hl: [[0, 2]],
+      }),
+      s("Now follow the 3, which starts in the top-right corner.", {
+        values: [[1, 2, 3], [4, 5, 6], [7, 8, 9]], hl: [[0, 2]],
+      }),
+      s("After the turn, the 3 sits in the bottom-right corner.", {
+        values: [[7, 4, 1], [8, 5, 2], [9, 6, 3]], hl: [[2, 2]],
+      }),
+      s("The 1 and the 3 moved to new rows and columns. Where does the element at row i, column j go?", {
+        values: [[7, 4, 1], [8, 5, 2], [9, 6, 3]], hl: [[0, 2], [2, 2]],
+      }),
+    ]),
+    G(GRID_9, [
+      s("The goal: after a clockwise quarter turn, the top row 1 2 3 ends up as the right column.", {
+        hl: [[0, 0], [0, 1], [0, 2]],
+      }),
+      s("Try reversing every row.", {
+        values: [[3, 2, 1], [6, 5, 4], [9, 8, 7]],
+      }),
+      s("Then reverse every column.", {
+        values: [[9, 8, 7], [6, 5, 4], [3, 2, 1]], bad: [[0, 0], [0, 1], [0, 2]],
+      }),
+      s("That is a half turn, with 9 8 7 on top instead of 7 4 1. Which two steps make a quarter turn?", {
+        values: [[9, 8, 7], [6, 5, 4], [3, 2, 1]], bad: [[0, 0], [0, 1], [0, 2]],
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Set Matrix Zeroes": [
+    G(ZERO_3, [
+      s("We scan row by row. Suppose we zero a row and column the moment we meet a 0.", {}),
+      s("The scan reaches the 0 in the middle.", {
+        hl: [[1, 1]],
+      }),
+      s("We zero its whole row and column at once. The new zeros are in red.", {
+        values: [[1, 0, 1], [0, 0, 0], [1, 0, 1]], ok: [[1, 1]], bad: [[0, 1], [1, 0], [1, 2], [2, 1]],
+      }),
+      s("The scan carries on to the bottom row. The cell below the middle is now 0.", {
+        values: [[1, 0, 1], [0, 0, 0], [1, 0, 1]], ok: [[1, 1]], hl: [[2, 1]], bad: [[0, 1], [1, 0], [1, 2]],
+      }),
+      s("We wrote that 0 ourselves. What goes wrong if the scan treats it like an original zero?", {
+        values: [[1, 0, 1], [0, 0, 0], [1, 0, 1]], ok: [[1, 1]], hl: [[2, 1]],
+      }),
+    ]),
+    G(ZERO_3, [
+      s("The 0 in the middle means row 1 and column 1 will have to be zeroed later.", {
+        hl: [[1, 1]],
+      }),
+      s("We want to remember that, without a copy of the matrix and without extra lists.", {
+        hl: [[1, 1]],
+      }),
+      s("Where inside the matrix itself could we write a note for row 1 and a note for column 1?", {
+        hl: [[1, 1]],
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Last Stone Weight": [
+    A([2, 7, 4, 1, 8, 1], [
+      s("The stones weigh 2, 7, 4, 1, 8 and 1. Each turn needs the two heaviest.", {}),
+      s("Finding the heaviest means looking at every stone.", {
+        hl: [0, 1, 2, 3, 4, 5],
+      }),
+      s("The two heaviest are 8 and 7. They smash together into a stone of weight 1.", {
+        hl: [4, 1],
+      }),
+      s("A new stone appears, and we will need the heaviest again and again. Which structure keeps it easy to reach?", {
+        hl: [4, 1],
+      }),
+    ]),
+    A([8, 5, 2], [
+      s("Stones 8, 5 and 2. The two heaviest, 8 and 5, smash together.", {
+        hl: [0, 1],
+      }),
+      s("Both are destroyed, and a stone of weight 3 is left from the smash.", {
+        values: ["-", "-", 2], bad: [0, 1], aux: { label: "new stone", items: ["3"] },
+      }),
+      s("The stone of weight 2 is still waiting.", {
+        values: ["-", "-", 2], ok: [2], aux: { label: "new stone", items: ["3"] },
+      }),
+      s("The new stone of weight 3 is not on the list yet. What should we do with it?", {
+        values: ["-", "-", 2], ok: [2], aux: { label: "new stone", items: ["3"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Find Median from Data Stream": [
+    A([5, 1, 4, 2, 3], [
+      s("Numbers arrive in any order: 5, 1, 4, 2, 3.", {}),
+      s("In sorted order they read 1, 2, 3, 4, 5.", {
+        values: [1, 2, 3, 4, 5],
+      }),
+      s("The median is the number in the middle.", {
+        values: [1, 2, 3, 4, 5], hl: [2],
+      }),
+      s("Sorting after every new number is slow. How could we split the numbers so the middle is easy to find?", {
+        values: [1, 2, 3, 4, 5], hl: [2],
+      }),
+    ]),
+    A([1, 2, 3, 4], [
+      s("The sorted numbers 1, 2, 3, 4, split into a lower half and an upper half.", {
+        ok: [0, 1], hl: [2, 3], tags: { 0: "lower", 2: "upper" },
+      }),
+      s("With an even count, the median is the average of the two numbers in the middle, 2 and 3.", {
+        ok: [0], hl: [1, 2], tags: { 0: "lower", 2: "upper" },
+      }),
+      s("To read the median quickly, which value of each half do we need ready?", {
+        ok: [0, 1], hl: [2, 3], tags: { 0: "lower", 2: "upper" },
+      }),
+    ]),
+  ],
+
+  // ===============================================================
+  // BATCH 17: Sliding Window, Greedy, Bit Manipulation, Prefix Sum & Hashing,
+  // Matrix, Heap (second set, written from the real challenges)
+  // ===============================================================
+
+  // ---------------------------------------------------------------
+  "Find All Anagrams in a String": [
+    A(["c", "b", "a", "e", "b", "a", "b", "a", "c", "d"], [
+      s("We look for anagrams of p = abc inside s. An anagram uses the same letters as p.", {
+        aux: { label: "p", items: ["a", "b", "c"] },
+      }),
+      s("Here is a candidate substring of s: c, b, a.", {
+        hl: [0, 1, 2], aux: { label: "p", items: ["a", "b", "c"] },
+      }),
+      s("It uses exactly the letters of p. Now try a longer substring: c, b, a, e.", {
+        ok: [0, 1, 2], hl: [3], aux: { label: "p", items: ["a", "b", "c"] },
+      }),
+      s("Too long: the extra e means it is not an anagram.", {
+        bad: [0, 1, 2, 3], aux: { label: "p", items: ["a", "b", "c"] },
+      }),
+      s("Too short: c and b alone are missing the a.", {
+        bad: [0, 1], aux: { label: "p", items: ["a", "b", "c"] },
+      }),
+      s("How long must a substring of s be to have any chance of being an anagram of p?", {
+        hl: [0, 1, 2], aux: { label: "p", items: ["a", "b", "c"] },
+      }),
+    ]),
+    A(["c", "b", "a", "e", "b", "a", "b", "a", "c", "d"], [
+      s("The window at index 0 holds c, b, a. Its letter counts are shown below.", {
+        hl: [0, 1, 2], ptrs: { start: 0 }, aux: { label: "window", items: ["a:1", "b:1", "c:1"] },
+      }),
+      s("The letter counts of p = abc are shown below.", {
+        hl: [0, 1, 2], ptrs: { start: 0 }, aux: { label: "p counts", items: ["a:1", "b:1", "c:1"] },
+      }),
+      s("The window's counts are equal to the counts of p.", {
+        ok: [0, 1, 2], ptrs: { start: 0 }, aux: { label: "both", items: ["a:1", "b:1", "c:1"] },
+      }),
+      s("The answer is a list of start positions. What should we do now that this window matches p?", {
+        ok: [0, 1, 2], ptrs: { start: 0 }, aux: { label: "both", items: ["a:1", "b:1", "c:1"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Fruit Into Baskets": [
+    A([0, 1, 2, 2], [
+      s("The trees in a row hold fruit of types 0, 1, 2, 2. We have two baskets, one fruit type per basket.", {}),
+      s("Start at the first tree: pick 0, then 1. Both fit in the baskets.", {
+        ok: [0, 1],
+      }),
+      s("The third tree has type 2, a third type. We must stop.", {
+        ok: [0, 1], bad: [2],
+      }),
+      s("Start at the second tree instead: 1, 2, 2 uses only two types.", {
+        ok: [1, 2, 3],
+      }),
+      s("We always pick trees in a row and may hold two types. What is this problem really asking for?", {
+        ok: [1, 2, 3],
+      }),
+    ]),
+    A([1, 2, 1, 3, 3], [
+      s("The window holds 1, 2, 1. That is two types of fruit.", {
+        hl: [0, 1, 2], ptrs: { l: 0, r: 2 }, aux: { label: "types", items: ["1:2", "2:1"] },
+      }),
+      s("The window grows to the right and takes in a 3.", {
+        hl: [0, 1, 2], bad: [3], ptrs: { l: 0, r: 3 }, aux: { label: "types", items: ["1:2", "2:1", "3:1"] },
+      }),
+      s("Now the window holds three types, over our limit of two.", {
+        bad: [0, 1, 2, 3], ptrs: { l: 0, r: 3 }, aux: { label: "types", items: ["1:2", "2:1", "3:1"] },
+      }),
+      s("The right edge cannot go back. What do we do to bring the window back under the limit?", {
+        bad: [0, 1, 2, 3], ptrs: { l: 0, r: 3 }, aux: { label: "types", items: ["1:2", "2:1", "3:1"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Max Consecutive Ones III": [
+    A([1, 1, 0, 1, 0, 0, 1], [
+      s("We may flip at most k = 1 zero into a one. We want the longest stretch of 1s.", {}),
+      s("Take the window 1, 1, 0, 1. It contains one zero.", {
+        hl: [0, 1, 2, 3], tags: { 2: "zero" },
+      }),
+      s("Flip that zero and the whole window becomes 1s.", {
+        values: [1, 1, 1, 1, 0, 0, 1], ok: [0, 1, 2, 3],
+      }),
+      s("Now take the window 1, 0, 1, 0 instead. It contains two zeros.", {
+        hl: [1, 2, 3, 4], bad: [2, 4],
+      }),
+      s("Which windows can be turned into all 1s with our flips? What must be true about a window's zeros?", {
+        hl: [1, 2, 3, 4], bad: [2, 4],
+      }),
+    ]),
+    A([1, 1, 0, 1, 0, 0, 1], [
+      s("k = 1. The window 1, 1, 0, 1 has one zero, which is allowed.", {
+        hl: [0, 1, 2, 3], ptrs: { l: 0, r: 3 }, aux: { label: "zeros", items: ["1"] },
+      }),
+      s("Extend the window to the right. It now includes another 0.", {
+        hl: [0, 1, 2, 3], bad: [4], ptrs: { l: 0, r: 4 }, aux: { label: "zeros", items: ["2"] },
+      }),
+      s("The window has 2 zeros, but only 1 flip is allowed.", {
+        bad: [2, 4], hl: [0, 1, 3], ptrs: { l: 0, r: 4 }, aux: { label: "zeros", items: ["2"] },
+      }),
+      s("The right edge cannot move back. What do we do to the window?", {
+        bad: [2, 4], hl: [0, 1, 3], ptrs: { l: 0, r: 4 }, aux: { label: "zeros", items: ["2"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Minimum Window Substring": [
+    A(["A", "D", "O", "B", "E", "C"], [
+      s("We need a window of s that has all the letters of t = ABC: A, B and C.", {
+        aux: { label: "has", items: [] },
+      }),
+      s("The window A, D, O, B has an A and a B, but no C.", {
+        hl: [0, 1, 2, 3], aux: { label: "has", items: ["A:1", "B:1"] },
+      }),
+      s("Add the E. There is still no C.", {
+        hl: [0, 1, 2, 3, 4], aux: { label: "has", items: ["A:1", "B:1"] },
+      }),
+      s("Add the C. The window now has A:1, B:1 and C:1.", {
+        hl: [0, 1, 2, 3, 4, 5], aux: { label: "has", items: ["A:1", "B:1", "C:1"] },
+      }),
+      s("Now it has A, B and C. In general, when does a window cover t, duplicates included?", {
+        ok: [0, 1, 2, 3, 4, 5], aux: { label: "has", items: ["A:1", "B:1", "C:1"] },
+      }),
+    ]),
+    A(["B", "B", "A", "N", "C"], [
+      s("The window B, B, A, N, C covers t = ABC. Its length is 5.", {
+        hl: [0, 1, 2, 3, 4], ptrs: { l: 0, r: 4 }, aux: { label: "has", items: ["A:1", "B:2", "C:1"] },
+      }),
+      s("Look at the leftmost B. Dropping it leaves B, A, N, C.", {
+        bad: [0], hl: [1, 2, 3, 4], ptrs: { l: 1, r: 4 }, aux: { label: "has", items: ["A:1", "B:1", "C:1"] },
+      }),
+      s("That shorter window still has A, B and C, so it still covers t.", {
+        bad: [0], ok: [1, 2, 3, 4], ptrs: { l: 1, r: 4 }, aux: { label: "has", items: ["A:1", "B:1", "C:1"] },
+      }),
+      s("We cut a letter from the left and it still covers t. How do we keep looking for a smaller window?", {
+        bad: [0], ok: [1, 2, 3, 4], ptrs: { l: 1, r: 4 }, aux: { label: "has", items: ["A:1", "B:1", "C:1"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Subarray Product Less Than K": [
+    A([10, 5, 2, 6], [
+      s("k = 100. The window 5, 2, 6 has product 60, which is less than 100.", {
+        hl: [1, 2, 3], ptrs: { l: 1, r: 3 }, tags: { 3: "60 < 100" },
+      }),
+      s("Look at the subarrays that end at the 6. One is the 6 alone.", {
+        ok: [3], ptrs: { l: 1, r: 3 },
+      }),
+      s("Another starts one place earlier: 2, 6.", {
+        ok: [2, 3], ptrs: { l: 1, r: 3 },
+      }),
+      s("And one more starts at the left edge of the window: 5, 2, 6.", {
+        ok: [1, 2, 3], ptrs: { l: 1, r: 3 },
+      }),
+      s("How many valid subarrays end at the right edge, in terms of left and right?", {
+        ok: [1, 2, 3], ptrs: { l: 1, r: 3 },
+      }),
+    ]),
+    A([10, 5, 2, 6], [
+      s("The window 10, 5, 2 has product 100, but we need a product less than 100.", {
+        hl: [0, 1, 2], ptrs: { l: 0, r: 2 }, tags: { 2: "product 100" },
+      }),
+      s("The product is not less than k, so this window is not allowed.", {
+        bad: [0, 1, 2], ptrs: { l: 0, r: 2 }, tags: { 2: "product 100" },
+      }),
+      s("The right edge cannot go back. What should we do to bring the product below 100?", {
+        bad: [0, 1, 2], ptrs: { l: 0, r: 2 }, tags: { 2: "product 100" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Contains Duplicate II": [
+    A([1, 2, 3, 1], [
+      s("k = 2. We look for two equal numbers that are at most 2 positions apart.", {}),
+      s("Stand on the last 1. Which earlier elements are close enough to matter?", {
+        hl: [3],
+      }),
+      s("The 2 and the 3 are within 2 positions of it.", {
+        ok: [1, 2], hl: [3], tags: { 1: "2 away", 2: "1 away" },
+      }),
+      s("The first 1 is 3 positions back, too far to count.", {
+        ok: [1, 2], hl: [3], bad: [0], tags: { 0: "3 away", 1: "2 away", 2: "1 away" },
+      }),
+      s("Only the last k elements can matter. What does that suggest we keep as we move along?", {
+        ok: [1, 2], hl: [3], bad: [0], tags: { 0: "3 away", 1: "2 away", 2: "1 away" },
+      }),
+    ]),
+    A([1, 2, 3, 1], [
+      s("k = 2. We keep a set of recent elements. After the first two, it holds 1 and 2.", {
+        hl: [0, 1], aux: { label: "set", items: ["1", "2"] },
+      }),
+      s("Next we add the 3. The set would now hold three elements, more than k = 2.", {
+        ok: [0, 1], hl: [2], aux: { label: "set", items: ["1", "2", "3"] },
+      }),
+      s("The set has 3 elements and k is 2. One of them is now too old.", {
+        bad: [0], ok: [1], hl: [2], aux: { label: "set", items: ["1", "2", "3"] },
+      }),
+      s("Which element should we remove from the set?", {
+        bad: [0], ok: [1], hl: [2], aux: { label: "set", items: ["1", "2", "3"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Jump Game II": [
+    A([2, 3, 1, 1, 4], [
+      s("From index 0 we can jump up to 2 steps.", {
+        hl: [0],
+      }),
+      s("With 1 jump we can land on index 1 or index 2.", {
+        hl: [0], ok: [1, 2],
+      }),
+      s("A second jump can start from any index we could have landed on.", {
+        ok: [1, 2], tags: { 1: "value 3", 2: "value 1" },
+      }),
+      s("Counting from index 1 and from index 2, where could a second jump land?", {
+        hl: [1, 2], tags: { 1: "value 3", 2: "value 1" },
+      }),
+    ]),
+    A([2, 3, 1, 1, 4], [
+      s("We scan the indexes reachable with 1 jump: first index 1, then index 2.", {
+        ok: [0], hl: [1, 2], aux: { label: "we keep", items: [] },
+      }),
+      s("At index 1 the value is 3, so a jump from there could land as far as index 4.", {
+        ok: [0], hl: [1], aux: { label: "we keep", items: ["4"] },
+      }),
+      s("At index 2 the value is 1, so a jump from there could land at index 3.", {
+        ok: [0, 1], hl: [2], aux: { label: "we keep", items: ["4"] },
+      }),
+      s("The scan reached the end of this range. What single number did we keep while scanning it?", {
+        ok: [0, 1, 2], aux: { label: "we keep", items: ["4"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Assign Cookies": [
+    A([1, 2, 3], [
+      s("The cookies have sizes 1, 2 and 3. The least greedy child is happy with any cookie of size 1 or more.", {
+        aux: { label: "child", items: ["greed 1"] },
+      }),
+      s("All three cookies would satisfy this child.", {
+        ok: [0, 1, 2], aux: { label: "child", items: ["greed 1"] },
+      }),
+      s("Greedier children, with greed 2 and 3, are waiting too.", {
+        ok: [0, 1, 2], aux: { label: "waiting", items: ["greed 1", "greed 2", "greed 3"] },
+      }),
+      s("Which cookie should the least greedy child receive?", {
+        hl: [0, 1, 2], aux: { label: "waiting", items: ["greed 1", "greed 2", "greed 3"] },
+      }),
+    ]),
+    A([1, 3], [
+      s("The cookies are 1 and 3. The children still waiting have greed 2 and 3.", {
+        aux: { label: "waiting", items: ["greed 2", "greed 3"] },
+      }),
+      s("Try the cookie of size 1 on the least greedy waiting child, who has greed 2.", {
+        hl: [0], aux: { label: "waiting", items: ["greed 2", "greed 3"] },
+      }),
+      s("It is too small for that child.", {
+        bad: [0], aux: { label: "waiting", items: ["greed 2", "greed 3"] },
+      }),
+      s("The other waiting child is at least as greedy. What should we do with this cookie?", {
+        bad: [0], aux: { label: "waiting", items: ["greed 2", "greed 3"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Lemonade Change": [
+    A([5, 5, 5, 10], [
+      s("Our drawer holds the bills 5, 5, 5 and 10. A customer pays with $20, so we owe $15.", {}),
+      s("One way to give $15: three $5 bills.", {
+        ok: [0, 1, 2],
+      }),
+      s("Another way: the $10 bill and one $5 bill.", {
+        ok: [3, 0],
+      }),
+      s("Both make $15. Which change should we prefer to give?", {
+        hl: [0, 1, 2, 3],
+      }),
+    ]),
+    A([10, 20], [
+      s("Two kinds of customers need change: one paying $10 and one paying $20.", {
+        tags: { 0: "pays 10", 1: "pays 20" },
+      }),
+      s("The customer paying $10 needs $5 back.", {
+        hl: [0], tags: { 0: "needs $5", 1: "pays 20" },
+      }),
+      s("The customer paying $20 needs $15 back.", {
+        hl: [1], tags: { 0: "needs $5", 1: "needs $15" },
+      }),
+      s("Which of our bills, $5 or $10, can help each customer? Which one is more valuable to keep?", {
+        hl: [0, 1], tags: { 0: "needs $5", 1: "needs $15" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Reverse Bits": [
+    A([0, 0, 1, 1], [
+      s("We reverse the 4 bits of n = 0011. The last bit should come out first.", {}),
+      s("Read the last bit of n. It is 1.", {
+        hl: [3], aux: { label: "read", items: ["1"] },
+      }),
+      s("Drop that bit from n to expose the next one.", {
+        values: [0, 0, 0, 1], hl: [3], aux: { label: "read", items: ["1"] },
+      }),
+      s("The next bit to read is again at the right end. It is 1.", {
+        values: [0, 0, 0, 1], hl: [3], aux: { label: "read", items: ["1", "1"] },
+      }),
+      s("Which two operations read the last bit and then drop it?", {
+        values: [0, 0, 0, 1], aux: { label: "read", items: ["1", "1"] },
+      }),
+    ]),
+    A([0, 0, 0, 0], [
+      s("The result starts as 0000. We read the bits 1, 1, 0, 0 from n, one after another.", {
+        aux: { label: "bit read", items: [] },
+      }),
+      s("First bit read: 1. The result becomes 0001.", {
+        values: [0, 0, 0, 1], hl: [3], aux: { label: "bit read", items: ["1"] },
+      }),
+      s("Second bit read: 1. The result becomes 0011.", {
+        values: [0, 0, 1, 1], hl: [3], aux: { label: "bit read", items: ["1"] },
+      }),
+      s("Third bit read: 0. The result becomes 0110.", {
+        values: [0, 1, 1, 0], hl: [3], aux: { label: "bit read", items: ["0"] },
+      }),
+      s("Fourth bit read: 0. The result becomes 1100. What did we do to the old bits before adding a new one?", {
+        values: [1, 1, 0, 0], hl: [3], aux: { label: "bit read", items: ["0"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Sum of Two Integers": [
+    A(["_", "_", "_"], [
+      s("Add a = 1 (001) and b = 3 (011) one bit column at a time. Here are the columns.", {
+        tags: { 0: "0 + 0", 1: "0 + 1", 2: "1 + 1" },
+      }),
+      s("XOR each column: 0 and 0 give 0, 0 and 1 give 1, 1 and 1 give 0.", {
+        values: [0, 1, 0], ok: [0, 1, 2], tags: { 0: "0 + 0", 1: "0 + 1", 2: "1 + 1" },
+      }),
+      s("The true sum 1 + 3 is 4, which is 100 in binary. XOR gave 010. How do a XOR b and a + b compare?", {
+        values: [0, 1, 0], hl: [0, 1, 2], out: "1 + 3 = 4 (100)",
+      }),
+    ]),
+    A([0, 1, 2], [
+      s("Add the columns of 001 and 011. The column sums are 0, 1 and 2.", {
+        tags: { 0: "0 + 0", 1: "0 + 1", 2: "1 + 1" },
+      }),
+      s("A binary digit can only be 0 or 1. Look at the column with the sum 2.", {
+        bad: [2], tags: { 0: "0 + 0", 1: "0 + 1", 2: "1 + 1" },
+      }),
+      s("When does a column produce a carry, and where does the carry go?", {
+        bad: [2], hl: [1], tags: { 0: "0 + 0", 1: "0 + 1", 2: "1 + 1" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Range Sum Query - Immutable": [
+    A([1, 2, 3, 4], [
+      s("The prefix sums of 1, 2, 3, 4 are 0, 1, 3, 6, 10.", {
+        aux: { label: "prefix", items: ["0", "1", "3", "6", "10"] },
+      }),
+      s("We want the sum of the elements from index 1 to index 2, which is 2 + 3.", {
+        hl: [1, 2], aux: { label: "prefix", items: ["0", "1", "3", "6", "10"] },
+      }),
+      s("The prefix before index 1 is 1, and the prefix through index 2 is 6.", {
+        hl: [1, 2], tags: { 1: "before: 1", 2: "through: 6" },
+        aux: { label: "prefix", items: ["0", "1", "3", "6", "10"] },
+      }),
+      s("How can we get the sum of 2 and 3 from the prefix sums 1 and 6?", {
+        hl: [1, 2], tags: { 1: "before: 1", 2: "through: 6" },
+        aux: { label: "prefix", items: ["0", "1", "3", "6", "10"] },
+      }),
+    ]),
+    A([1, 2, 3, 4], [
+      s("Many queries ask for sums over ranges of the same array.", {}),
+      s("Query 1: add up indexes 1 to 3. We touch 3 numbers.", {
+        hl: [1, 2, 3], out: "numbers touched: 3",
+      }),
+      s("Query 2: add up indexes 0 to 3. We touch all 4 numbers.", {
+        hl: [0, 1, 2, 3], out: "numbers touched: 7",
+      }),
+      s("Query 3: indexes 1 to 2. Each query repeats many of the same additions.", {
+        hl: [1, 2], out: "numbers touched: 9",
+      }),
+      s("What could we compute once, up front, so that every query takes the same tiny amount of work?", {
+        out: "numbers touched: 9",
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Subarray Sums Divisible by K": [
+    A([4, 5, 0, 1], [
+      s("k = 5. After each number we show the prefix sum and its remainder mod 5.", {
+        tags: { 0: "4 → r4", 1: "9 → r4", 2: "9 → r4", 3: "10 → r0" },
+      }),
+      s("The prefix sums after the 4 and after the 5 are 4 and 9. Both leave remainder 4.", {
+        hl: [0, 1], tags: { 0: "4 → r4", 1: "9 → r4", 2: "9 → r4", 3: "10 → r0" },
+      }),
+      s("The stretch between those two places is just the 5.", {
+        ok: [1], hl: [0], tags: { 0: "4 → r4", 1: "9 → r4", 2: "9 → r4", 3: "10 → r0" },
+      }),
+      s("Two prefix sums share the same remainder. What does that say about the stretch between them?", {
+        ok: [1], hl: [0], tags: { 0: "4 → r4", 1: "9 → r4", 2: "9 → r4", 3: "10 → r0" },
+      }),
+    ]),
+    A([-1, 5], [
+      s("k = 5. The array is -1, 5. The prefix sums are -1 and 4.", {
+        tags: { 0: "prefix -1", 1: "prefix 4" },
+      }),
+      s("The stretch between them is 5, which is divisible by 5.", {
+        hl: [1], tags: { 0: "prefix -1", 1: "prefix 4" },
+      }),
+      s("In some languages -1 % 5 gives -1, not 4. Then the two remainders look different.", {
+        hl: [0, 1], tags: { 0: "prefix -1", 1: "prefix 4" }, aux: { label: "remainders", items: ["-1", "4"] },
+      }),
+      s("The two prefix sums should match, but the remainders -1 and 4 do not. What should we do?", {
+        bad: [0, 1], tags: { 0: "prefix -1", 1: "prefix 4" }, aux: { label: "remainders", items: ["-1", "4"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Search a 2D Matrix": [
+    G(M34, [
+      s("Each row is sorted, and each row starts after the previous row ends.", {}),
+      s("The first row ends with 7.", {
+        hl: [[0, 3]],
+      }),
+      s("The next row starts with 10, which is bigger.", {
+        hl: [[0, 3], [1, 0]],
+      }),
+      s("The second row ends with 20 and the third starts with 23. The same thing happens.", {
+        hl: [[1, 3], [2, 0]],
+      }),
+      s("Read the cells row by row, left to right. What kind of list do you get?", {
+        out: "1, 3, 5, 7, 10, 11, 16, 20, 23, 30, 34, 60",
+      }),
+    ]),
+    G(M34, [
+      s("Number the cells 0, 1, 2, ... going row by row. This number is the flat index.", {
+        tags: FLAT_TAGS,
+      }),
+      s("Take the flat index 6. Which row and which column holds it?", {
+        hl: [[1, 2]], tags: FLAT_TAGS,
+      }),
+      s("Index 4 is the first cell of the second row, and index 8 is the first cell of the third row.", {
+        hl: [[1, 0], [2, 0]], tags: FLAT_TAGS,
+      }),
+      s("The matrix has n = 4 columns. How can the row and column be computed from a flat index mid?", {
+        tags: FLAT_TAGS,
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "K Closest Points to Origin": [
+    A(["P", "Q"], [
+      s("Two points: P at (1, 3) and Q at (-2, 2). Which one is closer to the origin?", {
+        tags: { 0: "(1,3)", 1: "(-2,2)" },
+      }),
+      s("The real distance of P is about 3.16.", {
+        hl: [0], tags: { 0: "(1,3)", 1: "(-2,2)" }, aux: { label: "distance", items: ["P: 3.16"] },
+      }),
+      s("The real distance of Q is about 2.83, so Q is closer.", {
+        hl: [1], tags: { 0: "(1,3)", 1: "(-2,2)" }, aux: { label: "distance", items: ["P: 3.16", "Q: 2.83"] },
+      }),
+      s("Square roots are slow. What simpler number could we compare to get the same winner?", {
+        tags: { 0: "(1,3)", 1: "(-2,2)" }, aux: { label: "distance", items: ["P: 3.16", "Q: 2.83"] },
+      }),
+    ]),
+    T([9, 4, 7], [
+      s("The heap holds the 3 closest points so far, as squared distances. The farthest, 9, is on top.", {
+        hl: [0], tags: { 0: "farthest" },
+      }),
+      s("A new point arrives with squared distance 2.", {
+        hl: [0], tags: { 0: "farthest" }, out: "new point: 2",
+      }),
+      s("2 is less than 9, so the new point is closer than the farthest of our points.", {
+        hl: [0], tags: { 0: "farthest" }, out: "new point: 2",
+      }),
+      s("The heap must hold exactly 3 points. What should we do with the new point and the top?", {
+        hl: [0], tags: { 0: "farthest" }, out: "new point: 2",
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Task Scheduler": [
+    A(["A", "A", "A", "B", "C"], [
+      s("The tasks are A, A, A, B, C. Two time units must pass between two runs of the same task.", {}),
+      s("Count how often each task appears.", {
+        aux: { label: "counts", items: ["A:3", "B:1", "C:1"] },
+      }),
+      s("Each repeat of a task needs two other time units between it and the run before.", {
+        hl: [0, 1, 2], aux: { label: "counts", items: ["A:3", "B:1", "C:1"] },
+      }),
+      s("Which task will force the most waiting between its runs?", {
+        aux: { label: "counts", items: ["A:3", "B:1", "C:1"] },
+      }),
+    ]),
+    A(["_", "_", "_", "_", "_", "_", "_", "_", "_"], [
+      s("Place the first A. Then two time units must pass before the next A.", {
+        values: ["A", "_", "_", "_", "_", "_", "_", "_", "_"], hl: [0],
+      }),
+      s("The next A can go in slot 3. That makes a block of 3 slots: an A and two waiting slots.", {
+        values: ["A", "_", "_", "A", "_", "_", "_", "_", "_"], ok: [0, 1, 2], hl: [3],
+      }),
+      s("The third A goes in slot 6.", {
+        values: ["A", "_", "_", "A", "_", "_", "A", "_", "_"], ok: [0, 1, 2, 3, 4, 5], hl: [6],
+      }),
+      s("With f = 3 runs of A and a gap of n = 2, how many slots do we need up to the last A?", {
+        values: ["A", "_", "_", "A", "_", "_", "A", "_", "_"], ok: [0, 1, 2, 3, 4, 5], hl: [6],
+      }),
+    ]),
+  ],
+
+  // ===============================================================
+  // BATCH 18: Intervals, Tries, Union Find (written from the real challenges)
+  // Tries and union-find are drawn with the graph renderer.
+  // ===============================================================
+
+  // ---------------------------------------------------------------
+  "Insert Interval": [
+    I([[1, 2], [3, 5], [6, 7], [8, 10], [12, 16], [4, 8]], [
+      s("The list is sorted by start. The new interval, [4, 8], is the bottom bar.", {
+        hl: [5], tags: { 5: "new" },
+      }),
+      s("Draw a line where the new interval starts, at 4.", {
+        hl: [5], marker: 4, markerLabel: "new starts", tags: { 5: "new" },
+      }),
+      s("And one where it ends, at 8.", {
+        hl: [5], marker: 8, markerLabel: "new ends", tags: { 5: "new" },
+      }),
+      s("Look at where each existing interval sits against these lines. How are they related to the new one?", {
+        hl: [5], marker: 8, markerLabel: "new ends", tags: { 5: "new" },
+      }),
+    ], { range: [0, 17] }),
+    I([[3, 5], [4, 8]], [
+      s("The existing interval [3, 5] overlaps the new interval [4, 8].", {
+        hl: [0, 1], tags: { 0: "[3, 5]", 1: "[4, 8]" },
+      }),
+      s("We want one single interval that covers both of them.", {
+        hl: [0, 1], tags: { 0: "[3, 5]", 1: "[4, 8]" },
+      }),
+      s("Which start and which end should the merged interval use?", {
+        hl: [0, 1], tags: { 0: "[3, 5]", 1: "[4, 8]" },
+      }),
+    ], { range: [0, 10] }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Non-overlapping Intervals": [
+    I([[1, 3], [2, 6], [4, 5]], [
+      s("The intervals [1, 3] and [2, 6] overlap, so we must drop one of them.", {
+        hl: [0, 1],
+      }),
+      s("A third interval, [4, 5], is waiting after them.", {
+        hl: [2],
+      }),
+      s("If we keep [2, 6], then [4, 5] overlaps it too.", {
+        ok: [1], bad: [2], marker: 6, markerLabel: "ends 6",
+      }),
+      s("Which of the first two should we keep, to leave the most room for the intervals that follow?", {
+        hl: [0, 1],
+      }),
+    ], { range: [0, 7] }),
+    I([[1, 2], [2, 3], [1, 3], [3, 4]], [
+      s("The intervals are sorted by end time. We keep [1, 2] first. Its end is 2.", {
+        ok: [0], marker: 2, markerLabel: "kept end 2",
+      }),
+      s("Next is [2, 3]. It starts at 2, just when the last kept interval ends.", {
+        ok: [0], hl: [1], marker: 2, markerLabel: "kept end 2",
+      }),
+      s("We keep it. The last kept end is now 3.", {
+        ok: [0, 1], marker: 3, markerLabel: "kept end 3",
+      }),
+      s("Next is [1, 3]. It starts at 1, before the last kept end.", {
+        ok: [0, 1], hl: [2], marker: 3, markerLabel: "kept end 3",
+      }),
+      s("When should we keep the next interval, and when should we skip it?", {
+        ok: [0, 1], hl: [2, 3], marker: 3, markerLabel: "kept end 3",
+      }),
+    ], { range: [0, 5] }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Meeting Rooms II": [
+    I([[0, 6], [1, 3], [2, 5], [4, 8]], [
+      s("Four meetings, drawn on a timeline.", {}),
+      s("At time 2, three meetings are running: [0, 6], [1, 3] and [2, 5].", {
+        hl: [0, 1, 2], marker: 2, markerLabel: "time 2",
+      }),
+      s("At time 7, only one meeting is running: [4, 8].", {
+        hl: [3], marker: 7, markerLabel: "time 7",
+      }),
+      s("Meetings that run at the same moment each need a room. What number tells us how many rooms we need?", {
+        hl: [0, 1, 2], marker: 2, markerLabel: "time 2",
+      }),
+    ], { range: [0, 9] }),
+    I([[0, 6], [1, 3], [4, 8]], [
+      s("Meetings in start order. [0, 6] and [1, 3] overlap, so they use two rooms.", {
+        hl: [0, 1],
+      }),
+      s("The next meeting is [4, 8]. It starts at time 4.", {
+        hl: [2], marker: 4, markerLabel: "start 4",
+      }),
+      s("At time 4, the meeting [1, 3] has ended but [0, 6] is still running.", {
+        ok: [1], hl: [0, 2], marker: 4, markerLabel: "start 4", tags: { 0: "until 6", 1: "until 3" },
+      }),
+      s("When can the new meeting reuse a room that was already in use?", {
+        hl: [2], marker: 4, markerLabel: "start 4", tags: { 0: "until 6", 1: "until 3" },
+      }),
+    ], { range: [0, 9] }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Minimum Number of Arrows to Burst Balloons": [
+    I([[1, 6], [2, 8], [7, 12], [10, 16]], [
+      s("Balloons are bars on a line, sorted by where they end. An arrow at x bursts every balloon covering x.", {}),
+      s("The first balloon, [1, 6], must be burst by an arrow somewhere between 1 and 6.", {
+        hl: [0],
+      }),
+      s("An arrow at 1 bursts this balloon, but no other balloon covers 1.", {
+        ok: [0], marker: 1, markerLabel: "x = 1",
+      }),
+      s("Where along [1, 6] is the best place to shoot, to burst as many other balloons as possible?", {
+        hl: [0],
+      }),
+    ], { range: [0, 17] }),
+    I([[1, 6], [2, 8], [7, 12], [10, 16]], [
+      s("The first arrow is at 6. It bursts [1, 6] and [2, 8].", {
+        ok: [0, 1], marker: 6, markerLabel: "arrow 6",
+      }),
+      s("The next balloon is [7, 12]. The arrow at 6 does not touch it.", {
+        ok: [0, 1], hl: [2], marker: 6, markerLabel: "arrow 6",
+      }),
+      s("The balloon starts after the arrow's position, so it is still floating.", {
+        ok: [0, 1], bad: [2], marker: 6, markerLabel: "arrow 6",
+      }),
+      s("What should we do about this balloon?", {
+        ok: [0, 1], bad: [2], marker: 6, markerLabel: "arrow 6",
+      }),
+    ], { range: [0, 17] }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Interval List Intersections": [
+    I([[0, 2], [1, 5]], [
+      s("Two intervals, [0, 2] and [1, 5]. Where do they overlap?", {
+        tags: { 0: "first", 1: "second" },
+      }),
+      s("Their overlap is the interval [1, 2].", {
+        intervals: [[0, 2], [1, 5], [1, 2]], ok: [2], tags: { 0: "first", 1: "second", 2: "overlap" },
+      }),
+      s("Another pair: [5, 10] and [1, 5] overlap in [5, 5], a single point.", {
+        intervals: [[5, 10], [1, 5], [5, 5]], ok: [2], tags: { 0: "first", 1: "second", 2: "overlap" },
+      }),
+      s("How are the start and end of an overlap found from the starts and ends of the two intervals?", {
+        intervals: [[0, 2], [1, 5], [1, 2]], ok: [2], tags: { 0: "first", 1: "second", 2: "overlap" },
+      }),
+    ], { range: [0, 11] }),
+    I([[0, 2], [5, 10], [1, 5], [8, 12]], [
+      s("Two sorted lists. A has [0, 2] and [5, 10], and B has [1, 5] and [8, 12].", {
+        tags: { 0: "A first", 1: "A second", 2: "B first", 3: "B second" },
+      }),
+      s("We compare the first interval of A with the first interval of B. They overlap in [1, 2].", {
+        hl: [0, 2], tags: { 0: "A first", 2: "B first" },
+      }),
+      s("The interval from A ends at 2, and the interval from B ends at 5.", {
+        hl: [0, 2], tags: { 0: "ends 2", 2: "ends 5" },
+      }),
+      s("After handling this pair, which list should move on to its next interval?", {
+        hl: [0, 2], tags: { 0: "ends 2", 2: "ends 5" },
+      }),
+    ], { range: [0, 13] }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Implement Trie (Prefix Tree)": [
+    GR(TRIE_CAT.nodes, TRIE_CAT.edges, [
+      s("A trie that stores cat and car. Words that start the same share the same path.", {}),
+      s("Follow the path from the top: c, then a, then t spells cat.", {
+        hl: [1, 2, 3], hlE: [[0, 1], [1, 2], [2, 3]],
+      }),
+      s("The path c, a, r spells car. The first two steps are shared.", {
+        hl: [1, 2, 4], hlE: [[0, 1], [1, 2], [2, 4]],
+      }),
+      s("What does each single step down from a node in the trie stand for?", {
+        hl: [1, 2, 3, 4], okE: [[0, 1], [1, 2], [2, 3], [2, 4]],
+      }),
+    ], { pos: TRIE_CAT.pos, directed: true, height: 230 }),
+    GR(TRIE_APPLE.nodes, TRIE_APPLE.edges, [
+      s("A trie holding only the word apple. The last letter, e, is marked as the end of a word.", {
+        tags: { 5: "word end" },
+      }),
+      s("Check the path a, p, p. It exists in the trie.", {
+        hl: [1, 2, 3], hlE: [[0, 1], [1, 2], [2, 3]], tags: { 5: "word end" },
+      }),
+      s("The node after the second p carries no end mark.", {
+        hl: [3], tags: { 3: "no end mark", 5: "word end" },
+      }),
+      s("Is app a stored word, or only the start of one? How do search and startsWith differ?", {
+        hl: [3], tags: { 3: "no end mark", 5: "word end" },
+      }),
+    ], { pos: TRIE_APPLE.pos, directed: true, height: 170 }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Design Add and Search Words Data Structure": [
+    GR(TRIE_BDM.nodes, TRIE_BDM.edges, [
+      s("The trie stores bad, dad and mad. We search for the pattern bad.", {}),
+      s("The first letter is b. Look at where b leads from the top.", {
+        hl: [1], hlE: [[0, 1]],
+      }),
+      s("Then a, then d.", {
+        hl: [1, 4, 7], hlE: [[0, 1], [1, 4], [4, 7]],
+      }),
+      s("At each letter, which children of the current node does the search need to look at?", {
+        ok: [1, 4, 7], okE: [[0, 1], [1, 4], [4, 7]],
+      }),
+    ], { pos: TRIE_BDM.pos, directed: true, height: 260 }),
+    GR(TRIE_BDM.nodes, TRIE_BDM.edges, [
+      s("Now search the pattern .ad. The dot can stand for any letter.", {}),
+      s("The first character is a dot. The top node has three children: b, d and m.", {
+        hl: [0],
+      }),
+      s("What should the search do at a dot?", {
+        hl: [0], hlE: [[0, 1], [0, 2], [0, 3]],
+      }),
+    ], { pos: TRIE_BDM.pos, directed: true, height: 260 }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Replace Words": [
+    GR(TRIE_ROOTS.nodes, TRIE_ROOTS.edges, [
+      s("The roots ca and cat are stored in a trie. The word to replace is cattle.", {
+        tags: { 2: "root: ca", 3: "root: cat" },
+      }),
+      s("cattle starts with ca.", {
+        hl: [1, 2], hlE: [[0, 1], [1, 2]], tags: { 2: "root: ca", 3: "root: cat" },
+      }),
+      s("It also starts with cat.", {
+        hl: [1, 2, 3], hlE: [[0, 1], [1, 2], [2, 3]], tags: { 2: "root: ca", 3: "root: cat" },
+      }),
+      s("Two roots match the same word. Which one should replace it?", {
+        hl: [2, 3], tags: { 2: "root: ca", 3: "root: cat" },
+      }),
+    ], { pos: TRIE_ROOTS.pos, directed: true, height: 170 }),
+    GR(TRIE_ROOTS.nodes, TRIE_ROOTS.edges, [
+      s("We walk cattle down the trie one letter at a time, starting with c.", {
+        hl: [1], hlE: [[0, 1]], tags: { 2: "root: ca", 3: "root: cat" },
+      }),
+      s("Then a. This node is marked as the end of a root.", {
+        ok: [1], hl: [2], hlE: [[1, 2]], tags: { 2: "root: ca", 3: "root: cat" },
+      }),
+      s("The walk could go on with t and reach the end of another root.", {
+        ok: [1, 2], hl: [3], hlE: [[2, 3]], tags: { 2: "root: ca", 3: "root: cat" },
+      }),
+      s("We want the shortest root. At which point of the walk can we stop?", {
+        ok: [1, 2], tags: { 2: "root: ca", 3: "root: cat" },
+      }),
+    ], { pos: TRIE_ROOTS.pos, directed: true, height: 170 }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Number of Connected Components in an Undirected Graph": [
+    GR(UF_FIVE.nodes, UF_FIVE.edges, [
+      s("Every node starts as its own component. There are 5 components.", {
+        aux: { label: "components", items: ["5"] },
+      }),
+      s("Process the edge between 0 and 1. They are in different components.", {
+        hl: [0, 1], hlE: [[0, 1]], aux: { label: "components", items: ["5"] },
+      }),
+      s("Nodes 0 and 1 now belong to one component. What happens to the number of components?", {
+        ok: [0, 1], okE: [[0, 1]], aux: { label: "components", items: ["?"] },
+      }),
+    ], { pos: UF_FIVE.pos, height: 190 }),
+    GR(UF_TRIANGLE.nodes, UF_TRIANGLE.edges, [
+      s("The edges 0-1 and 1-2 are processed. Nodes 0, 1 and 2 are in one component.", {
+        ok: [0, 1, 2], okE: [[0, 1], [1, 2]], aux: { label: "components", items: ["1"] },
+      }),
+      s("Now the edge between 0 and 2 arrives.", {
+        ok: [1], hl: [0, 2], hlE: [[0, 2]], okE: [[0, 1], [1, 2]], aux: { label: "components", items: ["1"] },
+      }),
+      s("Nodes 0 and 2 are already in the same component.", {
+        ok: [1], hl: [0, 2], hlE: [[0, 2]], okE: [[0, 1], [1, 2]], aux: { label: "components", items: ["1"] },
+      }),
+      s("What happens to the number of components when this edge is processed?", {
+        ok: [1], hl: [0, 2], hlE: [[0, 2]], okE: [[0, 1], [1, 2]], aux: { label: "components", items: ["1"] },
+      }),
+    ], { pos: UF_TRIANGLE.pos, height: 210 }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Redundant Connection": [
+    GR(TREE_FOUR.nodes, TREE_FOUR.edges, [
+      s("A tree on 4 nodes: four circles joined together with no cycle.", {
+        out: "nodes: 4",
+      }),
+      s("Count the edges that hold it together.", {
+        hlE: [[0, 1], [1, 2], [2, 3]], out: "nodes: 4, edges: 3",
+      }),
+      s("For n nodes, how many edges does a tree have?", {
+        okE: [[0, 1], [1, 2], [2, 3]], out: "nodes: 4, edges: 3",
+      }),
+    ], { pos: TREE_FOUR.pos, height: 170 }),
+    GR(RC_TRIANGLE.nodes, RC_TRIANGLE.edges, [
+      s("Add the edge between 1 and 2.", {
+        hl: [0, 1], hlE: [[0, 1]],
+      }),
+      s("Add the edge between 1 and 3. Nodes 1, 2 and 3 are now all connected.", {
+        ok: [0, 1, 2], okE: [[0, 1], [0, 2]],
+      }),
+      s("Now the edge between 2 and 3 arrives.", {
+        ok: [0], hl: [1, 2], okE: [[0, 1], [0, 2]], hlE: [[1, 2]],
+      }),
+      s("Nodes 2 and 3 are already connected through node 1. When is an edge the redundant one?", {
+        ok: [0], hl: [1, 2], okE: [[0, 1], [0, 2]], hlE: [[1, 2]],
+      }),
+    ], { pos: RC_TRIANGLE.pos, height: 210 }),
+  ],
+
+  // ===============================================================
+  // BATCH 19: Searching, Monotonic Stack, Dynamic Programming
+  // (written from the real challenges)
+  // ===============================================================
+
+  // ---------------------------------------------------------------
+  "Find Peak Element": [
+    A([1, 2, 1, 3, 5, 6, 4], [
+      s("We want any peak, a number bigger than both of its neighbours. Check the middle, at index 3.", {
+        hl: [3], ptrs: { lo: 0, mid: 3, hi: 6 },
+      }),
+      s("The middle holds 3 and the next number is 5. The array slopes upward at this point.", {
+        hl: [3, 4], ptrs: { lo: 0, mid: 3, hi: 6 },
+      }),
+      s("Given this upward slope at the middle, where must a peak exist?", {
+        hl: [3, 4], ptrs: { lo: 0, mid: 3, hi: 6 },
+      }),
+    ]),
+    A([1, 2, 1, 3, 5, 6, 4], [
+      s("We keep the right half, from index 4 to the end: 5, 6, 4.", {
+        ok: [4, 5, 6], ptrs: { lo: 4, hi: 6 },
+      }),
+      s("Beyond the last index we imagine negative infinity, lower than any number.", {
+        ok: [4, 5, 6], ptrs: { lo: 4, hi: 6 }, tags: { 6: "then -inf" },
+      }),
+      s("Coming from the middle, the numbers rise from 3 to 5.", {
+        hl: [3, 4], ok: [5, 6], ptrs: { lo: 4, hi: 6 }, tags: { 6: "then -inf" },
+      }),
+      s("Why must the half we keep contain a peak?", {
+        hl: [3, 4], ok: [5, 6], ptrs: { lo: 4, hi: 6 }, tags: { 6: "then -inf" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Capacity To Ship Packages Within D Days": [
+    A([3, 2, 2, 4, 1, 4], [
+      s("The packages weigh 3, 2, 2, 4, 1 and 4. We want the smallest ship capacity that works.", {}),
+      s("Try a capacity of 3. The first package, 3, fits.", {
+        ok: [0], aux: { label: "capacity", items: ["3"] },
+      }),
+      s("The package of weight 4 does not fit on a ship with capacity 3.", {
+        ok: [0], bad: [3], aux: { label: "capacity", items: ["3"] },
+      }),
+      s("So some capacities are too small to work at all. What is the smallest capacity that could possibly work?", {
+        bad: [3], aux: { label: "capacity", items: ["3"] },
+      }),
+    ]),
+    A([3, 2, 2, 4, 1, 4], [
+      s("With capacity 6 the loads are (3,2), (2,4) and (1,4). That is 3 days.", {
+        ok: [0, 1, 2, 3, 4, 5], tags: { 0: "day 1", 2: "day 2", 4: "day 3" }, out: "capacity 6: 3 days",
+      }),
+      s("With capacity 7 the loads are (3,2,2), (4,1) and (4). Again 3 days.", {
+        ok: [0, 1, 2, 3, 4, 5], tags: { 0: "day 1", 3: "day 2", 5: "day 3" }, out: "capacity 7: 3 days",
+      }),
+      s("With capacity 10 the loads are (3,2,2) and (4,1,4). That is 2 days.", {
+        ok: [0, 1, 2, 3, 4, 5], tags: { 0: "day 1", 3: "day 2" }, out: "capacity 10: 2 days",
+      }),
+      s("Compare the results. If a capacity ships everything within the days, what about a larger capacity?", {
+        ok: [0, 1, 2, 3, 4, 5], tags: { 0: "day 1", 3: "day 2" }, out: "capacity 10: 2 days",
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Time Based Key-Value Store": [
+    A(["-", "-", "-", "-"], [
+      s("The key foo has no values stored yet. Each slot will hold a timestamp.", {}),
+      s("set(foo, bar, 1) is called.", {
+        values: [1, "-", "-", "-"], hl: [0], tags: { 0: "bar" },
+      }),
+      s("Later, set(foo, bar2, 4) is called.", {
+        values: [1, 4, "-", "-"], ok: [0], hl: [1], tags: { 0: "bar", 1: "bar2" },
+      }),
+      s("Later still, set(foo, bar3, 7).", {
+        values: [1, 4, 7, "-"], ok: [0, 1], hl: [2], tags: { 0: "bar", 1: "bar2", 2: "bar3" },
+      }),
+      s("In what order do the timestamps of one key arrive, and what does that mean for this list?", {
+        values: [1, 4, 7, "-"], ok: [0, 1, 2], tags: { 0: "bar", 1: "bar2", 2: "bar3" },
+      }),
+    ]),
+    A([1, 4, 7, 9], [
+      s("The timestamps stored for foo are 1, 4, 7 and 9, in order. We call get(foo, 8).", {
+        tags: { 0: "bar", 1: "bar2", 2: "bar3", 3: "bar4" },
+      }),
+      s("Scanning the whole list gets slower as the list grows. But the list is in order.", {
+        hl: [0, 1, 2, 3], tags: { 0: "bar", 1: "bar2", 2: "bar3", 3: "bar4" },
+      }),
+      s("What fast search works on ordered data to find the largest timestamp that is at most 8?", {
+        tags: { 0: "bar", 1: "bar2", 2: "bar3", 3: "bar4" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Online Stock Span": [
+    A([100, 80, 60, 70], [
+      s("The stack holds 100, 80 and 60, each with its span of 1. Today's price is 70.", {
+        hl: [3], aux: { label: "stack", items: ["100:1", "80:1", "60:1"] },
+      }),
+      s("70 is higher than the price on top of the stack, 60.", {
+        ok: [2], hl: [3], aux: { label: "stack", items: ["100:1", "80:1", "60:1"] },
+      }),
+      s("The 60 had a span of 1, covering only itself.", {
+        ok: [2], hl: [3], aux: { label: "stack", items: ["100:1", "80:1", "60:1"] },
+      }),
+      s("Today's price is higher than the one on top. What does that tell us about today's span?", {
+        ok: [2], hl: [3], aux: { label: "stack", items: ["100:1", "80:1", "60:1"] },
+      }),
+    ]),
+    A([100, 80, 60, 70, 60, 75], [
+      s("The stack holds (100, 1), (80, 1), (70, 2) and (60, 1). The 70 has a span of 2.", {
+        hl: [3], aux: { label: "stack", items: ["100:1", "80:1", "70:2", "60:1"] },
+      }),
+      s("Today's price is 75.", {
+        hl: [5], aux: { label: "stack", items: ["100:1", "80:1", "70:2", "60:1"] },
+      }),
+      s("The 70 on the stack stands for two days: the 60 before it, and itself.", {
+        ok: [2, 3], hl: [5], tags: { 3: "span 2" }, aux: { label: "stack", items: ["100:1", "80:1", "70:2", "60:1"] },
+      }),
+      s("Why does each price on the stack carry its span?", {
+        ok: [2, 3], hl: [5], tags: { 3: "span 2" }, aux: { label: "stack", items: ["100:1", "80:1", "70:2", "60:1"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Next Greater Element II": [
+    A([1, 2, 1], [
+      s("The array is circular: 1, 2, 1. We look for the next greater number after the last 1.", {
+        hl: [2],
+      }),
+      s("After the last element there is nothing more on the right.", {
+        hl: [2], tags: { 2: "last" },
+      }),
+      s("In a circular array, where does the scan go after the last element?", {
+        hl: [2], tags: { 2: "last" },
+      }),
+    ]),
+    A([1, 2, 1], [
+      s("The scan goes from left to right. A stack keeps the numbers still waiting for a bigger one.", {
+        ptrs: { i: 2 }, aux: { label: "waiting", items: ["2", "1"] },
+      }),
+      s("At the end of the scan, the last 1 never saw a bigger number after it. But the 2 sits before it.", {
+        hl: [2], ok: [1], aux: { label: "waiting", items: ["2", "1"] },
+      }),
+      s("How can a single left-to-right scan with a stack let the last 1 find that 2?", {
+        hl: [2], ok: [1], aux: { label: "waiting", items: ["2", "1"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Car Fleet": [
+    A([1, 1, 7, 3, 12], [
+      s("The cars are sorted from closest to the target. Each number is a car's time alone to reach it.", {
+        tags: { 0: "pos 10", 1: "pos 8", 2: "pos 5", 3: "pos 3", 4: "pos 0" },
+      }),
+      s("The car at position 8 needs 1 hour. The car ahead of it, at position 10, also needs 1 hour.", {
+        hl: [0, 1], tags: { 0: "pos 10", 1: "pos 8", 2: "pos 5", 3: "pos 3", 4: "pos 0" },
+      }),
+      s("The car at position 3 needs 3 hours. The car ahead of it, at position 5, needs 7 hours.", {
+        hl: [2, 3], tags: { 0: "pos 10", 1: "pos 8", 2: "pos 5", 3: "pos 3", 4: "pos 0" },
+      }),
+      s("A car cannot pass the one ahead. When does a car end up in the same fleet as the car ahead of it?", {
+        hl: [2, 3], tags: { 0: "pos 10", 1: "pos 8", 2: "pos 5", 3: "pos 3", 4: "pos 0" },
+      }),
+    ]),
+    A([10, 8, 0, 5, 3], [
+      s("The cars start at positions 10, 8, 0, 5 and 3, in the input order. The target is 12.", {
+        tags: { 0: "speed 2", 1: "speed 4", 2: "speed 1", 3: "speed 1", 4: "speed 3" },
+      }),
+      s("Cars cannot pass each other, so the cars in front can hold a car back.", {
+        hl: [0, 1], tags: { 0: "speed 2", 1: "speed 4", 2: "speed 1", 3: "speed 1", 4: "speed 3" },
+      }),
+      s("Sorted by position, the cars line up like this.", {
+        values: [0, 3, 5, 8, 10], tags: { 0: "farthest", 4: "closest" },
+      }),
+      s("In which order should we go through the cars?", {
+        values: [0, 3, 5, 8, 10], tags: { 0: "farthest", 4: "closest" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Remove K Digits": [
+    A(["1", "4", "3", "2", "2", "1", "9"], [
+      s("The number is 1432219, and we may remove 3 digits. We want the smallest result.", {}),
+      s("Scanning from left to right: 1, then 4, then 3.", {
+        ok: [0], hl: [1, 2],
+      }),
+      s("The 4 is bigger than the 3 that comes right after it.", {
+        ok: [0], hl: [1, 2], tags: { 1: "4 > 3" },
+      }),
+      s("Which digit should we remove here, the 4 or the 3, to make the number smaller?", {
+        ok: [0], hl: [1, 2], tags: { 1: "4 > 3" },
+      }),
+    ]),
+    A(["1", "4", "3", "2", "2", "1", "9"], [
+      s("Remove the 4. The number becomes 132219.", {
+        values: ["1", "3", "2", "2", "1", "9", "-"], hl: [1],
+      }),
+      s("Remove the 3 instead. The number becomes 142219.", {
+        values: ["1", "4", "2", "2", "1", "9", "-"], hl: [1],
+      }),
+      s("The two results differ only in the second digit: a 3 or a 4.", {
+        values: ["1", "4", "2", "2", "1", "9", "-"], hl: [1], aux: { label: "results", items: ["132219", "142219"] },
+      }),
+      s("Which place decides which number is smaller, and why does that make removing the bigger digit pay off?", {
+        values: ["1", "4", "2", "2", "1", "9", "-"], hl: [1], aux: { label: "results", items: ["132219", "142219"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "House Robber II": [
+    A([2, 3, 2], [
+      s("The houses are in a circle, so the last house sits next to the first one.", {
+        hl: [0, 2], tags: { 0: "first", 2: "last" },
+      }),
+      s("Two houses that are next to each other cannot both be robbed.", {
+        hl: [0, 1, 2], tags: { 0: "first", 2: "last" },
+      }),
+      s("The first and last houses are now neighbours. What does that mean for the robber?", {
+        hl: [0, 2], tags: { 0: "first", 2: "last" },
+      }),
+    ]),
+    A([2, 3, 2], [
+      s("The first and last houses are neighbours, so they cannot both be robbed.", {
+        hl: [0, 2], tags: { 0: "first", 2: "last" },
+      }),
+      s("So at least one of them is left out. Suppose we leave out the last house.", {
+        ok: [0, 1], bad: [2], tags: { 0: "first", 2: "last" },
+      }),
+      s("What if we leave out the first house instead?", {
+        bad: [0], ok: [1, 2], tags: { 0: "first", 2: "last" },
+      }),
+      s("In each case the houses form a straight line. How can we turn the circle into ordinary House Robber problems?", {
+        hl: [0, 1, 2], tags: { 0: "first", 2: "last" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Minimum Path Sum": [
+    G([[1, 3, 1], [1, 5, 1], [4, 2, 1]], [
+      s("We want the cheapest way to reach each cell, moving only right or down.", {}),
+      s("The cheapest cost to reach the cell on the left of the center is 2, which is 1 + 1.", {
+        hl: [[1, 0]], tags: { "1,0": "cost 2" },
+      }),
+      s("The cheapest cost to reach the cell above the center is 4, which is 1 + 3.", {
+        hl: [[0, 1]], ok: [[1, 0]], tags: { "1,0": "cost 2", "0,1": "cost 4" },
+      }),
+      s("The center cell holds 5. What makes up the cheapest cost to reach it?", {
+        hl: [[1, 1]], ok: [[1, 0], [0, 1]], tags: { "1,0": "cost 2", "0,1": "cost 4" },
+      }),
+    ]),
+    G([[1, 3, 1], [1, 5, 1], [4, 2, 1]], [
+      s("Look at the first row: 1, 3, 1.", {
+        hl: [[0, 0], [0, 1], [0, 2]],
+      }),
+      s("The first cell costs 1 to reach.", {
+        ok: [[0, 0]], tags: { "0,0": "cost 1" },
+      }),
+      s("The next cell, 3, can only be reached from its left neighbour. It costs 4.", {
+        ok: [[0, 0]], hl: [[0, 1]], tags: { "0,0": "cost 1", "0,1": "cost 4" },
+      }),
+      s("What does it cost to reach the last cell of the first row, the one holding 1?", {
+        ok: [[0, 0], [0, 1]], hl: [[0, 2]], tags: { "0,0": "cost 1", "0,1": "cost 4" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Palindromic Substrings": [
+    A(["a", "b", "a"], [
+      s("A palindrome reads the same in both directions. It has a center in the middle.", {}),
+      s("The palindrome aba has its center on the letter b.", {
+        hl: [1], ok: [0, 2],
+      }),
+      s("In a different string, aab, the palindrome aa has its center between its two letters.", {
+        values: ["a", "a", "b"], hl: [0, 1],
+      }),
+      s("Which centers must we try, for a string of any length?", {
+        values: ["a", "a", "b"], hl: [0, 1],
+      }),
+    ]),
+    A(["a", "b", "c", "a"], [
+      s("Start at the center, the letter b.", {
+        hl: [1],
+      }),
+      s("Expand one step to each side. The outer letters are a and c.", {
+        ok: [1], hl: [0, 2],
+      }),
+      s("They differ, so a, b, c is not a palindrome.", {
+        ok: [1], bad: [0, 2],
+      }),
+      s("From a center, when should we stop expanding?", {
+        ok: [1], bad: [0, 2],
+      }),
+    ]),
+  ],
+
+  // ===============================================================
+  // BATCH 20: Graphs, Trees, Recursion & Backtracking (written from the real challenges)
+  // ===============================================================
+
+  // ---------------------------------------------------------------
+  "Max Area of Island": [
+    G(MAI_GRID, [
+      s("Land is 1 and water is 0. We explore the island, starting from the top land cell.", {
+        hl: [[0, 2]],
+      }),
+      s("Step down to the land cell below.", {
+        ok: [[0, 2]], hl: [[1, 2]],
+      }),
+      s("From this cell, the land cell above is a neighbour too. We already counted it.", {
+        ok: [[0, 2]], hl: [[1, 2]], tags: { "0,2": "counted" },
+      }),
+      s("How do we avoid counting a cell twice when the search keeps meeting cells it has already seen?", {
+        ok: [[0, 2]], hl: [[1, 2]], tags: { "0,2": "counted" },
+      }),
+    ], { dim: zeros(MAI_GRID) }),
+    G(MAI_GRID, [
+      s("We count the cells the search reaches. The first land cell counts 1.", {
+        ok: [[0, 2]], out: "area: 1",
+      }),
+      s("Down from it: one more cell.", {
+        ok: [[0, 2], [1, 2]], out: "area: 2",
+      }),
+      s("Left, and left again: two more cells.", {
+        ok: [[0, 2], [1, 2], [1, 1], [1, 0]], out: "area: 4",
+      }),
+      s("Down from the middle cell: one more.", {
+        ok: [[0, 2], [1, 2], [1, 1], [1, 0], [2, 1]], out: "area: 5",
+      }),
+      s("Each cell adds itself plus whatever its neighbours reach. How is the area worked out in the DFS?", {
+        ok: [[0, 2], [1, 2], [1, 1], [1, 0], [2, 1]], out: "area: 5",
+      }),
+    ], { dim: zeros(MAI_GRID) }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Surrounded Regions": [
+    G(SR_BOARD, [
+      s("A region of O cells is captured when X cells surround it completely.", {}),
+      s("The three connected O cells in the middle are enclosed by X cells.", {
+        hl: [[1, 1], [1, 2], [2, 2]],
+      }),
+      s("The O on the bottom edge touches the border of the board.", {
+        hl: [[3, 1]],
+      }),
+      s("Which O cells can never be captured?", {
+        hl: [[1, 1], [1, 2], [2, 2], [3, 1]],
+      }),
+    ], { dim: xs(SR_BOARD) }),
+    G(SR_BOARD, [
+      s("Search from the O cells on the border. There is one, at the bottom.", {
+        hl: [[3, 1]],
+      }),
+      s("Mark it as safe. No other O is connected to it.", {
+        ok: [[3, 1]],
+      }),
+      s("The other three O cells were not reached from the border.", {
+        ok: [[3, 1]], hl: [[1, 1], [1, 2], [2, 2]],
+      }),
+      s("Why is it enough to search only from the border cells, instead of from every O?", {
+        ok: [[3, 1]], hl: [[1, 1], [1, 2], [2, 2]],
+      }),
+    ], { dim: xs(SR_BOARD) }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Cheapest Flights Within K Stops": [
+    GR(FLIGHTS.nodes, FLIGHTS.edges, [
+      s("We want a trip from city 0 to city 3. Stops are the cities in between.", {
+        hl: [0, 3], tags: { 0: "start", 3: "end" },
+      }),
+      s("The trip 0, 1, 3 stops once, at city 1.", {
+        hl: [0, 1, 3], hlE: [[0, 1], [1, 3]], tags: { 0: "start", 1: "1 stop", 3: "end" },
+      }),
+      s("The trip 0, 1, 2, 3 stops twice, at cities 1 and 2.", {
+        hl: [0, 1, 2, 3], hlE: [[0, 1], [1, 2], [2, 3]], tags: { 0: "start", 1: "stop", 2: "stop", 3: "end" },
+      }),
+      s("If a trip may make at most k stops, how many flights can it use?", {
+        hl: [0, 3], tags: { 0: "start", 3: "end" },
+      }),
+    ], { pos: FLIGHTS.pos, directed: true, height: 230 }),
+    GR(FLIGHTS.nodes, FLIGHTS.edges, [
+      s("The price to reach city 0 is 0. The other cities are unknown.", {
+        hl: [0], tags: { 0: "0" }, aux: { label: "round", items: ["0"] },
+      }),
+      s("Round 1: try every flight once from the known cities. City 1 costs 100.", {
+        ok: [0], hl: [1], hlE: [[0, 1]], tags: { 0: "0", 1: "100" }, aux: { label: "round", items: ["1"] },
+      }),
+      s("Round 2: flights from city 1 give city 2 for 200 and city 3 for 700.", {
+        ok: [0, 1], hl: [2, 3], hlE: [[1, 2], [1, 3]], tags: { 0: "0", 1: "100", 2: "200", 3: "700" },
+        aux: { label: "round", items: ["2"] },
+      }),
+      s("Each round used one more flight than the round before. What does one round of relaxation represent?", {
+        ok: [0, 1, 2, 3], tags: { 0: "0", 1: "100", 2: "200", 3: "700" }, aux: { label: "round", items: ["2"] },
+      }),
+    ], { pos: FLIGHTS.pos, directed: true, height: 230 }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Min Cost to Connect All Points": [
+    GR(MST_POINTS.nodes, MST_POINTS.edges, [
+      s("Five points. Each line shows the cost of connecting two of them.", {}),
+      s("Every point must be connected, with exactly one path between any two points.", {
+        hl: [0, 1, 2, 3, 4],
+      }),
+      s("The loop A, B, D, E and back to A gives two different paths between some points.", {
+        badE: [[0, 1], [1, 3], [3, 4], [0, 4]],
+      }),
+      s("What do we call the cheapest set of connections that links all points and has no loops?", {
+        hl: [0, 1, 2, 3, 4],
+      }),
+    ], { pos: MST_POINTS.pos, height: 230 }),
+    GR(MST_POINTS.nodes, MST_POINTS.edges, [
+      s("Start from point A. The tree contains only A.", {
+        ok: [0], aux: { label: "tree", items: ["A"] },
+      }),
+      s("The edges leaving the tree are A-B (4) and A-E (7).", {
+        ok: [0], hlE: [[0, 1], [0, 4]], aux: { label: "tree", items: ["A"] },
+      }),
+      s("The tree adds A-B and grows to hold A and B.", {
+        ok: [0, 1], okE: [[0, 1]], aux: { label: "tree", items: ["A", "B"] },
+      }),
+      s("Now the edges leaving the tree are B-D (3), B-C (9) and A-E (7). Which connection do we add next?", {
+        ok: [0, 1], okE: [[0, 1]], hlE: [[1, 3], [1, 2], [0, 4]], aux: { label: "tree", items: ["A", "B"] },
+      }),
+    ], { pos: MST_POINTS.pos, height: 230 }),
+  ],
+
+  // ---------------------------------------------------------------
+  "Binary Tree Right Side View": [
+    T([1, 2, 3, N, 5, N, 4], [
+      s("Imagine standing on the right side of the tree, looking left.", {
+        hl: [0],
+      }),
+      s("The second level has two nodes: 2 and 3.", {
+        hl: [1, 2],
+      }),
+      s("The third level has two nodes: 5 and 4.", {
+        hl: [4, 6],
+      }),
+      s("Which node of each level can you see from the right?", {
+        hl: [0, 1, 2, 4, 6],
+      }),
+    ]),
+    T([1, 2, 3, N, 5, N, 4], [
+      s("Level order reads each level from left to right. Level 1 holds just the 1.", {
+        hl: [0], aux: { label: "level", items: ["1"] },
+      }),
+      s("Level 2 holds 2 and 3, in that order.", {
+        ok: [0], hl: [1, 2], aux: { label: "level", items: ["2", "3"] },
+      }),
+      s("Level 3 holds 5 and 4, in that order.", {
+        ok: [0, 1, 2], hl: [4, 6], aux: { label: "level", items: ["5", "4"] },
+      }),
+      s("From each level's list, which node should we record for the right side view?", {
+        ok: [0, 1, 2], hl: [4, 6], aux: { label: "level", items: ["5", "4"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Lowest Common Ancestor of a Binary Tree": [
+    T([3, 5, 1, 6, 2, 0, 8, N, N, 7, 4], [
+      s("We look for the lowest common ancestor of p = 5 and q = 1, starting from the root, 3.", {
+        hl: [0], tags: { 1: "p", 2: "q" },
+      }),
+      s("The search of the left subtree finds p = 5 and returns it.", {
+        ok: [1], tags: { 1: "p", 2: "q" },
+      }),
+      s("The search of the right subtree finds q = 1 and returns it.", {
+        ok: [1, 2], tags: { 1: "p", 2: "q" },
+      }),
+      s("At the root, both searches returned a node. What does that mean?", {
+        hl: [0], ok: [1, 2], tags: { 1: "p", 2: "q" },
+      }),
+    ]),
+    T([3, 5, 1, 6, 2, 0, 8, N, N, 7, 4], [
+      s("Now p = 7 and q = 4. We search the subtree of node 5.", {
+        hl: [1], tags: { 9: "p", 10: "q" },
+      }),
+      s("Below node 5, the left child, 6, contains neither p nor q.", {
+        hl: [1], bad: [3], tags: { 9: "p", 10: "q" },
+      }),
+      s("The right child, 2, has both p and q below it, so its search returns the node 2.", {
+        hl: [1], bad: [3], ok: [4, 9, 10], tags: { 9: "p", 10: "q" },
+      }),
+      s("At node 5 the left search found nothing and the right search returned a node. What does node 5 return?", {
+        hl: [1], bad: [3], ok: [4, 9, 10], tags: { 9: "p", 10: "q" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Count Good Nodes in Binary Tree": [
+    T([3, 1, 4, 3, N, 1, 5], [
+      s("A node is good if nothing larger is on the path from the root to it. Start at the root, 3.", {
+        hl: [0], tags: { 0: "path: 3" },
+      }),
+      s("Go down to the child 1. To judge it, we need to know something about the path above it.", {
+        ok: [0], hl: [1], tags: { 0: "path: 3" },
+      }),
+      s("And go down to the child 4.", {
+        ok: [0], hl: [2], tags: { 0: "path: 3" },
+      }),
+      s("What do we need to pass down from a node to its children, so that they can be judged?", {
+        ok: [0], hl: [1, 2], tags: { 0: "path: 3" },
+      }),
+    ]),
+    T([3, 1, 4, 3, N, 1, 5], [
+      s("Look at the 3 at the bottom left. The path to it is 3, 1, 3.", {
+        hl: [3], tags: { 3: "path 3,1,3" },
+      }),
+      s("Now look at the 1 below the 4. The path to it is 3, 4, 1.", {
+        hl: [5], tags: { 3: "path 3,1,3", 5: "path 3,4,1" },
+      }),
+      s("Compare each of these two nodes with the biggest value above it on its path.", {
+        hl: [3, 5], tags: { 3: "path 3,1,3", 5: "path 3,4,1" },
+      }),
+      s("Which of the two nodes is good, and when exactly is a node good?", {
+        hl: [3, 5], tags: { 3: "path 3,1,3", 5: "path 3,4,1" },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Subsets II": [
+    A([2, 1, 2], [
+      s("The array has duplicates: 2, 1, 2. We want every distinct subset exactly once.", {}),
+      s("The two 2s are not next to each other, so spotting that they are equal takes extra work.", {
+        hl: [0, 2],
+      }),
+      s("Sorted, the array reads 1, 2, 2.", {
+        values: [1, 2, 2], hl: [1, 2],
+      }),
+      s("Why does sorting the array help us avoid duplicate subsets?", {
+        values: [1, 2, 2], hl: [1, 2],
+      }),
+    ]),
+    A([1, 2, 2], [
+      s("We have chosen 1. Now we pick the next element to add, from the numbers after it.", {
+        ok: [0], aux: { label: "subset", items: ["1"] },
+      }),
+      s("Pick the first 2. The subset is 1, 2.", {
+        ok: [0], hl: [1], aux: { label: "subset", items: ["1", "2"] },
+      }),
+      s("Pick the second 2 instead. The subset is 1, 2 again.", {
+        ok: [0], hl: [2], aux: { label: "subset", items: ["1", "2"] },
+      }),
+      s("Both choices at this level built the same subset. When should we skip an element?", {
+        ok: [0], hl: [1, 2], aux: { label: "subset", items: ["1", "2"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Combination Sum II": [
+    A([1, 1, 2, 5, 6, 7, 10], [
+      s("The sorted candidates are 1, 1, 2, 5, 6, 7, 10 and the target is 8. Each number may be used once.", {}),
+      s("Choose the first 1. We still need 7.", {
+        ok: [0], tags: { 0: "need 7" }, aux: { label: "chosen", items: ["1"] },
+      }),
+      s("That first 1 is now used up.", {
+        bad: [0], tags: { 0: "need 7" }, aux: { label: "chosen", items: ["1"] },
+      }),
+      s("Where in the list should the next choice start?", {
+        bad: [0], tags: { 0: "need 7" }, aux: { label: "chosen", items: ["1"] },
+      }),
+    ]),
+    A([1, 1, 2, 5, 6, 7, 10], [
+      s("At the first level we choose the first number to add. Try the first 1.", {
+        hl: [0], aux: { label: "found", items: [] },
+      }),
+      s("It leads to the combination 1, 7.", {
+        ok: [0, 5], aux: { label: "found", items: ["1, 7"] },
+      }),
+      s("Now try the second 1 as the first number. It also leads to 1, 7.", {
+        hl: [1], ok: [5], aux: { label: "found", items: ["1, 7", "1, 7"] },
+      }),
+      s("The same combination appeared twice, yet 1, 1, 6 (using both 1s) must stay. How do we avoid the repeat?", {
+        hl: [0, 1], aux: { label: "found", items: ["1, 7", "1, 7"] },
+      }),
+    ]),
+  ],
+
+  // ---------------------------------------------------------------
+  "Palindrome Partitioning": [
+    A(["a", "a", "b"], [
+      s("We cut aab into pieces, and every piece must be a palindrome.", {}),
+      s("The first piece could be a. That is a palindrome.", {
+        hl: [0], aux: { label: "piece", items: ["a"] },
+      }),
+      s("The first piece could be aa. That is a palindrome too.", {
+        hl: [0, 1], aux: { label: "piece", items: ["aa"] },
+      }),
+      s("The first piece could be aab. Read backwards it is baa, which is different.", {
+        bad: [0, 1, 2], aux: { label: "piece", items: ["aab"] },
+      }),
+      s("Which pieces may we choose at each step?", {
+        aux: { label: "piece", items: ["aab"] },
+      }),
+    ]),
+    A(["a", "a", "b"], [
+      s("We cut aab into the pieces a, a, b, one piece at a time.", {
+        aux: { label: "pieces", items: [] },
+      }),
+      s("First piece: a.", {
+        ok: [0], aux: { label: "pieces", items: ["a"] },
+      }),
+      s("Second piece: a.", {
+        ok: [0, 1], aux: { label: "pieces", items: ["a", "a"] },
+      }),
+      s("Third piece: b. The cut now stands at the end of the string.", {
+        ok: [0, 1, 2], aux: { label: "pieces", items: ["a", "a", "b"] },
+      }),
+      s("When can we say a partition is complete?", {
+        ok: [0, 1, 2], aux: { label: "pieces", items: ["a", "a", "b"] },
+      }),
+    ]),
   ],
 
   // ===============================================================
